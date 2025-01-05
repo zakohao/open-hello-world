@@ -7,7 +7,7 @@
     "tasks": [
       {
         "label": "Run",
-        "command": "d:\\processing-4.3.1\\processing-java.exe",
+        "command": "D:/processing-4.3.1/processing-java.exe",
         "type": "process",
         "args": ["--force", "--sketch=${fileDirname}", "--run"],
         "problemMatcher": [],
