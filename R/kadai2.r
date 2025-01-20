@@ -1,0 +1,2 @@
+d<-read.delim("clipboard")
+
