@@ -1,8 +1,8 @@
-PWD d:/vscode/open-hello-world/latex
+PWD d:/vscode/open-hello-world
 INPUT d:/texlive/2024/texmf.cnf
 INPUT d:/texlive/2024/texmf-dist/web2c/texmf.cnf
 INPUT d:/texlive/2024/texmf-var/web2c/euptex/platex.fmt
-INPUT d:/vscode/open-hello-world/latex/1.tex
+INPUT d:/vscode/open-hello-world/1.tex
 OUTPUT out/1.log
 INPUT d:/texlive/2024/texmf-dist/tex/platex/base/jarticle.cls
 INPUT d:/texlive/2024/texmf-dist/tex/platex/base/jarticle.cls

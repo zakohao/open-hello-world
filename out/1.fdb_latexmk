@@ -1,10 +1,10 @@
 # Fdb version 4
-["dvipdf"] 1738522621.2225 "out/1.dvi" "out/1.pdf" "out/1" 1738522621.38054 0
-  "out/1.dvi" 1738522621 1156 e367b84ea21831a19f1d8a5a63b12f0c "latex"
+["dvipdf"] 1738523492.57979 "out/1.dvi" "out/1.pdf" "out/1" 1738523492.73286 0
+  "out/1.dvi" 1738523492 1156 ffcbb24969e8631088e0b51adc1e0883 "latex"
   (generated)
   "out/1.pdf"
   (rewritten before read)
-["latex"] 1738522621.05711 "d:/vscode/open-hello-world/latex/1.tex" "out/1.dvi" "1" 1738522621.37872 0
+["latex"] 1738523492.41778 "d:/vscode/open-hello-world/1.tex" "out/1.dvi" "1" 1738523492.73101 0
   "1.tex" 1738046452 730 9d3ccd62f92a00e5f9663a63128ed30f ""
   "d:/texlive/2024/texmf-dist/fonts/tfm/ptex-fonts/standard/goth10.tfm" 1737986228 1196 5981e79c37b2cfd27b3612a6783cd4b6 ""
   "d:/texlive/2024/texmf-dist/fonts/tfm/ptex-fonts/standard/min10.tfm" 1737986228 1196 1be730212205a270378fba11a44765dc ""
@@ -29,8 +29,8 @@
   "d:/texlive/2024/texmf-dist/web2c/texmf.cnf" 1737985750 42021 a58d36c7ede3d2fc9f93da62d691ddff ""
   "d:/texlive/2024/texmf-var/web2c/euptex/platex.fmt" 1737986389 2803467 74d5fa362951efb596fb0082f2a5798b ""
   "d:/texlive/2024/texmf.cnf" 1737986357 713 e69b156964470283e0530f5060668171 ""
-  "d:/vscode/open-hello-world/latex/1.tex" 1738046452 730 9d3ccd62f92a00e5f9663a63128ed30f ""
-  "out/1.aux" 1738522621 279 eb55e6091b660fe79b0ea28a2349b491 "latex"
+  "d:/vscode/open-hello-world/1.tex" 1738046452 730 9d3ccd62f92a00e5f9663a63128ed30f ""
+  "out/1.aux" 1738523492 279 eb55e6091b660fe79b0ea28a2349b491 "latex"
   (generated)
   "out/1.aux"
   "out/1.dvi"

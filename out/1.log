@@ -1,10 +1,10 @@
-This is e-upTeX, Version 3.141592653-p4.1.1-u1.30-230214-2.6 (utf8.sjis) (TeX Live 2024) (preloaded format=platex 2025.1.27)  3 FEB 2025 03:57
+This is e-upTeX, Version 3.141592653-p4.1.1-u1.30-230214-2.6 (utf8.sjis) (TeX Live 2024) (preloaded format=platex 2025.1.27)  3 FEB 2025 04:11
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**d:/vscode/open-hello-world/latex/1.tex
-(d:/vscode/open-hello-world/latex/1.tex
+**d:/vscode/open-hello-world/1.tex
+(d:/vscode/open-hello-world/1.tex
 pLaTeX2e <2023-02-14>+1, based on
 LaTeX2e <2024-11-01> patch level 1
 L3 programming layer <2024-12-25>
@@ -87,11 +87,11 @@ L3 programming layer <2024-12-25>
  ) 
 Here is how much of TeX's memory you used:
  534 strings out of 474364
- 9514 string characters out of 5747458
+ 9496 string characters out of 5747458
  397970 words of memory out of 5000000
  23796 multiletter control sequences out of 15000+600000
  568592 words of font info for 74 fonts, out of 8000000 for 9000
  647 hyphenation exceptions out of 8191
- 35i,6n,50p,189b,231s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 35i,6n,50p,183b,231s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on out/1.dvi (1 page, 1156 bytes).
