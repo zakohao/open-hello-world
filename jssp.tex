@@ -1,0 +1,127 @@
+\documentclass[twocolumn]{jarticle}
+
+\usepackage{jsaiac}
+\usepackage{graphicx}
+\usepackage{amsmath}
+
+
+%%
+\title{
+\jtitle{FMSにおける加工機械と複積載搬送ロボットの\\同時スケジューリング問題}
+\etitle{Simultaneous Scheduling Problem of Processing Machines and Multi-Load Transport Robots \\in the FMS}
+}
+%%�p���͈ȉ����g�p
+%\title{Style file for manuscripts of JSAI 20XX}
+
+\jaddress{関西学院大学総合政策研究科, 兵庫県三田市学園上ヶ原, ili53007@kwansei.ac.jp}
+
+\author{%
+   \jname{汪 永豪\first{}}
+   \ename{Wang Yonghao}
+\and
+   \jname{山田 孝子\second{}}
+   \ename{Takako Yamada}
+%\and
+%Given-name Surname\third{}%%�p���͍����g�p
+}
+
+\affiliate{
+\jname{\first{}関西学院大学大学院総合政策研究科}%
+\ename{Graduate School of Policy Studies, Kwansei Gakuin University}%
+\and
+\jname{\second{}関西学院大学総合政策学部メディア情報学科}
+\ename{Department of Applied Informatics, School of Policy Studies, Kwansei Gakuin University}
+%\and
+%\third{}Affiliation \#3 in English%%�p���͍����g�p
+}
+
+%%
+%\Vol{28}        %% <-- 28th�i�ύX���Ȃ��ł��������j
+%\session{0A0-00}%% <-- �u��ID�i�K�{)
+
+\begin{abstract}
+    With the globalization of the world economy, manufacturing companies must accept orders at lower prices than their competitors.
+As a result, achieving low-cost and high-quality production management has become increasingly important, posing a challenging issue that all manufacturers must overcome.
+To reduce costs, many companies have adopted Automated Guided Vehicles (AGVs) instead of human workers to transport parts between machines in a flexible manufacturing system (FMS).
+Additionally, since machines in an FMS are not always in operation, it is crucial to utilize their idle time effectively by assigning them varying tasks.
+This study aims to achieve simultaneous scheduling of both machines and AGVs, minimizing the completion time of existing tasks while making effective use of machine idle time to process additional parts. 
+\end{abstract}
+
+%\setcounter{page}{1}
+\def\Style{``jsaiac.sty''}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em%
+ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\def\JBibTeX{\leavevmode\lower .6ex\hbox{J}\kern-0.15em\BibTeX}
+\def\LaTeXe{\LaTeX\kern.15em2$_{\textstyle\varepsilon}$}
+
+\begin{document}
+\maketitle
+
+\section{はじめに}
+
+世界経済のグローバル化に伴い、製造業企業は他社より安い価格で注文を受ける必要がある.
+いかにして低コストと高品質な生産管理がより重要になり、製造業であれば誰でも乗り越えなければならない難しい問題である.
+コスト削減のために、多くな企業が人間作業員の代わりに、複積載搬送ロボット(AGV)を採用し、フレキシブルシステム生産で、部品を機械の間に運ぶ方法を採用しました.
+また、FMS生産には機械はいつも働いているわけではないので、その機械の待つ時間を活かせるために、ばらつきな仕事を機械にやらせることにしよう.
+本研究では機械とAGV両方同時スケジューリングを求める上に、現有な仕事を出来るだけ最短時間で完成させ、さらに、本来機械が遊んでいる時間を生かして、部品を加工するシステムを開発した.
+
+\section{実験用ジョブセット生成ルール設定}
+    企業のジョブセットデータは企業機密の故に、一般的に公開されない.
+本研究に使用しているジョブセットはすべて自動生成されたものだ.
+次の章には、種類三つ、それぞれ10000個のジョブセット生成ルールと符号定義を紹介する.
+
+    \begin{enumerate}
+    \item \label{item:setting} 符号定義と制約条件
+    
+    \textit{J} : ジョブの集合\\
+    \textit{P} : 作業の集合\\
+    \textit{M} : 加工機械の集合\\
+    $\textit{M}_{\textit{m}} \subseteq \textit{M}$\\
+    $t_{\textit{ij}}$ : ジョブi作業jの作業時間\\
+    $P_{\textit{ij}}$ : ジョブiの作業j\\
+    $\textit{M}(P_{\textit{ij}})$ : ジョブi作業jの作業機械番号\\
+    $\mu$ : 平均値\\
+    $\sigma$ : 標準偏差\\
+    $\sigma^2$ : 分散\\
+    
+    同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しない.\\
+
+    $before\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j-1)}}$ \\
+    $after\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j+1)}}$ \\
+
+    \item 正規分布
+    
+    ジョブセットのジョブ数平均値 : $\mu_{\textit{job}}$ = 5\\
+    ジョブセットのジョブ数分散 : $\sigma^2_{\textit{job}}$ = 1\\
+    ジョブiの作業数平均値 : $\mu_\textit{job(i)}$ = 5\\
+    ジョブiの作業数分散 : $\sigma^2_\textit{job(i)}$ = 1\\
+    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
+    ジョブセットの各操作時間平均値 : $\mu_{\textit{t}}$ = 15\\
+    ジョブセットの各操作時間分散 : $\sigma^2_{\textit{t}}$ = 3\\
+
+    \item 二谷正規分布
+    
+    一つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job1}}$ = 5\\
+    一つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job1}}$ = 1\\
+    二つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job2}}$ = 8\\
+    二つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job2}}$ = 1\\
+    一つ目のジョブiの作業数平均値 : $\mu_\textit{job1(i)}$ = 5\\
+    一つ目のジョブiの作業数分散 : $\sigma^2_\textit{job1(i)}$ = 1\\
+    二つ目のジョブiの作業数平均値 : $\mu_\textit{job2(i)}$ = 5\\
+    二つ目のジョブiの作業数分散 : $\sigma^2_\textit{job2(i)}$ = 1\\
+    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
+    一つ目のジョブセットの各操作時間平均値 : $\mu_{\textit{t1}}$ = 10\\
+    一つ目のジョブセットの各操作時間分散 : $\sigma^2_{\textit{t1}}$ = 1\\
+    二つ目のジョブセットの各操作時間平均値 : $\mu_{\textit{t2}}$ = 10\\
+    二つ目のジョブセットの各操作時間分散 : $\sigma^2_{\textit{t2}}$ = 1\\
+
+    \item 一様分布
+    
+    ジョブセットのジョブ数$\alpha_{\textit{job}}$ : $\alpha_{\textit{job}}$ =  \{3,4,\textellipsis,8,9\}\\
+    ジョブiの作業数 $\alpha_{\textit{job(i)}}$ : $\alpha_{\textit{job(i)}}$ = \{3,4,\textellipsis,6,7\}\\
+    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
+    ジョブi作業jの作業時間 : $t_{\textit{ij}}$ = \{10,11,\textellipsis,18,19\}\\
+    
+    \end{enumerate}
+
+\end{document}
