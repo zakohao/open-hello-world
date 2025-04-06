@@ -83,6 +83,43 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
         本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,
     機械の遊休時間を活用する余剰製品を提案するシステムの開発を行った.
 
+\section{符号定義}
+
+    $\textit{O}$ : すべての注文主からの注文の集合\\
+    $O_{\textit{i}}$ : 注文主\textit{i}からの注文\\
+    $\textit{O}_{\textit{i}} \subseteq \textit{O}$ , \textit{i} = \{1,2,3,\textellipsis\}\\
+    $\textit{OT}$ : すべての注文の納期\\
+    $OT_{\textit{i}}$ : 注文主\textit{i}からの注文の納期 , \textit{i} = \{1,2,3,\textellipsis\}\\
+    $\textit{OT} \geq OT_{\textit{i}}$\\
+    $O_{\textit{i}}S_{\textit{s}}$  : 注文主\textit{i}からの注文の第\textit{s}種製品がある , \textit{s} = \{1,2,3,\textellipsis\}\\
+    $n_{\textit{is}}$ : 注文主\textit{i}からの注文の第\textit{s}種製品の要求個数\\
+    $n_{\textit{s}}$ : すべての注文主からの注文の第\textit{s}種製品の要求個数\\
+    $n_{\textit{s}} = \sum_{i=1}^{\infty} n_{\textit{is}}$ \\
+    $\textit{N}$ : すべての製品の要求個数\\
+    $\textit{N} = \sum_{s=1}^{\infty} n_{\textit{s}}$\\
+    $S_{\textit{s}}Q_{\textit{q}}$  : 第\textit{s}種製品の第\textit{q}番目加工工程\\
+    $m_{\textit{sq}}$ : 第\textit{s}種製品の第\textit{q}番目加工工程の加工機械番号\\
+    $\textit{M}$ : 加工機械の集合\\
+    $\textit{m}_{\textit{m}}$ : 第\textit{m}台加工機械\\
+    $\textit{m}_{\textit{m}} \subseteq \textit{M}$ , \textit{m} = \{1,2,\textellipsis,9,10\}\\
+    $t_{\textit{sq}}$ : 第\textit{s}種製品の第\textit{q}番目加工工程の加工時間\\
+
+
+
+\section{モデル仮定}
+\begin{enumerate}
+    \item 注文はいろいろな注文主からくる。
+    \item 注文書ごとに1種類以上の製品がある。
+    \item 注文書ごとに製品種別\textit{s}ごとには納期、個数がある。
+    \item 工場は、納期\textit{T}に出荷する注文$O_{\textit{i}}$をまとめる。
+    \item 注文ごとの製品に応じて、使用する加工機械、加工時間と加工順番が予め設定される。
+    \item 工場は一つの納期内に注文を満たして製品を出荷できるよう、加工機械とAGVの最適なスケジューリング立つ。
+    \item 機械は作業途中で中退できない、割り込みできない。
+    \item ゼットタイムは考慮しない。
+    \item 加工工程はあらかじめに設定している順番通りに加工する。
+    \item 第\textit{s}種製品すべての加工工程を終える次第、加工終了。
+    \end{enumerate}
+
 \section{実験用ジョブセット生成ルール設定}
     企業のジョブセットデータは企業機密の故に、一般的に公開されない.
 本研究に使用しているジョブセットはすべて自動生成されたものだ.
@@ -91,16 +128,16 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     \begin{enumerate}
     \item \label{item:setting} 符号定義と制約条件
     
-    \textit{J} : ジョブの集合\\
-    \textit{P} : 作業の集合\\
-    \textit{M} : 加工機械の集合\\
-    $\textit{M}_{\textit{m}} \subseteq \textit{M}$\\
-    $t_{\textit{ij}}$ : ジョブi作業jの作業時間\\
-    $P_{\textit{ij}}$ : ジョブiの作業j\\
-    $\textit{M}(P_{\textit{ij}})$ : ジョブi作業jの作業機械番号\\
-    $\mu$ : 平均値\\
-    $\sigma$ : 標準偏差\\
-    $\sigma^2$ : 分散\\
+    %\textit{J} : ジョブの集合\\
+    %\textit{P} : 作業の集合\\
+    %\textit{M} : 加工機械の集合\\
+    %$\textit{M}_{\textit{m}} \subseteq \textit{M}$\\
+    %$t_{\textit{ij}}$ : ジョブi作業jの作業時間\\
+    %$P_{\textit{ij}}$ : ジョブiの作業j\\
+    %$\textit{M}(P_{\textit{ij}})$ : ジョブi作業jの作業機械番号\\
+    %$\mu$ : 平均値\\
+    %$\sigma$ : 標準偏差\\
+    %$\sigma^2$ : 分散\\
     
     同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しない.\\
 
@@ -121,8 +158,7 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     
     一つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job1}}$ = 5\\
     一つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job1}}$ = 1\\
-    二つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job2}}$ = 8\\
-    二つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job2}}$ = 1\\
+    二つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job2}}$ = 8\\    二つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job2}}$ = 1\\
     一つ目のジョブiの作業数平均値 : $\mu_\textit{job1(i)}$ = 5\\
     一つ目のジョブiの作業数分散 : $\sigma^2_\textit{job1(i)}$ = 1\\
     二つ目のジョブiの作業数平均値 : $\mu_\textit{job2(i)}$ = 5\\
