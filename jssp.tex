@@ -71,7 +71,8 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
 %コスト削減のために、多くな企業が人間作業員の代わりに、複積載搬送ロボット(AGV)を採用し、フレキシブルシステム生産で、部品を機械の間に運ぶ方法を採用しました.
 %また、FMS生産には機械はいつも働いているわけではないので、その機械の待つ時間を活かせるために、ばらつきな仕事を機械にやらせることにしよう.
 %本研究では機械とAGV両方同時スケジューリングを求める上に、現有な仕事を出来るだけ最短時間で完成させ、さらに、本来機械が遊んでいる時間を生かして、部品を加工するシステムを開発した.
-
+%%
+本研究でこれまで行ったことをまとめる
 \begin{enumerate}
     \item 実験用ジョブセットとして，製品種別ごとの加工機械の利用順番，利用時間の組み合わせデータの自動生成システムの作成
     \item 生成されたデータを用いた生産機械のスケジューリングを総当たり法で厳密解を求める最短生産スケジュール算出システムの作成
@@ -80,102 +81,81 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     \item 生産機械に加え複数台AGVを導入した生産スケジュールの最適化システムの作成
     \item 求められた生産スケジュールに基づく生産機械の遊休時間活用する余剰生産品提案システムの作成
     \end{enumerate}
-        本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,
-    機械の遊休時間を活用する余剰製品を提案するシステムの開発を行った.
+    以上を行ったうえで、本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,機械の遊休時間を活用する余剰製品を提案するシステムの開発に取り組む．
 
 \section{符号定義}
+\begin{align}
+    O &\text{: 工場が受領した注文書の集合} \nonumber\\
+    O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
+    OT &\text{: すべての注文書に対してもっとも遅い納期} \nonumber\\
+    OT_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
+    O_{i}S_{s} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
+    K_{is} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の価格} \nonumber\\
+    n_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文個数} \nonumber\\
+    n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
+    n_{s} &= \sum_{i=1}^{\infty} n_{is} \nonumber\\
+    N &\text{: すべての製品の合計注文個数} \nonumber\\
+    N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
+    S_{s}Q_{q} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
+    m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
+    M &\text{: 使用可能な加工機械の集合} \nonumber\\
+    m_{m} &\text{: 第$m$番の加工機械} \nonumber\\
+    t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber
+\end{align}
 
-    $\textit{O}$ : すべての注文主からの注文の集合\\
-    $O_{\textit{i}}$ : 注文主\textit{i}からの注文\\
-    $\textit{O}_{\textit{i}} \subseteq \textit{O}$ , \textit{i} = \{1,2,3,\textellipsis\}\\
-    $\textit{OT}$ : すべての注文の納期\\
-    $OT_{\textit{i}}$ : 注文主\textit{i}からの注文の納期 , \textit{i} = \{1,2,3,\textellipsis\}\\
-    $\textit{OT} \geq OT_{\textit{i}}$\\
-    $O_{\textit{i}}S_{\textit{s}}$  : 注文主\textit{i}からの注文の第\textit{s}種製品がある , \textit{s} = \{1,2,3,\textellipsis\}\\
-    $n_{\textit{is}}$ : 注文主\textit{i}からの注文の第\textit{s}種製品の要求個数\\
-    $n_{\textit{s}}$ : すべての注文主からの注文の第\textit{s}種製品の要求個数\\
-    $n_{\textit{s}} = \sum_{i=1}^{\infty} n_{\textit{is}}$ \\
-    $\textit{N}$ : すべての製品の要求個数\\
-    $\textit{N} = \sum_{s=1}^{\infty} n_{\textit{s}}$\\
-    $S_{\textit{s}}Q_{\textit{q}}$  : 第\textit{s}種製品の第\textit{q}番目加工工程\\
-    $m_{\textit{sq}}$ : 第\textit{s}種製品の第\textit{q}番目加工工程の加工機械番号\\
-    $\textit{M}$ : 加工機械の集合\\
-    $\textit{m}_{\textit{m}}$ : 第\textit{m}台加工機械\\
-    $\textit{m}_{\textit{m}} \subseteq \textit{M}$ , \textit{m} = \{1,2,\textellipsis,9,10\}\\
-    $t_{\textit{sq}}$ : 第\textit{s}種製品の第\textit{q}番目加工工程の加工時間\\
-
-
-
-\section{モデル仮定}
+\section{モデルの記述}
+\subsection{モデル仮定}
+本モデルでは受注生産を行う工場の製造工程をモデル化する．
 \begin{enumerate}
-    \item 注文はいろいろな注文主からくる。
-    \item 注文書ごとに1種類以上の製品がある。
-    \item 注文書ごとに製品種別\textit{s}ごとには納期、個数がある。
-    \item 工場は、納期\textit{T}に出荷する注文$O_{\textit{i}}$をまとめる。
-    \item 注文ごとの製品に応じて、使用する加工機械、加工時間と加工順番が予め設定される。
-    \item 工場は一つの納期内に注文を満たして製品を出荷できるよう、加工機械とAGVの最適なスケジューリング立つ。
-    \item 機械は作業途中で中退できない、割り込みできない。
-    \item ゼットタイムは考慮しない。
-    \item 加工工程はあらかじめに設定している順番通りに加工する。
-    \item 第\textit{s}種製品すべての加工工程を終える次第、加工終了。
+    \item 注文票はさまざまな注文主からくる。
+    \item 各注文書には製品$S$の種別が1種類が記載されている。注文する製品種別が異なる製品は異なる注文書で発注される.
+    \item 注文書ごとに価格、納期、個数がある。
+    \item 工場は、出荷する出荷日（納期）が同じ注文書$O_{\textit{i}}$をまとめ、これを注文書セットとする。
+    \item 製造する製品種別に応じて、使用する加工機械、加工時間とその加工機械の使用順が予め与えられる。
+    \item 工場は注文書セットで同一出荷として受注した注文書を納期日までに出荷できるよう、加工機械とAGVの最適なスケジューリングを行う。
+    \item スケジューリングの結果得られた注文書セットに含まれる受注した製品を定められた個数すべて出荷できる日を最速出荷日とする．また最速出荷日は早いほどよいとする．
+    \item 機械は注文書に記載された製品種別で指定された注文個数をすべて加工が終了するまで，作業を中途で終えたり，途中で他の製造作業を行うような割り込みはできないものとする。
+    \item 製品種別が異なるための機械のセットアップタイムは考慮しない。
+    \item 機械は製品種別ごとに定まる順番の通りに機械を使用して加工作業を行わなければならない。
+    \item 出荷が等しい注文書，すなわちある注文書セットがすべて出荷可能とればその注文書セットでの加工作業は終了となる。
     \end{enumerate}
 
-\section{実験用ジョブセット生成ルール設定}
-    企業のジョブセットデータは企業機密の故に、一般的に公開されない.
-本研究に使用しているジョブセットはすべて自動生成されたものだ.
-次の章には、種類三つ、それぞれ10000個のジョブセット生成ルールと符号定義を紹介する.
+\subsection{実験用ジョブセット生成}
+一般的に企業への注文書の具体例は外部には公開されない．そのため本研究では注文書セットを予め様々な確率的に生成する計算機実験用の自動生成システムを作成し，実験用の注文書セットを作成する．
+本節ではこの自動生成の手続きとそれにより作成した注文書セットについて述べる．
+\subsection{記号定義}
+\begin{align}
+    \mu_{odder} &\text{: 納期内の総オーダー数の平均値} \nonumber\\
+    %\mu_{odder} &\text{= 10} \nonumber\\
+    \sigma^2_{odder} &\text{: 納期内の総オーダー数の分散} \nonumber\\
+    %\sigma^2_{odder} &\text{= 2} \nonumber\\
+    \mu_{lot} &\text{: 各オーダーに注文された製品のロット数の平均値} \nonumber\\
+    %\mu_{lot} &\text{= 3} \nonumber\\
+    \sigma^2_{lot} &\text{: 各オーダーに注文された製品のロット数の分散} \nonumber\\
+    %\sigma^2_{lot} &\text{= 1} \nonumber\\
+\end{align}
 
-    \begin{enumerate}
-    \item \label{item:setting} 符号定義と制約条件
-    
-    %\textit{J} : ジョブの集合\\
-    %\textit{P} : 作業の集合\\
-    %\textit{M} : 加工機械の集合\\
-    %$\textit{M}_{\textit{m}} \subseteq \textit{M}$\\
-    %$t_{\textit{ij}}$ : ジョブi作業jの作業時間\\
-    %$P_{\textit{ij}}$ : ジョブiの作業j\\
-    %$\textit{M}(P_{\textit{ij}})$ : ジョブi作業jの作業機械番号\\
-    %$\mu$ : 平均値\\
-    %$\sigma$ : 標準偏差\\
-    %$\sigma^2$ : 分散\\
-    
+\subsection{生成ルール}
+\begin{enumerate}
+    \item 多層回路基盤を作る工場等、同じ工程が何回も加工する加工工程に向けて、生成する。
+    \item 正規分布を用いてオーダー数$O_{\textit{i}}$を生成($\mu_{\textit{odder}}$ = 10、$\sigma^2_{\textit{odder}}$ = 2)。
+    \item 負の値やゼロを除外し、サンプルからランダムに1つの整数を選んで、今回のシミュレーションの注文数とする。
+    \item 各注文は最大で6種類の製品を含む。
+    \item 各種別の製品について、固定されている制作工程がある、工程間は転倒しない。
+    \item 各製品のロット数は正規分布($\mu_{\textit{lot}}$ = 3、$\sigma^2_{\textit{lot}}$ = 1)から生成し、負またはゼロを除外。
+    \item 各製品は注文内で0.7の確率で含まれるによる制御。
+    \item 各製品の総数量は、すべての注文におけるその製品のロット数合計に10を掛けて算出。
+    \item $m_{\textit{1}}$から$m_{\textit{13}}$まで13個それぞれ役目が重ねない加工機械がある。
+    \item 各加工工程の操作時間 $T_{\textit{J}}$:一部は製品数量に単位時間を掛けて決定、一部は固定時間。
+    \item 各製品種別に対し、加工工程と対応する操作時間の組み合わせを記録する。
+    \end{enumerate}
+
     同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しない.\\
 
-    $before\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j-1)}}$ \\
-    $after\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j+1)}}$ \\
-
-    \item 正規分布
-    
-    ジョブセットのジョブ数平均値 : $\mu_{\textit{job}}$ = 5\\
-    ジョブセットのジョブ数分散 : $\sigma^2_{\textit{job}}$ = 1\\
-    ジョブiの作業数平均値 : $\mu_\textit{job(i)}$ = 5\\
-    ジョブiの作業数分散 : $\sigma^2_\textit{job(i)}$ = 1\\
-    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
-    ジョブセットの各操作時間平均値 : $\mu_{\textit{t}}$ = 15\\
-    ジョブセットの各操作時間分散 : $\sigma^2_{\textit{t}}$ = 3\\
-
-    \item 二谷正規分布
-    
-    一つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job1}}$ = 5\\
-    一つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job1}}$ = 1\\
-    二つ目のジョブセットのジョブ数平均値 : $\mu_{\textit{job2}}$ = 8\\    二つ目のジョブセットのジョブ数分散 : $\sigma^2_{\textit{job2}}$ = 1\\
-    一つ目のジョブiの作業数平均値 : $\mu_\textit{job1(i)}$ = 5\\
-    一つ目のジョブiの作業数分散 : $\sigma^2_\textit{job1(i)}$ = 1\\
-    二つ目のジョブiの作業数平均値 : $\mu_\textit{job2(i)}$ = 5\\
-    二つ目のジョブiの作業数分散 : $\sigma^2_\textit{job2(i)}$ = 1\\
-    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
-    一つ目のジョブセットの各操作時間平均値 : $\mu_{\textit{t1}}$ = 10\\
-    一つ目のジョブセットの各操作時間分散 : $\sigma^2_{\textit{t1}}$ = 1\\
-    二つ目のジョブセットの各操作時間平均値 : $\mu_{\textit{t2}}$ = 10\\
-    二つ目のジョブセットの各操作時間分散 : $\sigma^2_{\textit{t2}}$ = 1\\
-
-    \item 一様分布
-    
-    ジョブセットのジョブ数$\alpha_{\textit{job}}$ : $\alpha_{\textit{job}}$ =  \{3,4,\textellipsis,8,9\}\\
-    ジョブiの作業数 $\alpha_{\textit{job(i)}}$ : $\alpha_{\textit{job(i)}}$ = \{3,4,\textellipsis,6,7\}\\
-    $\textit{M}_{\textit{m}} \subseteq \textit{M}$ , m = \{1,2,3,4\}\\
-    ジョブi作業jの作業時間 : $t_{\textit{ij}}$ = \{10,11,\textellipsis,18,19\}\\
-    
+\begin{enumerate}
+    \item $before\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j-1)}}$ \\
+    \item $after\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j+1)}}$ \\
     \end{enumerate}
+
 
 \end{document}
