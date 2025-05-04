@@ -1,9 +1,10 @@
-\documentclass[twocolumn]{jarticle}
+%\documentclass[twocolumn]{jarticle}
+\documentclass{jarticle}
 
 \usepackage{jsaiac}
 \usepackage{graphicx}
 \usepackage{amsmath}
-
+\allowdisplaybreaks[4] 
 
 %%
 \title{
@@ -82,28 +83,31 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     \item 求められた生産スケジュールに基づく生産機械の遊休時間活用する余剰生産品提案システムの作成
     \end{enumerate}
     以上を行ったうえで、本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,機械の遊休時間を活用する余剰製品を提案するシステムの開発に取り組む．
+    このような問題は、JSSP(Job Shop Scheduling Problem)問題と言います。
 
-\section{符号定義}
-\begin{align}
-    O &\text{: 工場が受領した注文書の集合} \nonumber\\
-    O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
-    OT &\text{: すべての注文書に対してもっとも遅い納期} \nonumber\\
-    OT_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
-    O_{i}S_{s} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
-    K_{is} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の価格} \nonumber\\
-    n_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文個数} \nonumber\\
-    n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
-    n_{s} &= \sum_{i=1}^{\infty} n_{is} \nonumber\\
-    N &\text{: すべての製品の合計注文個数} \nonumber\\
-    N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
-    S_{s}Q_{q} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
-    m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
-    M &\text{: 使用可能な加工機械の集合} \nonumber\\
-    m_{m} &\text{: 第$m$番の加工機械} \nonumber\\
-    t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber
-\end{align}
+%\section{符号定義}
+%\begin{align}
+    %O &\text{: 工場が受領した注文書の集合} \nonumber\\
+    %O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
+    %OT &\text{: すべての注文書に対してもっとも遅い納期} \nonumber\\
+    %OT_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
+    %O_{i}S_{s} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
+    %K_{is} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の価格} \nonumber\\
+    %n_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文個数} \nonumber\\
+    %n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
+    %n_{s} &= \sum_{i=1}^{\infty} n_{is} \nonumber\\
+    %N &\text{: すべての製品の合計注文個数} \nonumber\\
+    %N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
+    %S_{s}Q_{q} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
+    %m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
+    %M &\text{: 使用可能な加工機械の集合} \nonumber\\
+    %m_{m} &\text{: 第$m$番の加工機械} \nonumber\\
+    %t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber\\
+    %ht_{l_{1}l_{2}} &\text{: AGVが$l_{1}$から$l_{2}$までの搬送時間} \nonumber\\
+    %l_{1},l_{2} &\subseteq (L/U,m_{1},\cdots,m_{m})  \nonumber
+%\end{align}
 
-\section{モデルの記述}
+\section{モデル}
 \subsection{モデル仮定}
 本モデルでは受注生産を行う工場の製造工程をモデル化する．
 \begin{enumerate}
@@ -119,6 +123,42 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     \item 機械は製品種別ごとに定まる順番の通りに機械を使用して加工作業を行わなければならない。
     \item 出荷が等しい注文書，すなわちある注文書セットがすべて出荷可能とればその注文書セットでの加工作業は終了となる。
     \end{enumerate}
+
+\subsection{受注}
+製品を製造する工場をここでは考える．一定の期間に工場には様々な顧客から注文票が到着する．ある期間中に到着した注文票を$0$とあらわす．この注文票の集合は$O_1$から$O_i$までの$i$枚の注文票からなる．各注文票$O_i$には，注文する製品名$S_s$，納期$d_i$，各製品名注文ロット数$lnS_{is}$,注文する製品の単価$price_s$が記載されている．注文票に記載できる製品は１種類で，複数の製品を発注する場合には，注文票を分けることになっている．
+工場は当該期間に受注した注文票で最も納期の早い注文票の納期を$d_{min}$として，その期日に間に合うように，受注した製品の製造計画を立てる．
+\subsection{製造}
+製造計画の作成するためには，まず製品種別$S_s$ごとに，加工工程として使用する製造機械の順番が決まっている．製造機械を使用する時間は製造する個数による．そのため製品$S_{s}$を製造するための$q$番目の加工工程を$f_{sq}$ としてあらわし，そこで使われる製造機械番号を$m_{sq}$,加工時間を$t_{sq}$で表す．
+
+\subsection{仕掛品搬送}
+加工工程で、異なる製造機械の間で仕掛品搬送にAGV(Automated Guided Vehicle)を用いる場合，製品$S_s$の第$f_{sq}$工程と第$f_{s,(q+1)}$工程間を$AGV_{j}$で搬送するとき，その輸送時間を$ut_{j,s,q,(q+1)}$で表す．
+以上を記号として整理すると，以下のようになる．
+
+\section{符号定義}
+\begin{align}
+    O &\text{: 工場が受領した注文書の集合} \nonumber\\
+    O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
+    d_{min} &\text{: 受注した注文票で最も納期の早い注文票の納期} \nonumber\\
+    d_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
+    S{s} &\text{: 製品$S$の種別番号$s$} \nonumber\\
+    S{is} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
+    price_{s} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の単価} \nonumber\\
+    lnS_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文ロット数} \nonumber\\
+    n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
+    n_{s} &= 10\sum_{i=1}^{\infty} lnS_{is} \nonumber\\
+    N &\text{: すべての製品の合計注文個数} \nonumber\\
+    N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
+    f_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
+    m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
+    M &\text{: 使用可能な加工機械の集合} \nonumber\\
+    m_{m} &\text{: 第$m$番目の加工機械} \nonumber\\
+    t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber\\
+    l_{1},l_{2} &\subseteq (L/U,m_{1},\cdots,m_{m})  \nonumber\\
+    l_{1}& \ne l_{2} \nonumber\\
+    AGV_{j} & \text{: 第$j$番目のAGV} \nonumber\\
+    ht_{j,l_{1},l_{2}} &\text{: $AGV_{j}$が$l_{1}$から$l_{2}$までの搬送時間} \nonumber\\
+    ut_{j,s,q,(q+1)} &\text{: $AGV_{j}$が製品$s$の第$q$工程と第$q+1$工程間の輸送時間} \nonumber
+\end{align}
 
 \subsection{実験用ジョブセット生成}
 一般的に企業への注文書の具体例は外部には公開されない．そのため本研究では注文書セットを予め様々な確率的に生成する計算機実験用の自動生成システムを作成し，実験用の注文書セットを作成する．
@@ -138,24 +178,81 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
 \subsection{生成ルール}
 \begin{enumerate}
     \item 多層回路基盤を作る工場等、同じ工程が何回も加工する加工工程に向けて、生成する。
-    \item 正規分布を用いてオーダー数$O_{\textit{i}}$を生成($\mu_{\textit{odder}}$ = 10、$\sigma^2_{\textit{odder}}$ = 2)。
+    \item 正規分布を用いてオーダー数$O_{i}$を生成($\mu_{odder}$ = 10、$\sigma^2_{odder}$ = 2)。
     \item 負の値やゼロを除外し、サンプルからランダムに1つの整数を選んで、今回のシミュレーションの注文数とする。
     \item 各注文は最大で6種類の製品を含む。
     \item 各種別の製品について、固定されている制作工程がある、工程間は転倒しない。
-    \item 各製品のロット数は正規分布($\mu_{\textit{lot}}$ = 3、$\sigma^2_{\textit{lot}}$ = 1)から生成し、負またはゼロを除外。
+    \item 各製品のロット数は正規分布($\mu_{lot}$ = 3、$\sigma^2_{lot}$ = 1)から生成し、負またはゼロを除外。
     \item 各製品は注文内で0.7の確率で含まれるによる制御。
     \item 各製品の総数量は、すべての注文におけるその製品のロット数合計に10を掛けて算出。
-    \item $m_{\textit{1}}$から$m_{\textit{13}}$まで13個それぞれ役目が重ねない加工機械がある。
-    \item 各加工工程の操作時間 $T_{\textit{J}}$:一部は製品数量に単位時間を掛けて決定、一部は固定時間。
+    \item $m_{1}$から$m_{13}$まで13個それぞれ役目が重ねない加工機械がある。
+    \item 各加工工程の操作時間 $T_{J}$:一部は製品数量に単位時間を掛けて決定、一部は固定時間。
     \item 各製品種別に対し、加工工程と対応する操作時間の組み合わせを記録する。
     \end{enumerate}
 
     同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しない.\\
 
 \begin{enumerate}
-    \item $before\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j-1)}}$ \\
-    \item $after\{\textit{M}(P_{\textit{ij}})\}$ $\neq$ \textit{M}$P_{\textit{i(j+1)}}$ \\
+    \item $before\{m_{sq}\} \neq m_{sq}$ \\
+    \item $after\{m_{sq}\} \neq m_{sq}$ \\
     \end{enumerate}
 
+\subsection{レイアウト、AGV搬送設定}
+\begin{enumerate}
+    \item 工場にはL/U(Lording/Unlording)、機械($m_{1} \sim m_{m}$)がある。
+    \item 各AGVはL/Uから出発、各機械の間を部品を搬送する。
+    \item 製品の最後の一つ加工操作が終わった後に、AGVは最後の一つの加工操作を務めた機械のところで、部品を受取、L/Uまで搬送する。
+    \item 注文書に書かれているすべての製品がL/Uまで搬送したら、加工終了し総操作時間加算する。
+    \item AGVは一回限りに一種類の部品を搬送します、容量は考慮しません。
+    \item $AGV_j$がL/Uから各機械への搬送時間は同じく$ht_{j,L/U,m_{m}}=30$。
+    \item AGVが機械の間での搬送時間は、相隣の機械は同じく20、機械の間に挟まれた機械の個数分かける10加算する。
+    \item 一つの搬送作業に対して、AGV1台で搬送する。
+    \item 一つの搬送作業に対して、一回しかしない。
+    \end{enumerate}
+
+\section{提案手法}
+本研究では、JSSP問題に対して、GAを用いた探索手法を提案する。また、こういう加工順序が厳格に定められている問題には、PPS(Precedence Preservative Crossover)という交差手法を採用します。
+\subsection{PPS交差法}
+PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問題において有効な交差手法の一つである。本手法は、親個体の遺伝子情報を組み合わせる際に、工程間の優先順序を保持しつつ、新たな子個体を生成することを目的としている。
+\begin{enumerate}
+    \item 2つの親染色体(Parent1, Parent2)を選択する。
+    \item Parent1から順序情報を、Parent2から操作集合の構成を主に利用する。
+    \item 子個体の染色体を初期化する。
+    \item Parent1の順序に従い、Parent2に存在する操作を逐次選びながら、子個体に挿入する。ただし、すでに挿入された操作との順序制約を満たすように注意深く挿入される。
+    \item すべての操作が挿入されるまで繰り返す。
+    \end{enumerate}
+数式：
+\begin{itemize}
+    \item $S = \{S_1, S_2, \dots, S_s\}$：製品種類の集合（$s$は製品種類数）
+    \item 各製品$S_s$は$q$個の加工操作を持ち、$f_s = \{f_{s1}, f_{s2}, \dots, f_{sq}\}$とする。
+    \item 親個体は操作列として表現される：$P_1 = [o_1^1, o_2^1, \dots, o_m^1]$, $P_2 = [o_1^2, o_2^2, \dots, o_m^2]$
+    \item 子個体$C$を空列として初期化：$C \leftarrow [\ ]$
+    \end{itemize}
+
+\begin{enumerate}
+    \item $i \leftarrow 1$
+    \item \textbf{while} $|C| < m$ \textbf{do}:
+    \begin{enumerate}
+        \item $o \leftarrow P_1[i]$ (親1の$i$番目の操作)
+        \item \textbf{if} $o \in P_2$ かつ $\text{precedence\_satisfied}(o, C) = \text{True}$ \textbf{then}:
+        \begin{itemize}
+        \item $C \leftarrow C \cup \{o\}$ (子供に操作を追加)
+        \item $P_2 \leftarrow P_2 \setminus \{o\}$
+        \end{itemize}
+        \item $i \leftarrow i + 1$
+    \end{enumerate}
+    \item \textbf{return} $C$
+    \end{enumerate}
+
+ここで、precedence\_satisfied関数は以下で定義される：
+
+\[
+\text{precedence\_satisfied}(f_{sq}, C) =
+\begin{cases}
+    \text{True} & \text{if } f_{s,(q-1)} \in C \text{ または } q = 1 \\
+    \text{False} & \text{otherwise}
+\end{cases}
+\]
+    
 
 \end{document}
