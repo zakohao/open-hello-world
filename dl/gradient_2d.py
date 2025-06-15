@@ -68,4 +68,3 @@ if __name__ == '__main__':
     plt.grid()
     plt.draw()
     plt.show()
-    plt.show(block=True)
