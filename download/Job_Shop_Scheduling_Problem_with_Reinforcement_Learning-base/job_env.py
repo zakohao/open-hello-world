@@ -12,9 +12,9 @@ import pandas as pd
 import random
 
 class job_shop_env():
-    path = './data/'
-    #expert_job = pd.read_csv(path + 'process_time_matrix.csv',header=None).drop([0]).values
-    expert_job = pd.read_csv('D:\\vscode\\open-hello-world\\download\\Job_Shop_Scheduling_Problem_with_Reinforcement_Learning-base\\data\\process_time_matrix.csv',header=None).drop([0]).values
+    path = 'D:\\vscode\\open-hello-world\\download\\Job_Shop_Scheduling_Problem_with_Reinforcement_Learning-base\\data\\'
+    expert_job = pd.read_csv(path + 'process_time_matrix.csv',header=None).drop([0]).values
+    #expert_job = pd.read_csv('D:\\vscode\\open-hello-world\\download\\Job_Shop_Scheduling_Problem_with_Reinforcement_Learning-base\\data\\process_time_matrix.csv',header=None).drop([0]).values
     job = pd.read_csv(path + 'work_order.csv',header=None).values
     
     def __init__(self):
