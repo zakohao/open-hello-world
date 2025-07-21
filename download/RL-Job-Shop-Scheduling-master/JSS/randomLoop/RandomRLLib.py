@@ -13,7 +13,7 @@ from ray.rllib.utils.typing import TrainerConfigDict
 from ray.util.iter import LocalIterator
 
 DEFAULT_CONFIG = with_common_config({})
-
+哦
 
 class RandomLegalPolicy(Policy):
     """Just pick a randomLoop legal action"""
