@@ -1,267 +1,212 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import matplotlib.pyplot as plt
 from collections import deque
 
-# ====== 环境类，带限制条件和甘特图数据记录 ======
+# Hyperparameters
+EPISODES = 300
+GAMMA = 0.95
+LR = 0.001
+EPSILON_DECAY = 0.995
+MIN_EPSILON = 0.01
+BATCH_SIZE = 64
+MEMORY_SIZE = 10000
+
 class JSSPEnv:
-    def __init__(self, processing_times, machine_assignments):
-        self.processing_times = processing_times
+    def __init__(self, machine_assignments, processing_times):
         self.machine_assignments = machine_assignments
-        self.num_jobs = len(processing_times)
-        self.num_machines = max(max(m) for m in machine_assignments) + 1
+        self.processing_times = processing_times
+        self.num_jobs, self.num_machines = machine_assignments.shape
+        
+        # 获取所有机器ID并创建映射
+        self.all_machines = np.unique(machine_assignments)
+        self.machine_to_index = {machine: idx for idx, machine in enumerate(self.all_machines)}
+        self.index_to_machine = {idx: machine for idx, machine in enumerate(self.all_machines)}
+        
         self.reset()
-
+    
     def reset(self):
-        self.current_time = 0
-        self.job_step = [0 for _ in range(self.num_jobs)]             # 每个job当前执行的工序索引
-        self.done_ops = [[False]*len(job) for job in self.processing_times]  # 工序完成标记
-        self.machine_available_time = [0 for _ in range(self.num_machines)] # 机器空闲时间
-        self.job_available_time = [0 for _ in range(self.num_jobs)]          # 任务可执行时间（上一工序完成时间）
-        self.schedule = []          # 甘特图数据： [{'job': , 'step': , 'machine': , 'start': , 'end': }, ...]
+        self.current_step = [0] * self.num_jobs
+        self.time_table = [0] * len(self.all_machines)  # 为每个机器创建时间表
+        self.job_end_times = [0] * self.num_jobs
+        self.done = False
+        self.schedule = []
         return self._get_state()
-
+    
     def _get_state(self):
         state = []
-        for j in range(self.num_jobs):
-            step = self.job_step[j]
-            if step < len(self.processing_times[j]):
-                state.append(self.job_available_time[j])
-                state.append(self.machine_available_time[self.machine_assignments[j][step]])
-                state.append(self.processing_times[j][step])
+        for job in range(self.num_jobs):
+            op = self.current_step[job]
+            if op < self.num_machines:
+                machine = self.machine_assignments[job, op]
+                proc_time = self.processing_times[job, op]
+                state.append([machine, proc_time])
             else:
-                state.extend([0, 0, 0])
-        return np.array(state, dtype=np.float32)
-
-    def _get_valid_actions(self):
-        valid_actions = []
-        for j in range(self.num_jobs):
-            step = self.job_step[j]
-            if step >= len(self.processing_times[j]):
-                continue  # 工序全部完成
-            if self.done_ops[j][step]:
-                continue  # 当前工序已完成
-            # 这里可加入机器忙碌判断，训练时动作选择时过滤非法动作即可
-            valid_actions.append(j)
-        return valid_actions
-
+                state.append([0, 0])
+        return np.array(state).flatten()
+    
     def step(self, action):
-        j = action
-        step = self.job_step[j]
-
-        # 违反顺序或重复操作判罚
-        if step >= len(self.processing_times[j]) or self.done_ops[j][step]:
-            return self._get_state(), -10, False, {}
-
-        machine = self.machine_assignments[j][step]
-        proc_time = self.processing_times[j][step]
-
-        # 当前作业与机器的最早可用时间，保证加工不重叠且顺序执行
-        start_time = max(self.job_available_time[j], self.machine_available_time[machine])
+        job = action
+        if self.done or self.current_step[job] >= self.num_machines:
+            return self._get_state(), -10, self.done, []
+        
+        op = self.current_step[job]
+        machine_id = self.machine_assignments[job, op]
+        machine_idx = self.machine_to_index[machine_id]
+        proc_time = self.processing_times[job, op]
+        
+        start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
+        
+        self.job_end_times[job] = end_time
+        self.time_table[machine_idx] = end_time
+        self.schedule.append((job, op, machine_id, start_time, proc_time))
+        
+        self.current_step[job] += 1
+        self.done = all(step >= self.num_machines for step in self.current_step)
+        
+        reward = -end_time if self.done else 0
+        return self._get_state(), reward, self.done, self.schedule
 
-        # 更新状态
-        self.machine_available_time[machine] = end_time
-        self.job_available_time[j] = end_time
-        self.done_ops[j][step] = True
-        self.job_step[j] += 1
-
-        # 记录甘特图信息
-        self.schedule.append({
-            'job': j,
-            'step': step,
-            'machine': machine,
-            'start': start_time,
-            'end': end_time
-        })
-
-        done = all(self.job_step[j] >= len(self.processing_times[j]) for j in range(self.num_jobs))
-        reward = -max(self.machine_available_time) if done else -1
-
-        return self._get_state(), reward, done, {}
-
-    def get_makespan(self):
-        return max(self.machine_available_time)
-
-    def render_gantt(self):
-        fig, ax = plt.subplots(figsize=(12, 6))
-        colors = plt.cm.get_cmap('tab20', self.num_jobs)
-
-        for task in self.schedule:
-            ax.barh(
-                y=f"Machine {task['machine']}",
-                width=task['end'] - task['start'],
-                left=task['start'],
-                height=0.4,
-                color=colors(task['job']),
-                edgecolor='black'
-            )
-            ax.text(
-                x=task['start'] + 0.1,
-                y=f"Machine {task['machine']}",
-                s=f"J{task['job']}O{task['step']}",
-                va='center',
-                ha='left',
-                fontsize=8,
-                color='black'
-            )
-
-        ax.set_xlabel("Time")
-        ax.set_ylabel("Machines")
-        ax.set_title("JSSP Final Schedule Gantt Chart")
-        plt.tight_layout()
-        plt.show()
-
-# ====== DQN网络 ======
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
-        self.net = nn.Sequential(
+        self.fc = nn.Sequential(
             nn.Linear(input_dim, 128),
-            nn.ReLU(),
-            nn.Linear(128, 128),
             nn.ReLU(),
             nn.Linear(128, output_dim)
         )
-
+    
     def forward(self, x):
-        return self.net(x)
+        return self.fc(x)
 
-# ====== 训练函数 ======
-def train_dqn(env, episodes=300):
-    input_dim = len(env._get_state())
-    output_dim = env.num_jobs
-    policy_net = DQN(input_dim, output_dim)
-    target_net = DQN(input_dim, output_dim)
-    target_net.load_state_dict(policy_net.state_dict())
+def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart"):
+    fig, ax = plt.subplots(figsize=(12, 8))
+    color_map = plt.colormaps.get_cmap("tab20").resampled(num_jobs)
+    
+    # 创建机器ID到y轴位置的映射
+    machine_to_ypos = {machine: idx for idx, machine in enumerate(sorted(all_machines))}
+    
+    for job_id in range(num_jobs):
+        job_tasks = [t for t in schedule if t[0] == job_id]
+        for task in job_tasks:
+            job_id, op_index, machine_id, start, duration = task
+            label = f"J{job_id+1}-P{op_index+1}"
+            ypos = machine_to_ypos[machine_id]
+            ax.barh(ypos, duration, left=start, height=0.6,
+                    color=color_map(job_id), edgecolor='black')
+            ax.text(start + duration / 2, ypos, label,
+                    va='center', ha='center', color='black', fontsize=8)
+    
+    ax.set_xlabel("Time")
+    ax.set_ylabel("Machine")
+    ax.set_title(title)
+    
+    # 设置y轴刻度和标签
+    sorted_machines = sorted(all_machines)
+    ax.set_yticks(range(len(sorted_machines)))
+    ax.set_yticklabels([f"M{m}" for m in sorted_machines])
+    
+    ax.grid(True, linestyle='--', alpha=0.7)
+    plt.tight_layout()
+    plt.show()
 
-    optimizer = optim.Adam(policy_net.parameters(), lr=0.001)
-    memory = deque(maxlen=10000)
-    batch_size = 64
-    gamma = 0.99
+def train(machine_assignments, processing_times):
+    env = JSSPEnv(machine_assignments, processing_times)
+    state_dim = len(env.reset())
+    action_dim = env.num_jobs  # 动作空间大小等于作业数
+    
+    model = DQN(state_dim, action_dim)
+    optimizer = optim.Adam(model.parameters(), lr=LR)
+    criterion = nn.MSELoss()
+    memory = deque(maxlen=MEMORY_SIZE)
     epsilon = 1.0
-    epsilon_decay = 0.995
-    epsilon_min = 0.1
-    target_update_freq = 10
-
-    rewards_all = []
-    makespans_all = []
-
-    for episode in range(episodes):
+    
+    best_makespan = float('inf')
+    best_schedule = None
+    makespans = []
+    
+    for ep in range(EPISODES):
         state = env.reset()
-        done = False
+        state = torch.FloatTensor(state)
         total_reward = 0
-
+        done = False
+        
         while not done:
-            valid_actions = env._get_valid_actions()
-
             if random.random() < epsilon:
-                action = random.choice(valid_actions)
+                action = random.randint(0, action_dim - 1)
             else:
                 with torch.no_grad():
-                    q_values = policy_net(torch.FloatTensor(state))
-                    sorted_actions = q_values.argsort(descending=True)
-                    # 选择合法动作中q值最高的
-                    for a in sorted_actions:
-                        if a.item() in valid_actions:
-                            action = a.item()
-                            break
-
-            next_state, reward, done, _ = env.step(action)
-            memory.append((state, action, reward, next_state, done))
-            state = next_state
+                    q_values = model(state)
+                    action = q_values.argmax().item()
+            
+            next_state, reward, done, schedule = env.step(action)
+            next_state_tensor = torch.FloatTensor(next_state)
+            memory.append((state, action, reward, next_state_tensor, done))
+            state = next_state_tensor
             total_reward += reward
-
-            if len(memory) >= batch_size:
-                batch = random.sample(memory, batch_size)
+            
+            if done:
+                makespan = max(env.job_end_times)
+                makespans.append(makespan)
+                if makespan < best_makespan:
+                    best_makespan = makespan
+                    best_schedule = schedule.copy()
+            
+            if len(memory) >= BATCH_SIZE:
+                batch = random.sample(memory, BATCH_SIZE)
                 states, actions, rewards, next_states, dones = zip(*batch)
-                states = torch.FloatTensor(states)
+                
+                states = torch.stack(states)
                 actions = torch.LongTensor(actions).unsqueeze(1)
                 rewards = torch.FloatTensor(rewards).unsqueeze(1)
-                next_states = torch.FloatTensor(next_states)
+                next_states = torch.stack(next_states)
                 dones = torch.BoolTensor(dones).unsqueeze(1)
-
-                q_values = policy_net(states).gather(1, actions)
-                q_next = target_net(next_states).max(1)[0].detach().unsqueeze(1)
-                q_target = rewards + gamma * q_next * (~dones)
-
-                loss = nn.MSELoss()(q_values, q_target)
+                
+                current_q = model(states).gather(1, actions)
+                next_q = model(next_states).max(1)[0].unsqueeze(1)
+                target_q = rewards + GAMMA * next_q * (~dones)
+                
+                loss = criterion(current_q, target_q.detach())
                 optimizer.zero_grad()
                 loss.backward()
                 optimizer.step()
-
-        rewards_all.append(total_reward)
-        makespan = env.get_makespan()
-        makespans_all.append(makespan)
-
-        if epsilon > epsilon_min:
-            epsilon *= epsilon_decay
-
-        if episode % target_update_freq == 0:
-            target_net.load_state_dict(policy_net.state_dict())
-
-        print(f"Episode {episode}: Total Reward={total_reward:.2f}, Makespan={makespan}")
-
-    torch.save(policy_net.state_dict(), 'jssp_dqn_model.pt')
-    print("\n模型保存至 jssp_dqn_model.pt")
-
-    # 训练过程makespan曲线
-    plt.figure(figsize=(10,4))
-    plt.plot(makespans_all)
-    plt.xlabel("Episode")
-    plt.ylabel("Makespan")
-    plt.title("Makespan over Episodes")
+        
+        epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
+        print(f"Episode {ep+1}: Reward={total_reward}, Makespan={makespan}")
+    
+    # Plot final result
+    print(f"Best makespan: {best_makespan}")
+    plot_gantt_chart(best_schedule, env.num_jobs, env.all_machines)
+    plt.figure()
+    plt.plot(makespans)
+    plt.xlabel('Episode')
+    plt.ylabel('Makespan')
+    plt.title('Training Progress')
     plt.grid(True)
     plt.show()
 
-    # 最终甘特图
-    env.render_gantt()
-
-    return policy_net, rewards_all, makespans_all
-
-# ====== 评估函数 ======
-def evaluate(env, model_path='jssp_dqn_model.pt'):
-    input_dim = len(env._get_state())
-    output_dim = env.num_jobs
-    policy_net = DQN(input_dim, output_dim)
-    policy_net.load_state_dict(torch.load(model_path))
-    policy_net.eval()
-
-    state = env.reset()
-    done = False
-
-    while not done:
-        valid_actions = env._get_valid_actions()
-        with torch.no_grad():
-            q_values = policy_net(torch.FloatTensor(state))
-            sorted_actions = q_values.argsort(descending=True)
-            for a in sorted_actions:
-                if a.item() in valid_actions:
-                    action = a.item()
-                    break
-
-        state, _, done, _ = env.step(action)
-
-    print("评估完成，最终Makespan:", env.get_makespan())
-    env.render_gantt()
-
-# ====== 主程序示例 ======
 if __name__ == "__main__":
-    # 示例任务：每个 job 对应各工序的加工时间和机器编号
-    processing_times = [
-        [3, 2, 2],
-        [2, 1, 4],
-        [4, 3, 2]
-    ]
-    machine_assignments = [
-        [0, 1, 2],
-        [1, 2, 0],
-        [2, 0, 1]
-    ]
-
-    env = JSSPEnv(processing_times, machine_assignments)
-    train_dqn(env, episodes=300)
-    evaluate(env)
+    # 示例输入矩阵 - 可以是任意形状
+    machine_assignments = np.array([
+        [1, 2, 3, 4, 5, 6],
+        [2, 3, 6, 1, 5, 4],
+        [3, 6, 1, 2, 4, 5],
+        [6, 2, 1, 4, 5, 3],
+        [1, 3, 5, 6, 2, 4],
+        [2, 6, 4, 1, 5, 3],
+    ])
+    
+    processing_times = np.array([
+        [1, 3, 6, 7, 3, 6],
+        [8, 5, 10, 10, 10, 4],
+        [5, 4, 8, 9, 1, 7],
+        [5, 5, 5, 3, 8, 9],
+        [9, 3, 5, 4, 3, 1],
+        [3, 3, 9, 10, 4, 1],
+    ])
+    
+    train(machine_assignments, processing_times)

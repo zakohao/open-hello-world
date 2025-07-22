@@ -16,7 +16,7 @@ def smooth_curve(x):
 
 def shuffle_dataset(x, t):
     """データセットのシャッフルを行う
-
+[=]
     Parameters
     ----------
     x : 訓練データ
