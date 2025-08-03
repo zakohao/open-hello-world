@@ -5,7 +5,7 @@ import csv
 import os
 import time
 from collections import defaultdict
-from train import DQN, JSSPEnv  # 确保train.py中有DQN和JSSPEnv的定义
+from train import DQN, JSSPEnv 
 
 def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", filename="gantt_chart.png"):
     if not schedule:
@@ -344,7 +344,7 @@ def solve_jssp(machine_assignments, processing_times, model_path='jssp_model.pth
 
 if __name__ == "__main__":
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[20],odder_std_dev[5]\lot_mean[7],lot_std_dev[3]\machine[13]\seed[3]\[6]r[17]c,14gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[20],odder_std_dev[5]\lot_mean[7],lot_std_dev[3]\machine[13]\seed[3]\[6]r[17]c,1gene.csv"
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
