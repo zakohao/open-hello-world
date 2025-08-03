@@ -298,8 +298,8 @@ def train(training_datasets):
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
     
     # 保存模型
-    torch.save(model.state_dict(), 'jssp_model.pth')
-    print(f"模型已保存为 'jssp_model.pth'")
+    torch.save(model.state_dict(), 'jssp_model_npcb_(20,5)_(7,3)_(13)_(3).pth')
+    print(f"模型已保存")
     
     return model
 
