@@ -14,7 +14,7 @@ from tqdm import tqdm
 # Hyperparameters
 EPISODES = 3000
 GAMMA = 0.95
-LR = 0.001
+LR = 0.0001
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 BATCH_SIZE = 64
@@ -73,7 +73,14 @@ class JSSPEnv:
         self.current_step[job] += 1
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        reward = -end_time if self.done else 0
+        #reward verson1
+        #reward = -end_time if self.done else 0 
+        
+        #reward verson2
+        reward = -proc_time 
+        self.current_step[job] += 1 
+        self.done = all(step >= self.num_machines for step in self.current_step) 
+        
         return self._get_state(), reward, self.done, self.schedule
 
 class DQN(nn.Module):
@@ -298,7 +305,7 @@ def train(training_datasets):
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
     
     # 保存模型
-    torch.save(model.state_dict(), 'jssp_model_npcb_(20,5)_(7,3)_(13)_(3).pth')
+    torch.save(model.state_dict(), 'newR_LR0.0001_3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
     print(f"模型已保存")
     
     return model
