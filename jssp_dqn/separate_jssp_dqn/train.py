@@ -305,7 +305,8 @@ def train(training_datasets):
 
 if __name__ == "__main__":
     # 指定文件夹路径
-    folder_path = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[20],odder_std_dev[5]\lot_mean[7],lot_std_dev[3]\machine[13]\seed[3]"
+    #folder_path = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[20],odder_std_dev[5]\lot_mean[7],lot_std_dev[3]\machine[13]\seed[3]"
+    folder_path = r"D:\pysrc\wang_data\jobset\double normal\j1[5,1],j2[8,1]\p1[5,1],p2[8,1]\machine[4]\t1[10,1],t2[15,1]\seed[3]"
     
     # 加载训练数据
     training_datasets = load_folder_data(folder_path)
