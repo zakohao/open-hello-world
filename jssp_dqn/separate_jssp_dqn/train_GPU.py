@@ -20,6 +20,18 @@ MIN_EPSILON = 0.01
 BATCH_SIZE = 64
 MEMORY_SIZE = 10000
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+print(f"使用设备: {device}")
+
+print(f"PyTorch版本: {torch.__version__}")
+print(f"CUDA可用: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU设备数量: {torch.cuda.device_count()}")
+    print(f"当前GPU: {torch.cuda.current_device()}")
+    print(f"设备名称: {torch.cuda.get_device_name(0)}")
+
+a=input()
+
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
         self.machine_assignments = machine_assignments
@@ -236,8 +248,8 @@ def train(training_datasets):
     
     print(f"状态维度: {state_dim}, 动作空间: {action_dim}")
     
-    # 初始化模型
-    model = DQN(state_dim, action_dim)
+    # 初始化模型并移动到GPU
+    model = DQN(state_dim, action_dim).to(device)
     optimizer = optim.Adam(model.parameters(), lr=LR)
     criterion = nn.MSELoss()
     memory = deque(maxlen=MEMORY_SIZE)
@@ -253,7 +265,7 @@ def train(training_datasets):
         ma, pt = random.choice(training_datasets)
         env = JSSPEnv(ma, pt)
         state = env.reset()
-        state = torch.FloatTensor(state)
+        state = torch.FloatTensor(state).to(device)  # 移动到GPU
         total_reward = 0
         done = False
         
@@ -268,8 +280,8 @@ def train(training_datasets):
             
             # 执行动作
             next_state, reward, done, schedule = env.step(action)
-            next_state_tensor = torch.FloatTensor(next_state)
-            memory.append((state, action, reward, next_state_tensor, done))
+            next_state_tensor = torch.FloatTensor(next_state).to(device)  # 移动到GPU
+            memory.append((state.cpu(), action, reward, next_state_tensor.cpu(), done))  # 存储时移回CPU
             state = next_state_tensor
             total_reward += reward
             
@@ -286,11 +298,12 @@ def train(training_datasets):
                 batch = random.sample(memory, BATCH_SIZE)
                 states, actions, rewards, next_states, dones = zip(*batch)
                 
-                states = torch.stack(states)
-                actions = torch.LongTensor(actions).unsqueeze(1)
-                rewards = torch.FloatTensor(rewards).unsqueeze(1)
-                next_states = torch.stack(next_states)
-                dones = torch.BoolTensor(dones).unsqueeze(1)
+                # 将批次数据移动到GPU
+                states = torch.stack(states).to(device)
+                actions = torch.LongTensor(actions).unsqueeze(1).to(device)
+                rewards = torch.FloatTensor(rewards).unsqueeze(1).to(device)
+                next_states = torch.stack(next_states).to(device)
+                dones = torch.BoolTensor(dones).unsqueeze(1).to(device)
                 
                 current_q = model(states).gather(1, actions)
                 next_q = model(next_states).max(1)[0].unsqueeze(1)
@@ -305,7 +318,7 @@ def train(training_datasets):
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
     
     # 保存模型
-    torch.save(model.state_dict(), 'newR_LR0.0001_3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
+    torch.save(model.state_dict(), 'GPU_newR_LR0.0001_3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
     print(f"模型已保存")
     
     return model
