@@ -258,7 +258,7 @@ class FixedJSSPEnv(JSSPEnv):
         reward = -end_time if self.done else 0
         return self._get_state(), reward, self.done, self.schedule
 
-def solve_jssp(machine_assignments, processing_times, model_path='3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'): 
+def solve_jssp(machine_assignments, processing_times, model_path='LR0.001_3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'): 
     if machine_assignments is None or processing_times is None:
         print("输入数据无效，无法求解")
         return None, None
