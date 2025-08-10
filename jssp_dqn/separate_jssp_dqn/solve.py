@@ -15,14 +15,21 @@ def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", file
     fig, ax = plt.subplots(figsize=(15, 10))
     color_map = plt.colormaps.get_cmap("tab20").resampled(num_jobs)
     
-    # 创建机器ID到y轴位置的映射
-    machine_to_ypos = {machine: idx for idx, machine in enumerate(sorted(all_machines))}
+    # 过滤掉M0，仅保留大于0的机器
+    filtered_machines = sorted([m for m in all_machines if m > 0])
+    if not filtered_machines:
+        print("没有可用的非零机器数据")
+        return
+        
+    # 创建机器ID到y轴位置的映射（仅非零机器）
+    machine_to_ypos = {machine: idx for idx, machine in enumerate(filtered_machines)}
     
-    # 按机器和开始时间排序任务
+    # 按机器和开始时间排序任务（忽略M0）
     machine_tasks = defaultdict(list)
     for task in schedule:
         job_id, op_index, machine_id, start, duration = task
-        machine_tasks[machine_id].append((start, duration, job_id, op_index))
+        if machine_id > 0:  # 仅处理非零机器
+            machine_tasks[machine_id].append((start, duration, job_id, op_index))
     
     # 绘制每个机器上的任务
     for machine_id, tasks in machine_tasks.items():
@@ -40,10 +47,12 @@ def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", file
     ax.set_ylabel("机器")
     ax.set_title(title)
     
-    # 设置y轴刻度和标签
-    sorted_machines = sorted(all_machines)
-    ax.set_yticks(range(len(sorted_machines)))
-    ax.set_yticklabels([f"M{m}" for m in sorted_machines])
+    # 设置y轴刻度和标签（仅非零机器）
+    ax.set_yticks(range(len(filtered_machines)))
+    ax.set_yticklabels([f"M{m}" for m in filtered_machines])
+    
+    # 反转y轴使标签从上往下增大
+    ax.invert_yaxis()
     
     ax.grid(True, linestyle='--', alpha=0.7)
     plt.tight_layout()
@@ -249,7 +258,7 @@ class FixedJSSPEnv(JSSPEnv):
         reward = -end_time if self.done else 0
         return self._get_state(), reward, self.done, self.schedule
 
-def solve_jssp(machine_assignments, processing_times, model_path='jssp_model_npcb_(20,5)_(7,3)_(13)_(3).pth'): 
+def solve_jssp(machine_assignments, processing_times, model_path='3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'): 
     if machine_assignments is None or processing_times is None:
         print("输入数据无效，无法求解")
         return None, None
@@ -336,7 +345,7 @@ def solve_jssp(machine_assignments, processing_times, model_path='jssp_model_npc
     # 绘制甘特图
     if schedule:
         print(f"调度包含 {len(schedule)} 个任务")
-        plot_gantt_chart(schedule, env.num_jobs, env.all_machines, title=f"调度方案 (Makespan={makespan})")
+        plot_gantt_chart(schedule, env.num_jobs, env.all_machines, title=f"JSSP_DQN (Makespan={makespan})")
     else:
         print("无调度数据可绘制")
     
@@ -344,7 +353,7 @@ def solve_jssp(machine_assignments, processing_times, model_path='jssp_model_npc
 
 if __name__ == "__main__":
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[20],odder_std_dev[5]\lot_mean[7],lot_std_dev[3]\machine[13]\seed[3]\[6]r[17]c,1gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,0gene.csv"
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
