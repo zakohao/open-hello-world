@@ -258,7 +258,7 @@ class FixedJSSPEnv(JSSPEnv):
         reward = -end_time if self.done else 0
         return self._get_state(), reward, self.done, self.schedule
 
-def solve_jssp(machine_assignments, processing_times, model_path='LR0.001_3000ep_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'): 
+def solve_jssp(machine_assignments, processing_times, model_path='R2_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'): 
     if machine_assignments is None or processing_times is None:
         print("输入数据无效，无法求解")
         return None, None
@@ -353,7 +353,7 @@ def solve_jssp(machine_assignments, processing_times, model_path='LR0.001_3000ep
 
 if __name__ == "__main__":
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,0gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,1gene.csv"
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)

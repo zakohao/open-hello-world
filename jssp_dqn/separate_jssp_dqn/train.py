@@ -12,9 +12,9 @@ from collections import deque
 from tqdm import tqdm
 
 # Hyperparameters
-EPISODES = 3000
+EPISODES = 300
 GAMMA = 0.95
-LR = 0.0001
+LR = 0.001
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 BATCH_SIZE = 32
@@ -39,6 +39,12 @@ class JSSPEnv:
         self.job_end_times = [0] * self.num_jobs
         self.done = False
         self.schedule = []
+        
+        # 跟踪机器利用率#2025/8/21{
+        self.machine_total_time = [0] * len(self.all_machines)  # 机器总可用时间
+        self.machine_working_time = [0] * len(self.all_machines)  # 机器实际加工时间
+        #}
+        
         return self._get_state()
     
     def _get_state(self):
@@ -51,14 +57,49 @@ class JSSPEnv:
                 state.append([machine, proc_time])
             else:
                 state.append([0, 0])
-        return np.array(state).flatten()
+                
+        # 添加机器利用率信息到状态#2025/8/21{
+        utilization = []
+        for i in range(len(self.all_machines)):
+            if self.machine_total_time[i] > 0:
+                util = self.machine_working_time[i] / self.machine_total_time[i]
+            else:
+                util = 0
+            utilization.append(util)
+        #}
+            
+        #return np.array(state).flatten()
+        #2025/8/21{
+        return np.array(state).flatten().tolist() + utilization
+        #}
+    
+    #2025/8/21{
+    def get_valid_actions(self):
+        """返回当前可执行的动作（作业）列表"""
+        valid_actions = []
+        for job in range(self.num_jobs):
+            op = self.current_step[job]
+            # 如果作业还有工序未完成，且前一道工序已完成（如果是第一道工序则总是可执行）
+            if op < self.num_machines and (op == 0 or self.current_step[job] > 0):
+                valid_actions.append(job)
+        return valid_actions
+    #}
     
     def step(self, action):
         job = action
-        if self.done or self.current_step[job] >= self.num_machines:
-            return self._get_state(), -10, self.done, []
-        
+        #2025/8/21{
         op = self.current_step[job]
+        #}
+        
+        #if self.done or self.current_step[job] >= self.num_machines:
+            #return self._get_state(), -10, self.done, []
+        
+        # 检查动作是否有效#2025/8/21{
+        if self.done or op >= self.num_machines or job not in self.get_valid_actions():
+            return self._get_state(), -10, self.done, {}
+        #}
+        
+        #op = self.current_step[job]
         machine_id = self.machine_assignments[job, op]
         machine_idx = self.machine_to_index[machine_id]
         proc_time = self.processing_times[job, op]
@@ -66,22 +107,59 @@ class JSSPEnv:
         start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
         
+        # 更新机器总时间和工作时间#2025/8/21{
+        machine_available_time = max(self.time_table[machine_idx], self.job_end_times[job])
+        self.machine_total_time[machine_idx] = end_time  # 机器总可用时间到当前结束时间
+        self.machine_working_time[machine_idx] += proc_time  # 增加机器工作时间
+        
         self.job_end_times[job] = end_time
         self.time_table[machine_idx] = end_time
-        self.schedule.append((job, op, machine_id, start_time, proc_time))
+        #self.schedule.append((job, op, machine_id, start_time, proc_time))
+        
+        #2025/8/21{
+        self.schedule.append((job, op, machine_id, start_time, end_time))
+        #}
         
         self.current_step[job] += 1
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        #reward verson1
+        # 计算机器利用率奖励#2025/8/21{}
+        utilization_reward = 0
+        if self.machine_total_time[machine_idx] > 0:
+            utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
+            utilization_reward = utilization * 5  # 缩放因子，可以根据需要调整
+        #}
+        
+        #reward verson1 #总加工时间
         #reward = -end_time if self.done else 0 
         
-        #reward verson2
-        reward = -proc_time 
-        self.current_step[job] += 1 
-        self.done = all(step >= self.num_machines for step in self.current_step) 
+        #reward verson2 #是否在时刻t时选择了action
+        #reward = -proc_time 
         
-        return self._get_state(), reward, self.done, self.schedule
+        # reward verson3 组合奖励：负的处理时间 + 机器利用率奖励
+        #2025/8/21{
+        reward = -proc_time + utilization_reward
+        # 如果所有作业完成，添加最终奖励
+        if self.done:
+            makespan = max(self.job_end_times)
+            reward += -makespan * 0.1  # 根据总完成时间给予额外奖励
+        #}
+        
+        #self.current_step[job] += 1 
+        #self.done = all(step >= self.num_machines for step in self.current_step) 
+        
+        
+        #self.done = all(step >= self.num_machines for step in self.current_step)
+        
+        #return self._get_state(), reward, self.done, self.schedule
+        #2025/8/21{
+        return self._get_state(), reward, self.done, {
+            "schedule": self.schedule,
+            "machine_utilization": [self.machine_working_time[i] / self.machine_total_time[i] 
+                                   if self.machine_total_time[i] > 0 else 0 
+                                   for i in range(len(self.all_machines))]
+        }
+        #}
 
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
@@ -246,6 +324,9 @@ def train(training_datasets):
     best_makespan = float('inf')
     best_schedule = None
     makespans = []
+    #2025/8/21{
+    utilizations = []
+    #}
     
     # 训练循环
     for ep in tqdm(range(EPISODES), desc="训练进度"):
@@ -258,16 +339,28 @@ def train(training_datasets):
         done = False
         
         while not done:
+            # 获取有效动作
+            valid_actions = env.get_valid_actions()
+            if not valid_actions:
+                break
+            
             # 选择动作
             if random.random() < epsilon:
-                action = random.randint(0, action_dim - 1)
+                #action = random.randint(0, action_dim - 1)
+                action = random.choice(valid_actions)
             else:
                 with torch.no_grad():
                     q_values = model(state)
+                    # 只从有效动作中选择
+                    valid_q_values = q_values.clone()
+                    for i in range(action_dim):
+                        if i not in valid_actions:
+                            valid_q_values[i] = -float('inf')
                     action = q_values.argmax().item()
             
             # 执行动作
-            next_state, reward, done, schedule = env.step(action)
+            #next_state, reward, done, schedule = env.step(action)
+            next_state, reward, done, info = env.step(action)
             next_state_tensor = torch.FloatTensor(next_state)
             memory.append((state, action, reward, next_state_tensor, done))
             state = next_state_tensor
@@ -277,9 +370,16 @@ def train(training_datasets):
             if done:
                 makespan = max(env.job_end_times)
                 makespans.append(makespan)
+                
+                #2025/8/21{
+                avg_utilization = np.mean(info["machine_utilization"])
+                utilizations.append(avg_utilization)
+                #}
+                
                 if makespan < best_makespan:
                     best_makespan = makespan
-                    best_schedule = schedule.copy()
+                    best_schedule = info["schedule"].copy()
+                    #best_schedule = schedule.copy()
             
             # 经验回放
             if len(memory) >= BATCH_SIZE:
@@ -305,7 +405,7 @@ def train(training_datasets):
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
     
     # 保存模型
-    torch.save(model.state_dict(), 'R2_LR0.0001_3000ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
+    torch.save(model.state_dict(), 'R(p+u)_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
     print(f"模型已保存")
     
     return model
