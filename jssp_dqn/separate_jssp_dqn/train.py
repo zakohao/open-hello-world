@@ -127,7 +127,7 @@ class JSSPEnv:
         utilization_reward = 0
         if self.machine_total_time[machine_idx] > 0:
             utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
-            utilization_reward = utilization * 5  # 缩放因子，可以根据需要调整
+            utilization_reward = utilization * 5
         #}
         
         #reward verson1 #总加工时间
@@ -148,10 +148,8 @@ class JSSPEnv:
         #self.current_step[job] += 1 
         #self.done = all(step >= self.num_machines for step in self.current_step) 
         
-        
-        #self.done = all(step >= self.num_machines for step in self.current_step)
-        
         #return self._get_state(), reward, self.done, self.schedule
+        
         #2025/8/21{
         return self._get_state(), reward, self.done, {
             "schedule": self.schedule,

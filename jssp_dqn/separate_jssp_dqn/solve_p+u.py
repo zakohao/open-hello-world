@@ -438,11 +438,11 @@ def solve_jssp(machine_assignments, processing_times, model_path):
 
 if __name__ == "__main__":
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,1gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,5gene.csv"
     
     # 可以选择不同的模型
-    #model_path = 'R2_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 原始模型
-    model_path = 'R(p+u)_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 利用率模型
+    #model_path = 'R2_LR0.0001_3000ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 进程模型
+    model_path = 'R(p+u)_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 进程+利用率模型
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
