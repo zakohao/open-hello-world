@@ -12,9 +12,9 @@ from collections import deque
 from tqdm import tqdm
 
 # Hyperparameters
-EPISODES = 300
+EPISODES = 3000
 GAMMA = 0.95
-LR = 0.001
+LR = 0.0001
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
 BATCH_SIZE = 32
@@ -403,7 +403,7 @@ def train(training_datasets):
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
     
     # 保存模型
-    torch.save(model.state_dict(), 'R(p+u)_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
+    torch.save(model.state_dict(), 'R(p+u)_LR0.0001_3000ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
     print(f"模型已保存")
     
     return model
