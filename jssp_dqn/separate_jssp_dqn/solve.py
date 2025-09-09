@@ -7,7 +7,7 @@ import time
 from collections import defaultdict
 from train import DQN, JSSPEnv 
 
-def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", filename="gantt_chart.png"):
+def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", filename="new_gantt_chart.png"):
     if not schedule:
         print("无调度数据，无法绘制甘特图")
         return
