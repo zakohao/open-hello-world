@@ -26,8 +26,6 @@ if torch.cuda.is_available():
     print(f"CUDA版本: {torch.version.cuda}")
     print(f"GPU设备: {torch.cuda.get_device_name(0)}")
 
-a=input()
-
 # Hyperparameters
 EPISODES = 3000
 GAMMA = 0.95
