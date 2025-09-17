@@ -5,7 +5,25 @@ import csv
 import os
 import time
 from collections import defaultdict
-from train import DQN, JSSPEnv 
+
+# 重新定义与训练代码一致的DQN模型
+class DQN(torch.nn.Module):
+    def __init__(self, input_dim, output_dim):
+        super(DQN, self).__init__()
+        self.fc = torch.nn.Sequential(
+            torch.nn.Linear(input_dim, 256),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.1),
+            torch.nn.Linear(256, 128),
+            torch.nn.ReLU(),
+            torch.nn.Dropout(0.1),
+            torch.nn.Linear(128, 64),
+            torch.nn.ReLU(),
+            torch.nn.Linear(64, output_dim)
+        )
+    
+    def forward(self, x):
+        return self.fc(x)
 
 def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", filename="new_gantt_chart.png"):
     if not schedule:
@@ -27,8 +45,9 @@ def plot_gantt_chart(schedule, num_jobs, all_machines, title="Gantt Chart", file
     # 按机器和开始时间排序任务（忽略M0）
     machine_tasks = defaultdict(list)
     for task in schedule:
-        job_id, op_index, machine_id, start, duration = task
+        job_id, op_index, machine_id, start, end = task
         if machine_id > 0:  # 仅处理非零机器
+            duration = end - start
             machine_tasks[machine_id].append((start, duration, job_id, op_index))
     
     # 绘制每个机器上的任务
@@ -176,25 +195,29 @@ def load_single_csv(file_path):
         print(f"加载文件 {os.path.basename(file_path)} 时出错: {str(e)}")
         return None, None
 
-class FixedJSSPEnv(JSSPEnv):
-    """修复原始环境类的问题，处理0值操作"""
-    def __init__(self, machine_assignments, processing_times, use_utilization=False):
-        self.use_utilization = use_utilization
+class JSSPEnv:
+    def __init__(self, machine_assignments, processing_times):
+        self.machine_assignments = machine_assignments
+        self.processing_times = processing_times
+        self.num_jobs, self.num_machines = machine_assignments.shape
         
-        # 先计算每个作业的实际操作数
-        num_jobs, num_machines = machine_assignments.shape
+        # 获取所有机器ID并创建映射
+        self.all_machines = np.unique(machine_assignments)
+        self.machine_to_index = {machine: idx for idx, machine in enumerate(self.all_machines)}
+        self.index_to_machine = {idx: machine for idx, machine in enumerate(self.all_machines)}
+        
+        # 计算每个作业的实际操作数
         self.actual_ops_per_job = []
-        for job in range(num_jobs):
+        for job in range(self.num_jobs):
             valid_ops = 0
-            for op in range(num_machines):
+            for op in range(self.num_machines):
                 if machine_assignments[job, op] != 0:
                     valid_ops += 1
             self.actual_ops_per_job.append(valid_ops)
         
         print(f"实际操作数: {self.actual_ops_per_job}")
         
-        # 然后调用父类初始化
-        super().__init__(machine_assignments, processing_times)
+        self.reset()
     
     def reset(self):
         self.current_step = [0] * self.num_jobs
@@ -203,155 +226,110 @@ class FixedJSSPEnv(JSSPEnv):
         self.done = False
         self.schedule = []
         
-        # 如果需要使用利用率，初始化相关变量
-        if self.use_utilization:
-            self.machine_total_time = [0] * len(self.all_machines)
-            self.machine_working_time = [0] * len(self.all_machines)
+        # 初始化利用率相关变量
+        self.machine_total_time = [0] * len(self.all_machines)
+        self.machine_working_time = [0] * len(self.all_machines)
             
         return self._get_state()
     
     def _get_state(self):
+        # 使用与训练代码相同的状态表示
         state = []
+        
+        # 1. 当前可执行操作的机器和处理时间
         for job in range(self.num_jobs):
             op = self.current_step[job]
-            # 只包含有效操作的状态
-            if op < self.actual_ops_per_job[job]:
+            if op < self.num_machines:
                 machine = self.machine_assignments[job, op]
                 proc_time = self.processing_times[job, op]
-                state.append([machine, proc_time])
+                state.extend([machine, proc_time])
             else:
-                state.append([0, 0])
-                
-        state = np.array(state).flatten()
+                state.extend([0, 0])
         
-        # 如果需要使用利用率，添加利用率信息
-        if self.use_utilization:
-            utilization = []
-            for i in range(len(self.all_machines)):
-                if self.machine_total_time[i] > 0:
-                    util = self.machine_working_time[i] / self.machine_total_time[i]
-                else:
-                    util = 0
-                utilization.append(util)
+        # 2. 机器当前负载
+        for machine_time in self.time_table:
+            state.append(machine_time)
+        
+        # 3. 作业完成情况
+        for job_end_time in self.job_end_times:
+            state.append(job_end_time)
+        
+        # 4. 机器利用率信息
+        for i in range(len(self.all_machines)):
+            if self.machine_total_time[i] > 0:
+                util = self.machine_working_time[i] / self.machine_total_time[i]
+            else:
+                util = 0
+            state.append(util)
             
-            state = np.concatenate([state, utilization])
-            
-        return state
+        return np.array(state, dtype=np.float32)
+    
+    def get_valid_actions(self):
+        """返回当前可执行的动作（作业）列表"""
+        valid_actions = []
+        for job in range(self.num_jobs):
+            op = self.current_step[job]
+            # 如果作业还有工序未完成
+            if op < self.actual_ops_per_job[job]:
+                valid_actions.append(job)
+        return valid_actions
     
     def step(self, action):
         job = action
-        if self.done:
-            return self._get_state(), 0, self.done, self.schedule
-        
-        # 检查作业是否已完成
-        if self.current_step[job] >= self.actual_ops_per_job[job]:
-            # 作业已完成，跳过
-            return self._get_state(), -1, self.done, self.schedule
-        
         op = self.current_step[job]
+        
+        # 检查动作是否有效
+        if self.done or op >= self.actual_ops_per_job[job] or job not in self.get_valid_actions():
+            return self._get_state(), -10, self.done, {}
+        
         machine_id = self.machine_assignments[job, op]
-        
-        # 跳过无效操作（机器号为0）
-        while machine_id == 0 and self.current_step[job] < self.num_machines - 1:
-            self.current_step[job] += 1
-            op = self.current_step[job]
-            machine_id = self.machine_assignments[job, op]
-        
-        # 检查是否跳过所有操作
-        if machine_id == 0 or self.current_step[job] >= self.actual_ops_per_job[job]:
-            self.current_step[job] += 1
-            self.done = all(step >= self.actual_ops_per_job[i] for i, step in enumerate(self.current_step))
-            return self._get_state(), 0, self.done, self.schedule
-        
         machine_idx = self.machine_to_index[machine_id]
         proc_time = self.processing_times[job, op]
         
         start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
         
-        # 如果需要使用利用率，更新相关变量
-        if self.use_utilization:
-            machine_available_time = max(self.time_table[machine_idx], self.job_end_times[job])
-            self.machine_total_time[machine_idx] = end_time
-            self.machine_working_time[machine_idx] += proc_time
+        # 更新机器总时间和工作时间
+        self.machine_total_time[machine_idx] = end_time
+        self.machine_working_time[machine_idx] += proc_time
         
         self.job_end_times[job] = end_time
         self.time_table[machine_idx] = end_time
-        self.schedule.append((job, op, machine_id, start_time, proc_time))
-        self.current_step[job] += 1
         
-        # 检查所有作业是否完成
+        self.schedule.append((job, op, machine_id, start_time, end_time))
+        
+        self.current_step[job] += 1
         self.done = all(step >= self.actual_ops_per_job[i] for i, step in enumerate(self.current_step))
         
-        # 计算奖励
-        if self.use_utilization:
-            # 使用利用率奖励
-            utilization_reward = 0
-            if self.machine_total_time[machine_idx] > 0:
-                utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
-                utilization_reward = utilization * 5
-            
-            reward = -proc_time + utilization_reward
-            if self.done:
-                makespan = max(self.job_end_times)
-                reward += -makespan * 0.1
-        else:
-            # 原始奖励
-            reward = -end_time if self.done else 0
-            
-        return self._get_state(), reward, self.done, self.schedule
-
-def get_model_state_dim(model_path):
-    """获取模型的输入维度"""
-    try:
-        # 加载模型状态字典
-        state_dict = torch.load(model_path)
+        # 计算机器利用率奖励
+        utilization_reward = 0
+        if self.machine_total_time[machine_idx] > 0:
+            utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
+            utilization_reward = utilization * 5
         
-        # 查找第一个线性层的权重
-        for key in state_dict.keys():
-            if 'weight' in key and len(state_dict[key].shape) == 2:
-                input_dim = state_dict[key].shape[1]
-                return input_dim
-    except:
-        pass
-    
-    return None
+        # 组合奖励：负的处理时间 + 机器利用率奖励
+        reward = -proc_time + utilization_reward
+        # 如果所有作业完成，添加最终奖励
+        if self.done:
+            makespan = max(self.job_end_times)
+            reward += -makespan * 0.1
+        
+        return self._get_state(), reward, self.done, {
+            "schedule": self.schedule,
+            "machine_utilization": [self.machine_working_time[i] / self.machine_total_time[i] 
+                                   if self.machine_total_time[i] > 0 else 0 
+                                   for i in range(len(self.all_machines))]
+        }
 
-#def solve_jssp(machine_assignments, processing_times, model_path='R(p+u)_LR0.001_300ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'):
-def solve_jssp(machine_assignments, processing_times, model_path): 
+def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
     if machine_assignments is None or processing_times is None:
         print("输入数据无效，无法求解")
         return None, None
         
     print(f"问题维度: {machine_assignments.shape[0]} 作业, {machine_assignments.shape[1]} 工序")
     
-    # 确定模型类型
-    model_state_dim = get_model_state_dim(model_path)
-    if model_state_dim is None:
-        print("无法确定模型类型，使用默认环境")
-        use_utilization = False
-    else:
-        # 计算预期的状态维度
-        num_jobs = machine_assignments.shape[0]
-        num_machines = len(np.unique(machine_assignments))
-        
-        # 原始模型的状态维度: num_jobs * 2
-        # 利用率模型的状态维度: num_jobs * 2 + num_machines
-        expected_original_dim = num_jobs * 2
-        expected_utilization_dim = num_jobs * 2 + num_machines
-        
-        if model_state_dim == expected_original_dim:
-            use_utilization = False
-            print("检测到原始模型（不考虑利用率）")
-        elif model_state_dim == expected_utilization_dim:
-            use_utilization = True
-            print("检测到利用率模型")
-        else:
-            print(f"模型状态维度 ({model_state_dim}) 与预期不符，使用默认环境")
-            use_utilization = False
-    
-    # 创建适当的环境
-    env = FixedJSSPEnv(machine_assignments, processing_times, use_utilization=use_utilization)
+    # 创建环境
+    env = JSSPEnv(machine_assignments, processing_times)
     state_dim = len(env.reset())
     action_dim = env.num_jobs
     
@@ -360,25 +338,59 @@ def solve_jssp(machine_assignments, processing_times, model_path):
     # 加载模型
     model = DQN(state_dim, action_dim)
     try:
-        model.load_state_dict(torch.load(model_path))
+        # 加载模型时忽略dropout层的参数（如果存在）
+        state_dict = torch.load(model_path, map_location=device)
+        
+        # 处理可能的键名不匹配
+        new_state_dict = {}
+        for key, value in state_dict.items():
+            # 重命名键以匹配当前模型结构
+            if key == 'fc.6.weight':
+                new_key = 'fc.8.weight'
+            elif key == 'fc.6.bias':
+                new_key = 'fc.8.bias'
+            elif key == 'fc.3.weight':
+                new_key = 'fc.4.weight'
+            elif key == 'fc.3.bias':
+                new_key = 'fc.4.bias'
+            elif key == 'fc.4.weight':
+                new_key = 'fc.6.weight'
+            elif key == 'fc.4.bias':
+                new_key = 'fc.6.bias'
+            elif key == 'fc.8.weight':
+                new_key = 'fc.3.weight'
+            elif key == 'fc.8.bias':
+                new_key = 'fc.3.bias'
+            else:
+                new_key = key
+            new_state_dict[new_key] = value
+        
+        model.load_state_dict(new_state_dict, strict=False)
+        model.to(device)
         model.eval()
-        print("模型加载成功")
+        print(f"模型加载成功，使用设备: {device}")
     except Exception as e:
         print(f"加载模型失败: {e}")
-        return None, None
+        # 尝试直接加载（不重命名键）
+        try:
+            model.load_state_dict(torch.load(model_path, map_location=device), strict=False)
+            model.to(device)
+            model.eval()
+            print(f"使用宽松模式加载模型成功")
+        except Exception as e2:
+            print(f"宽松模式加载也失败: {e2}")
+            return None, None
     
     # 使用训练好的模型求解
     state = env.reset()
-    state_tensor = torch.FloatTensor(state)
+    state_tensor = torch.FloatTensor(state).to(device)
     done = False
     schedule = []
     
     step_count = 0
-    max_steps = 5000  # 合理的最大步数
+    max_steps = 5000
     total_operations = sum(env.actual_ops_per_job)
     
-    # 跟踪进度
-    progress = []
     start_time = time.time()
     
     while not done and step_count < max_steps:
@@ -387,32 +399,34 @@ def solve_jssp(machine_assignments, processing_times, model_path):
         with torch.no_grad():
             q_values = model(state_tensor)
             
-            # 创建有效动作掩码（只选择未完成的作业）
-            valid_actions = [job for job in range(env.num_jobs) 
-                            if env.current_step[job] < env.actual_ops_per_job[job]]
+            # 获取有效动作
+            valid_actions = env.get_valid_actions()
             
             if not valid_actions:
                 print("无有效动作可用")
                 break
                 
             # 只考虑有效动作
-            valid_q_values = q_values[valid_actions]
-            best_valid_idx = torch.argmax(valid_q_values).item()
-            action = valid_actions[best_valid_idx]
+            valid_q_values = q_values.clone()
+            for i in range(action_dim):
+                if i not in valid_actions:
+                    valid_q_values[i] = -float('inf')
+            
+            action = valid_q_values.argmax().item()
         
-        next_state, reward, done, current_schedule = env.step(action)
-        state_tensor = torch.FloatTensor(next_state)
-        schedule = current_schedule
+        next_state, reward, done, info = env.step(action)
+        state_tensor = torch.FloatTensor(next_state).to(device)
         
-        # 记录进度
-        completed_ops = sum(env.current_step)
-        progress.append(completed_ops / total_operations)
+        if 'schedule' in info:
+            schedule = info['schedule']
         
-        if step_count % 100 == 0:
+        if step_count % 50 == 0:
             elapsed = time.time() - start_time
+            completed_ops = sum(env.current_step)
+            progress = completed_ops / total_operations
             ops_per_sec = step_count / elapsed if elapsed > 0 else 0
             print(f"步数 {step_count}: 完成 {completed_ops}/{total_operations} 操作 "
-                  f"({progress[-1]*100:.1f}%), {ops_per_sec:.1f} 操作/秒")
+                  f"({progress*100:.1f}%), {ops_per_sec:.1f} 操作/秒")
         
         if done:
             break
@@ -420,11 +434,11 @@ def solve_jssp(machine_assignments, processing_times, model_path):
     elapsed = time.time() - start_time
     
     if done:
-        makespan = max(env.job_end_times) if hasattr(env, 'job_end_times') and env.job_end_times else 0
+        makespan = max(env.job_end_times)
         print(f"求解成功! 步数: {step_count}, 最大完工时间: {makespan}, 耗时: {elapsed:.2f}秒")
     else:
         completed_ops = sum(min(env.current_step[job], env.actual_ops_per_job[job]) for job in range(env.num_jobs))
-        makespan = max(env.job_end_times) if hasattr(env, 'job_end_times') and env.job_end_times else 0
+        makespan = max(env.job_end_times)
         print(f"求解未完成! 步数: {step_count}, 完成 {completed_ops}/{total_operations} 操作")
     
     # 绘制甘特图
@@ -437,18 +451,21 @@ def solve_jssp(machine_assignments, processing_times, model_path):
     return schedule, makespan
 
 if __name__ == "__main__":
+    # 设置设备
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print(f"使用设备: {device}")
+    
     # 使用训练好的模型求解新问题
     problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,15gene.csv"
     
-    # 可以选择不同的模型
-    #model_path = 'R2_LR0.0001_3000ep_barch32_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 进程模型
-    model_path = 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 进程+利用率模型
+    # 选择模型
+    model_path = 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 使用优化后的模型
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
     
     if ma is not None and pt is not None:
         print("成功加载问题数据，开始求解...")
-        solve_jssp(ma, pt, model_path=model_path)
+        solve_jssp(ma, pt, model_path=model_path, device=device)
     else:
         print("无法加载问题数据")
