@@ -499,31 +499,6 @@ def train_optimized(training_datasets):
     torch.save(model.state_dict(), 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth')
     print("模型已保存")
     
-    # 绘制训练曲线
-    plt.figure(figsize=(15, 5))
-    
-    plt.subplot(1, 3, 1)
-    plt.plot(makespans)
-    plt.title('Makespan over Episodes')
-    plt.xlabel('Episode')
-    plt.ylabel('Makespan')
-    
-    plt.subplot(1, 3, 2)
-    plt.plot(utilizations)
-    plt.title('Machine Utilization')
-    plt.xlabel('Episode')
-    plt.ylabel('Utilization')
-    
-    plt.subplot(1, 3, 3)
-    plt.plot(losses)
-    plt.title('Training Loss')
-    plt.xlabel('Update Step')
-    plt.ylabel('Loss')
-    
-    plt.tight_layout()
-    plt.savefig('training_metrics.png')
-    plt.show()
-    
     return model
 
 if __name__ == "__main__":

@@ -454,9 +454,9 @@ if __name__ == "__main__":
     # 设置设备
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"使用设备: {device}")
-    
+
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,15gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,17gene.csv"
     
     # 选择模型
     model_path = 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 使用优化后的模型
