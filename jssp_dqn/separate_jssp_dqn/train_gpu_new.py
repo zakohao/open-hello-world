@@ -1,6 +1,4 @@
 import os
-import re
-import ast
 import csv
 import numpy as np
 import random
@@ -11,9 +9,7 @@ import torch.optim as optim
 from collections import deque
 from tqdm import tqdm
 from multiprocessing import Pool
-import concurrent.futures
 from torch.utils.data import Dataset, DataLoader
-from torch.cuda import amp
 
 # 获取当前脚本所在的目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -36,13 +32,13 @@ if torch.cuda.is_available():
 # Hyperparameters
 EPISODES = 3000
 GAMMA = 0.95
-LR = 0.0005  # 增加学习率
+LR = 0.0005
 EPSILON_DECAY = 0.995
 MIN_EPSILON = 0.01
-BATCH_SIZE = 128  # 增加批次大小
-MEMORY_SIZE = 20000  # 增加回放缓冲区大小
-UPDATE_FREQUENCY = 2  # 更新频率
-NUM_ENVS = 4  # 并行环境数量
+BATCH_SIZE = 128  
+MEMORY_SIZE = 20000 
+UPDATE_FREQUENCY = 2 
+NUM_ENVS = 4 
 
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
@@ -377,7 +373,7 @@ def train_optimized(training_datasets):
     optimizer = optim.Adam(model.parameters(), lr=LR)
     scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.9)
     criterion = nn.MSELoss()
-    scaler = amp.GradScaler()  # 混合精度
+    scaler = torch.amp.GradScaler('cuda')
     
     # 使用更大的回放缓冲区
     memory = deque(maxlen=MEMORY_SIZE)
@@ -433,7 +429,7 @@ def train_optimized(training_datasets):
                 dones_tensor[i] = torch.BoolTensor([dones[i]])
             
             # 使用混合精度训练
-            with amp.autocast():
+            with torch.amp.autocast(device_type='cuda'):
                 current_q = model(states_tensor).gather(1, actions_tensor)
                 next_q = model(next_states_tensor).max(1)[0].unsqueeze(1)
                 target_q = rewards_tensor + GAMMA * next_q * (~dones_tensor)
