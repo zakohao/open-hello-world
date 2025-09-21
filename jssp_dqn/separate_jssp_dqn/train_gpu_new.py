@@ -114,7 +114,7 @@ class JSSPEnv:
         
         # 检查动作是否有效
         if self.done or op >= self.num_machines or job not in self.get_valid_actions():
-            return self._get_state(), -10, self.done, {}
+            return self._get_state(), -20, self.done, {}
         
         machine_id = self.machine_assignments[job, op]
         machine_idx = self.machine_to_index[machine_id]
@@ -123,37 +123,74 @@ class JSSPEnv:
         start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
         
-        # 更新机器总时间和工作时间
-        machine_available_time = max(self.time_table[machine_idx], self.job_end_times[job])
-        self.machine_total_time[machine_idx] = end_time  # 机器总可用时间到当前结束时间
-        self.machine_working_time[machine_idx] += proc_time  # 增加机器工作时间
-        
+        # 计算空闲时间（机器等待时间）
+        machine_idle_time = start_time - self.time_table[machine_idx]
+        job_waiting_time = start_time - self.job_end_times[job]
+
+         # 更新机器总时间和工作时间
+        self.machine_total_time[machine_idx] = end_time
+        self.machine_working_time[machine_idx] += proc_time
+    
         self.job_end_times[job] = end_time
         self.time_table[machine_idx] = end_time
-        
+    
         self.schedule.append((job, op, machine_id, start_time, end_time))
-        
         self.current_step[job] += 1
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        # 计算机器利用率奖励
+        # ========== 改进的奖励计算 ==========
+    
+        # 1. 基础奖励（负的处理时间）
+        base_reward = -proc_time * 0.1  # 降低基础惩罚
+
+        # 2. 机器利用率奖励
         utilization_reward = 0
         if self.machine_total_time[machine_idx] > 0:
             utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
-            utilization_reward = utilization * 5
+            utilization_reward = utilization * 3
         
-        # 组合奖励：负的处理时间 + 机器利用率奖励
-        reward = -proc_time + utilization_reward
-        # 如果所有作业完成，添加最终奖励
+        # 3. 空闲时间惩罚（鼓励减少机器空闲）
+        idle_penalty = -machine_idle_time * 0.05
+
+#        4. 作业等待时间惩罚（鼓励减少作业等待）
+        waiting_penalty = -job_waiting_time * 0.03
+
+        # 5. 进度平衡奖励（鼓励均衡推进所有作业）
+        progress_reward = 0
+        if not self.done:
+            # 计算所有作业的平均进度
+            avg_progress = sum(self.current_step) / (self.num_jobs * self.num_machines)
+            # 当前作业进度与平均进度的差异
+            current_progress = self.current_step[job] / self.num_machines
+            progress_diff = abs(current_progress - avg_progress)
+            progress_reward = (1 - progress_diff) * 2  # 越接近平均进度奖励越高
+        
+        # 6. 完成奖励（当作业完成时）
+        completion_reward = 0
+        if self.current_step[job] == self.num_machines:
+            completion_reward = 50  # 作业完成给予较大奖励
+
+        # 7. 最终makespan奖励（当所有作业完成时）
+        final_reward = 0
         if self.done:
             makespan = max(self.job_end_times)
-            reward += -makespan * 0.1  # 根据总完成时间给予额外奖励
+            # makespan越小奖励越大（负的makespan作为奖励）
+            final_reward = -makespan * 0.2
+            # 额外奖励：基于与最优解的相对性能
+            estimated_optimal = sum(self.processing_times.flatten()) / len(self.all_machines)
+            if makespan < estimated_optimal * 1.5:  # 如果在最优解的1.5倍内
+                final_reward += 100
+
+        # 组合所有奖励成分
+        reward = (base_reward + utilization_reward + idle_penalty + 
+                  waiting_penalty + progress_reward + completion_reward + final_reward)
         
         return self._get_state(), reward, self.done, {
             "schedule": self.schedule,
             "machine_utilization": [self.machine_working_time[i] / self.machine_total_time[i] 
                                    if self.machine_total_time[i] > 0 else 0 
-                                   for i in range(len(self.all_machines))]
+                                   for i in range(len(self.all_machines))],
+            "makespan": max(self.job_end_times) if self.done else None
         }
 
 class DQN(nn.Module):
