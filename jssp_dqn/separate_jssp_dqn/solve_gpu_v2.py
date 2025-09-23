@@ -439,7 +439,7 @@ if __name__ == "__main__":
     print(f"使用设备: {device}")
 
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,2000gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,1000gene.csv"
     
     # 选择模型
     model_path = 'improved_jssp_model.pth'  # 使用优化后的模型
