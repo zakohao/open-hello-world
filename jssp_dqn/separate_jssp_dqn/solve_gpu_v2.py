@@ -13,10 +13,8 @@ class DQN(torch.nn.Module):
         self.fc = torch.nn.Sequential(
             torch.nn.Linear(input_dim, 256),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.1),
             torch.nn.Linear(256, 128),
             torch.nn.ReLU(),
-            torch.nn.Dropout(0.1),
             torch.nn.Linear(128, 64),
             torch.nn.ReLU(),
             torch.nn.Linear(64, output_dim)
@@ -187,8 +185,6 @@ def load_single_csv(file_path):
         # 打印成功消息
         print(f"成功加载文件: {os.path.basename(file_path)}, 形状: {machine_array.shape}")
         print(f"有效作业数: {len(machine_data)}, 最大工序数: {max_ops}")
-        print(f"机器分配示例:\n{machine_array[:2]}")
-        print(f"处理时间示例:\n{time_array[:2]}")
         return machine_array, time_array
     
     except Exception as e:
@@ -233,11 +229,11 @@ class JSSPEnv:
         return self._get_state()
     
     def _get_state(self):
-        # 使用与训练代码相同的状态表示
+        """使用与训练代码完全相同的状态表示（33维）"""
         state = []
         
-        # 1. 当前可执行操作的机器和处理时间
-        for job in range(self.num_jobs):
+        # 1. 当前可执行操作的机器和处理时间（12维：6个作业 × 2个特征）
+        for job in range(6):  # 固定6个作业，与训练时一致
             op = self.current_step[job]
             if op < self.num_machines:
                 machine = self.machine_assignments[job, op]
@@ -246,22 +242,43 @@ class JSSPEnv:
             else:
                 state.extend([0, 0])
         
-        # 2. 机器当前负载
-        for machine_time in self.time_table:
-            state.append(machine_time)
+        # 2. 机器当前负载（13维：13台机器）
+        # 如果机器数不足13，用0填充；如果超过13，截断
+        num_machines_needed = 13
+        for i in range(min(len(self.time_table), num_machines_needed)):
+            state.append(self.time_table[i])
+        # 填充到13维
+        while len(state) < 12 + num_machines_needed:
+            state.append(0)
         
-        # 3. 作业完成情况
-        for job_end_time in self.job_end_times:
-            state.append(job_end_time)
+        # 3. 作业完成情况（6维：6个作业）
+        for i in range(min(6, len(self.job_end_times))):
+            state.append(self.job_end_times[i])
+        # 填充到6维
+        while len(state) < 12 + num_machines_needed + 6:
+            state.append(0)
         
-        # 4. 机器利用率信息
-        for i in range(len(self.all_machines)):
+        # 4. 机器利用率信息（2维：只取前2个机器的利用率）
+        util_count = 2  # 训练时只用了2维
+        for i in range(min(util_count, len(self.all_machines))):
             if self.machine_total_time[i] > 0:
                 util = self.machine_working_time[i] / self.machine_total_time[i]
             else:
                 util = 0
             state.append(util)
-            
+        # 填充到2维
+        while len(state) < 12 + num_machines_needed + 6 + util_count:
+            state.append(0)
+        
+        # 确保状态维度为33
+        if len(state) != 33:
+            print(f"警告: 状态维度为{len(state)}，调整到33")
+            # 截断或填充到33维
+            if len(state) > 33:
+                state = state[:33]
+            else:
+                state.extend([0] * (33 - len(state)))
+        
         return np.array(state, dtype=np.float32)
     
     def get_valid_actions(self):
@@ -301,24 +318,24 @@ class JSSPEnv:
         self.current_step[job] += 1
         self.done = all(step >= self.actual_ops_per_job[i] for i, step in enumerate(self.current_step))
         
-        # 计算机器利用率奖励
-        utilization_reward = 0
-        if self.machine_total_time[machine_idx] > 0:
-            utilization = self.machine_working_time[machine_idx] / self.machine_total_time[machine_idx]
-            utilization_reward = utilization * 5
+        # 使用简化的奖励函数（与训练时一致）
+        reward = -proc_time  # 基础时间惩罚
         
-        # 组合奖励：负的处理时间 + 机器利用率奖励
-        reward = -proc_time + utilization_reward
-        # 如果所有作业完成，添加最终奖励
+        # 完成奖励
+        if self.current_step[job] == self.actual_ops_per_job[job]:
+            reward += 10
+        
+        # 最终奖励
         if self.done:
             makespan = max(self.job_end_times)
-            reward += -makespan * 0.1
+            reward += -makespan * 0.01
         
         return self._get_state(), reward, self.done, {
             "schedule": self.schedule,
             "machine_utilization": [self.machine_working_time[i] / self.machine_total_time[i] 
                                    if self.machine_total_time[i] > 0 else 0 
-                                   for i in range(len(self.all_machines))]
+                                   for i in range(len(self.all_machines))],
+            "makespan": max(self.job_end_times) if self.done else None
         }
 
 def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
@@ -333,57 +350,23 @@ def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
     state_dim = len(env.reset())
     action_dim = env.num_jobs
     
-    print(f"状态维度: {state_dim}, 动作空间大小: {action_dim}")
+    print(f"当前状态维度: {state_dim}, 动作空间大小: {action_dim}")
     
-    # 加载模型
+    # 创建与模型匹配的模型
     model = DQN(state_dim, action_dim)
     try:
-        # 加载模型时忽略dropout层的参数（如果存在）
-        state_dict = torch.load(model_path, map_location=device)
-        
-        # 处理可能的键名不匹配
-        new_state_dict = {}
-        for key, value in state_dict.items():
-            # 重命名键以匹配当前模型结构
-            if key == 'fc.6.weight':
-                new_key = 'fc.8.weight'
-            elif key == 'fc.6.bias':
-                new_key = 'fc.8.bias'
-            elif key == 'fc.3.weight':
-                new_key = 'fc.4.weight'
-            elif key == 'fc.3.bias':
-                new_key = 'fc.4.bias'
-            elif key == 'fc.4.weight':
-                new_key = 'fc.6.weight'
-            elif key == 'fc.4.bias':
-                new_key = 'fc.6.bias'
-            elif key == 'fc.8.weight':
-                new_key = 'fc.3.weight'
-            elif key == 'fc.8.bias':
-                new_key = 'fc.3.bias'
-            else:
-                new_key = key
-            new_state_dict[new_key] = value
-        
-        model.load_state_dict(new_state_dict, strict=False)
+        # 尝试加载模型
+        model.load_state_dict(torch.load(model_path, map_location=device))
         model.to(device)
         model.eval()
         print(f"模型加载成功，使用设备: {device}")
     except Exception as e:
-        print(f"加载模型失败: {e}")
-        # 尝试直接加载（不重命名键）
-        try:
-            model.load_state_dict(torch.load(model_path, map_location=device), strict=False)
-            model.to(device)
-            model.eval()
-            print(f"使用宽松模式加载模型成功")
-        except Exception as e2:
-            print(f"宽松模式加载也失败: {e2}")
-            return None, None
+        print(f"模型加载失败: {e}")
+        return None, None
     
     # 使用训练好的模型求解
     state = env.reset()
-    state_tensor = torch.FloatTensor(state).to(device)
+    state_tensor = torch.FloatTensor(state).unsqueeze(0).to(device)  # 添加batch维度
     done = False
     schedule = []
     
@@ -410,12 +393,12 @@ def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
             valid_q_values = q_values.clone()
             for i in range(action_dim):
                 if i not in valid_actions:
-                    valid_q_values[i] = -float('inf')
+                    valid_q_values[0, i] = -float('inf')  # 注意batch维度
             
             action = valid_q_values.argmax().item()
         
         next_state, reward, done, info = env.step(action)
-        state_tensor = torch.FloatTensor(next_state).to(device)
+        state_tensor = torch.FloatTensor(next_state).unsqueeze(0).to(device)
         
         if 'schedule' in info:
             schedule = info['schedule']
@@ -459,7 +442,7 @@ if __name__ == "__main__":
     problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,2000gene.csv"
     
     # 选择模型
-    model_path = 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 使用优化后的模型
+    model_path = 'improved_jssp_model.pth'  # 使用优化后的模型
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
