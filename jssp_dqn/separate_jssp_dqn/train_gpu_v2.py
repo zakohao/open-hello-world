@@ -419,7 +419,7 @@ def train_optimized(training_datasets):
             })
     
     # 保存模型
-    torch.save(model.state_dict(), 'improved_jssp_model.pth')
+    torch.save(model.state_dict(), 'improved_jssp_model_1.pth')
     print(f"最佳makespan: {best_makespan}")
     
     # 绘制训练曲线
