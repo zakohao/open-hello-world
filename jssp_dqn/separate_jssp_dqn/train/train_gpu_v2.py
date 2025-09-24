@@ -22,14 +22,14 @@ else:
     device = torch.device("cpu")
     print("使用CPU")
 
-# Hyperparameters - 调整为更适合密集训练的参数
-EPISODES = 1000  # 减少总episode数，但每个episode更有效
-GAMMA = 0.99     # 增加折扣因子，更重视长期奖励
-LR = 0.001       # 适当增加学习率
-EPSILON_DECAY = 0.998  # 减慢探索衰减
-MIN_EPSILON = 0.05     # 保持一定探索
-BATCH_SIZE = 64        # 减小批次大小
-MEMORY_SIZE = 50000    # 增加经验回放缓冲区
+# Hyperparameters
+EPISODES = 1000  
+GAMMA = 0.99     
+LR = 0.001       
+EPSILON_DECAY = 0.998  
+MIN_EPSILON = 0.05     
+BATCH_SIZE = 64        
+MEMORY_SIZE = 50000    
 UPDATE_FREQUENCY = 1   # 每步都更新
 
 class JSSPEnv:
@@ -55,7 +55,7 @@ class JSSPEnv:
         return self._get_state()
     
     def _get_state(self):
-        """简化的状态表示，类似于第二个代码的成功方案"""
+        """简化的状态表示"""
         state = []
         
         # 1. 每个作业的下一道工序信息
@@ -79,6 +79,8 @@ class JSSPEnv:
         total_ops = self.num_jobs * self.num_machines
         progress = completed_ops / total_ops if total_ops > 0 else 0
         state.append(progress)
+
+        # 去除了环境中的机器的利用率状态
         
         return np.array(state, dtype=np.float32)
     
@@ -115,8 +117,7 @@ class JSSPEnv:
         self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        # ========== 改进的奖励函数 ==========
-        # 基于第二个代码的成功经验
+        # ========== 改进奖励函数 ==========
         
         # 1. 基础时间惩罚（鼓励快速完成）
         time_penalty = -proc_time * 0.01
@@ -164,7 +165,7 @@ class JSSPEnv:
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
-        # 使用更简单的网络结构，类似于第二个代码
+        # 改变网络结构
         self.fc = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
@@ -422,35 +423,10 @@ def train_optimized(training_datasets):
     torch.save(model.state_dict(), 'improved_jssp_model_1.pth')
     print(f"最佳makespan: {best_makespan}")
     
-    # 绘制训练曲线
-    if makespans:
-        plt.figure(figsize=(12, 4))
-        plt.subplot(1, 2, 1)
-        plt.plot(makespans)
-        plt.xlabel('Episode')
-        plt.ylabel('Makespan')
-        plt.title('Training Progress')
-        plt.grid(True)
-        
-        plt.subplot(1, 2, 2)
-        # 计算移动平均
-        window = min(50, len(makespans))
-        if len(makespans) > window:
-            moving_avg = np.convolve(makespans, np.ones(window)/window, mode='valid')
-            plt.plot(moving_avg)
-            plt.xlabel('Episode')
-            plt.ylabel('Makespan (Moving Avg)')
-            plt.title('Smoothed Training Progress')
-            plt.grid(True)
-        
-        plt.tight_layout()
-        plt.savefig('training_progress.png')
-        plt.show()
-    
     return model, best_schedule
 
 if __name__ == "__main__":
-    print("开始训练改进的JSSP模型")
+    print("开始训练JSSP模型")
     folder_path = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]"
     
     # 加载训练数据
@@ -462,9 +438,9 @@ if __name__ == "__main__":
         print("训练完成！")
         
         # 测试最佳调度
-        if best_schedule:
-            print(f"最佳调度方案 (makespan: {max([end for _, _, _, _, end in best_schedule]):.1f})")
-            for job, op, machine, start, end in best_schedule:
-                print(f"作业{job} 工序{op} -> 机器{machine}: {start:.1f}-{end:.1f}")
+        #if best_schedule:
+            #print(f"最佳调度方案 (makespan: {max([end for _, _, _, _, end in best_schedule]):.1f})")
+            #for job, op, machine, start, end in best_schedule:
+                #print(f"作业{job} 工序{op} -> 机器{machine}: {start:.1f}-{end:.1f}")
     else:
         print("未找到有效的训练数据")
