@@ -456,10 +456,10 @@ if __name__ == "__main__":
     print(f"使用设备: {device}")
 
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,2000gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,3000gene.csv"
     
     # 选择模型
-    model_path = 'new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 使用优化后的模型
+    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\new_GPU_R(p+u)_LR0.0005_1000ep_barch128_jssp_model_npcb_(10,2)_(3,1)_(13)_(3).pth'  # 使用优化后的模型
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
