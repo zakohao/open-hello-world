@@ -23,14 +23,14 @@ else:
     print("使用CPU")
 
 # Hyperparameters
-EPISODES = 2000  
-GAMMA = 0.95     
-LR = 0.0005       
-EPSILON_DECAY = 0.998  
-MIN_EPSILON = 0.01     
-BATCH_SIZE = "dynamic"        
-MEMORY_SIZE = 100000    
-UPDATE_FREQUENCY = 1   # 每步都更新
+EPISODES = 3000  
+GAMMA = 0.99           # 越接近1表示越重视长期回报
+LR = 0.00001           # 较小的学习率使训练更稳定但收敛较慢
+EPSILON_DECAY = 0.998  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
+MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
+BATCH_SIZE = "dynamic"
+MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
+UPDATE_FREQUENCY = 1   # 每执行1步就进行一次梯度更新
 
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
@@ -55,7 +55,6 @@ class JSSPEnv:
         return self._get_state()
     
     def _get_state(self):
-        """简化的状态表示"""
         state = []
         
         # 1. 每个作业的下一道工序信息
@@ -117,7 +116,7 @@ class JSSPEnv:
         self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        # ========== 改进奖励函数 ==========
+        # 奖励函数
         
         # 1. 基础时间惩罚（鼓励快速完成）
         time_penalty = -proc_time * 0.01
@@ -165,7 +164,6 @@ class JSSPEnv:
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
-        # 改变网络结构
         self.fc = nn.Sequential(
             nn.Linear(input_dim, 256),
             nn.ReLU(),
@@ -375,10 +373,9 @@ def train_focused(training_datasets):
             total_reward += reward
             steps += 1
             
-            # ========== 关键修改：动态批量大小 ==========
             current_batch_size = min(32, len(memory))  # 动态批量大小
             
-            # 经验回放 - 使用全局记忆库
+            # 经验回放
             if len(memory) >= current_batch_size:
                 batch = random.sample(memory, current_batch_size)
                 
@@ -409,8 +406,6 @@ def train_focused(training_datasets):
             episode_batch_size = min(len(episode_memory), 16)
             if episode_batch_size >= 4:  # 确保有足够样本
                 episode_batch = random.sample(episode_memory, episode_batch_size)
-                
-                # 训练逻辑同上...
         
         # 记录结果
         if env.done:
