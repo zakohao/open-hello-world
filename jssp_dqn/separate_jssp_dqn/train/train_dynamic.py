@@ -303,7 +303,7 @@ def load_folder_data(folder_path):
     print(f"总共加载了 {valid_files} 个有效数据集")
     return datasets
 
-def train_focused(training_datasets):
+def train_dynamic(training_datasets):
     """专注于单个数据集的训练版本"""
     if not training_datasets:
         print("没有可用的训练数据!")
@@ -430,7 +430,7 @@ def train_focused(training_datasets):
             })
     
     # 保存模型
-    torch.save(model.state_dict(), 'focused_jssp_model.pth')
+    torch.save(model.state_dict(), 'dynamic_jssp_model.pth')
     print(f"最佳makespan: {best_makespan}")
     
     return model, best_schedule
@@ -444,7 +444,7 @@ if __name__ == "__main__":
     
     # 训练模型
     if training_datasets:
-        model, best_schedule = train_focused(training_datasets)
+        model, best_schedule = train_dynamic(training_datasets)
         print("训练完成！")
         
         # 测试最佳调度
