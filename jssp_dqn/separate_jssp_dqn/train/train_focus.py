@@ -24,10 +24,10 @@ else:
 
 # Hyperparameters
 EPISODES = 3000  
-GAMMA = 0.99           # 越接近1表示越重视长期回报
-LR = 0.00001           # 较小的学习率使训练更稳定但收敛较慢
-EPSILON_DECAY = 0.998  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
-MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
+GAMMA = 0.97           # 越接近1表示越重视长期回报
+LR = 0.0005           # 较小的学习率使训练更稳定但收敛较慢
+EPSILON_DECAY = 0.9997  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
+MIN_EPSILON = 0.08     # 最小探索率 越大越随机选择，越小越选择当前最适
 BATCH_SIZE = "dynamic"
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
 UPDATE_FREQUENCY = 1   # 每执行1步就进行一次梯度更新
@@ -399,8 +399,8 @@ def train_focused(training_datasets):
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
         
-        # ========== Episode结束后的额外学习 ==========
-        # 使用当前episode的经验进行额外训练（可选）
+        # Episode结束后的额外学习
+        # 使用当前episode的经验进行额外训练
         if len(episode_memory) > 0:
             # 可以选择使用当前episode的所有经验进行训练
             episode_batch_size = min(len(episode_memory), 16)
