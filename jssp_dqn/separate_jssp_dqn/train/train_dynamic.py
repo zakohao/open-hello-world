@@ -401,11 +401,11 @@ def train_focused(training_datasets):
         
         # Episode结束后的额外学习
         # 使用当前episode的经验进行额外训练
-        if len(episode_memory) > 0:
+        #if len(episode_memory) > 0:
             # 可以选择使用当前episode的所有经验进行训练
-            episode_batch_size = min(len(episode_memory), 16)
-            if episode_batch_size >= 4:  # 确保有足够样本
-                episode_batch = random.sample(episode_memory, episode_batch_size)
+            #episode_batch_size = min(len(episode_memory), 16)
+            #if episode_batch_size >= 4:  # 确保有足够样本
+                #episode_batch = random.sample(episode_memory, episode_batch_size)
         
         # 记录结果
         if env.done:
