@@ -23,14 +23,14 @@ else:
     print("使用CPU")
 
 # Hyperparameters
-EPISODES = 3000  
-GAMMA = 0.97           # 越接近1表示越重视长期回报
+EPISODES = 2000  
+GAMMA = 0.95           # 越接近1表示越重视长期回报
 LR = 0.0005           # 较小的学习率使训练更稳定但收敛较慢
-EPSILON_DECAY = 0.9995  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
-MIN_EPSILON = 0.3     # 最小探索率 越大越随机选择，越小越选择当前最适
-BATCH_SIZE = 64        # 固定批量大小
+EPSILON_DECAY = 0.998  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
+MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
+BATCH_SIZE = 32        # 固定批量大小
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
-UPDATE_TARGET_FREQUENCY = 100  # 每100步更新一次目标网络
+UPDATE_TARGET_FREQUENCY = 50  # 每50步更新一次目标网络
 MIN_COMPLETE_EPISODES = 30     # 完成30个数据集的完整调度后才开始训练
 
 class JSSPEnv:
