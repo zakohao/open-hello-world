@@ -118,12 +118,12 @@ class JSSPEnv:
         # 奖励函数
         
         # 1. 基础时间惩罚（鼓励快速完成）
-        time_penalty = proc_time * 0.01
+        time_penalty = -proc_time * 0.01
         
         # 2. 机器负载平衡奖励
         machine_loads = [t for t in self.time_table]
         load_std = np.std(machine_loads) if machine_loads else 0
-        load_balance_reward = load_std * 0.1  # 负载越均衡奖励越高
+        load_balance_reward = -load_std * 0.1  # 负载越均衡奖励越高
         
         # 3. 进度奖励（鼓励推进进度）
         progress_reward = 0
