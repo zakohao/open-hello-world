@@ -441,7 +441,8 @@ def train_dynamic(training_datasets):
             total_steps += 1
             
             # 经验回放（在完整调度过程中进行）
-            if len(memory) >= BATCH_SIZE:
+            if len(memory) % BATCH_SIZE == 0:
+            #if len(memory) >= BATCH_SIZE:
                 batch = random.sample(memory, BATCH_SIZE)
                 
                 states, actions, rewards, next_states, dones = zip(*batch)
