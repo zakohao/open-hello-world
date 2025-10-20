@@ -28,10 +28,10 @@ GAMMA = 0.95           # 越接近1表示越重视长期回报
 LR = 0.0005           # 较小的学习率使训练更稳定但收敛较慢
 EPSILON_DECAY = 0.998  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
 MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
-BATCH_SIZE = 32        # 固定批量大小
+BATCH_SIZE = 64        # 固定批量大小
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
-UPDATE_TARGET_FREQUENCY = 50  # 每50步更新一次目标网络
-MIN_COMPLETE_EPISODES = 30     # 完成30个数据集的完整调度后才开始训练
+UPDATE_TARGET_FREQUENCY = 30  # 每UPDATE_TARGET_FREQUENCY步更新一次目标网络
+MIN_COMPLETE_EPISODES = 10     # 完成MIN_COMPLETE_EPISODES个数据集的完整调度后才开始训练
 
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
@@ -53,6 +53,7 @@ class JSSPEnv:
         self.done = False
         self.schedule = []
         self.total_processing_time = np.sum(self.processing_times)
+        self.completed_ops = 0  # 初始化累计完成工序数
         return self._get_state()
     
     def _get_state(self):
@@ -118,35 +119,63 @@ class JSSPEnv:
         # 奖励函数
         
         # 1. 基础时间惩罚（鼓励快速完成）
-        time_penalty = -proc_time * 0.01
+        #time_penalty = -proc_time * 0.01
         
         # 2. 机器负载平衡奖励
-        machine_loads = [t for t in self.time_table]
-        load_std = np.std(machine_loads) if machine_loads else 0
-        load_balance_reward = -load_std * 0.1  # 负载越均衡奖励越高
+        #machine_loads = [t for t in self.time_table]
+        #load_std = np.std(machine_loads) if machine_loads else 0
+        #load_balance_reward = -load_std * 0.1  # 负载越均衡奖励越高
         
         # 3. 进度奖励（鼓励推进进度）
-        progress_reward = 0
-        completed_ops = sum(self.current_step)
-        total_ops = self.num_jobs * self.num_machines
-        if total_ops > 0:
-            progress = completed_ops / total_ops
-            progress_reward = progress * 10
+        #progress_reward = 0
+        #completed_ops = sum(self.current_step)
+        #total_ops = self.num_jobs * self.num_machines
+        #if total_ops > 0:
+            #progress = completed_ops / total_ops
+            #progress_reward = progress * 10
         
         # 4. 完成作业奖励
-        completion_reward = 0
-        if self.current_step[job] == self.num_machines:  # 作业完成
-            completion_reward = 100
+        #completion_reward = 0
+        #if self.current_step[job] == self.num_machines:  # 作业完成
+            #completion_reward = 100
         
         # 5. 最终奖励（基于makespan）
+        #final_reward = 0
+        #if self.done:
+            #makespan = max(self.job_end_times)
+            # 基于理论下界的相对奖励
+            #theoretical_lower_bound = self.total_processing_time / len(self.all_machines)
+            #efficiency = theoretical_lower_bound / makespan if makespan > 0 else 0
+            #final_reward = efficiency * 500  # 效率越高奖励越大
+        
+        # 改进后的 reward
+        time_penalty = -proc_time * 0.05   # 处理时间惩罚
+
+        # 进度差分奖励
+        total_ops = self.num_jobs * self.num_machines
+        progress_prev = self.completed_ops / total_ops if total_ops > 0 else 0
+        self.completed_ops += 1
+        progress_now = self.completed_ops / total_ops
+        progress_reward = (progress_now - progress_prev) * 30  # 平滑奖励（最大≈30）
+
+        # 机器负载平衡
+        machine_loads = [t for t in self.time_table]
+        if len(machine_loads) > 1:
+            load_balance_reward = -np.std(machine_loads) * 0.05
+        else:
+            load_balance_reward = 0
+
+        # 单作业完成奖励
+        completion_reward = 15 if self.current_step[job] == self.num_machines else 0
+
+        # 最终效率奖励
         final_reward = 0
         if self.done:
             makespan = max(self.job_end_times)
-            # 基于理论下界的相对奖励
             theoretical_lower_bound = self.total_processing_time / len(self.all_machines)
             efficiency = theoretical_lower_bound / makespan if makespan > 0 else 0
-            final_reward = efficiency * 500  # 效率越高奖励越大
-        
+            final_reward = efficiency * 100
+
         # 组合奖励
         reward = (time_penalty + load_balance_reward + progress_reward + 
                  completion_reward + final_reward)
@@ -302,7 +331,7 @@ def load_folder_data(folder_path):
     print(f"总共加载了 {valid_files} 个有效数据集")
     return datasets
 
-def train_dynamic(training_datasets):
+def train_target(training_datasets):
     if not training_datasets:
         print("没有可用的训练数据!")
         return None, None
@@ -441,8 +470,8 @@ def train_dynamic(training_datasets):
             total_steps += 1
             
             # 经验回放（在完整调度过程中进行）
-            if len(memory) % BATCH_SIZE == 0:
-            #if len(memory) >= BATCH_SIZE:
+            #if len(memory) % BATCH_SIZE == 0:
+            if len(memory) >= BATCH_SIZE:
                 batch = random.sample(memory, BATCH_SIZE)
                 
                 states, actions, rewards, next_states, dones = zip(*batch)
@@ -517,7 +546,7 @@ if __name__ == "__main__":
     
     # 训练模型
     if training_datasets:
-        model, target_model, best_schedule = train_dynamic(training_datasets)
+        model, target_model, best_schedule = train_target(training_datasets)
         print("训练完成！")
         
         # 测试最佳调度

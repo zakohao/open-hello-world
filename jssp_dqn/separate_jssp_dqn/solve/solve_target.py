@@ -452,7 +452,7 @@ if __name__ == "__main__":
     problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,5gene.csv"
     
     # 选择模型
-    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\target_2.pth' 
+    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\target_4.pth' 
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
