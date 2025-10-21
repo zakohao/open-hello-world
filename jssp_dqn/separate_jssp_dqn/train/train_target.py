@@ -149,14 +149,14 @@ class JSSPEnv:
             #final_reward = efficiency * 500  # 效率越高奖励越大
         
         # 改进后的 reward
-        time_penalty = -proc_time * 0.05   # 处理时间惩罚
+        time_penalty = -proc_time * 0.05   
 
         # 进度差分奖励
         total_ops = self.num_jobs * self.num_machines
         progress_prev = self.completed_ops / total_ops if total_ops > 0 else 0
         self.completed_ops += 1
         progress_now = self.completed_ops / total_ops
-        progress_reward = (progress_now - progress_prev) * 30  # 平滑奖励（最大≈30）
+        progress_reward = (progress_now - progress_prev) * 30  
 
         # 机器负载平衡
         machine_loads = [t for t in self.time_table]
