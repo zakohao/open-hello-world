@@ -116,38 +116,6 @@ class JSSPEnv:
         self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(step >= self.num_machines for step in self.current_step)
         
-        # 奖励函数
-        
-        # 1. 基础时间惩罚（鼓励快速完成）
-        #time_penalty = -proc_time * 0.01
-        
-        # 2. 机器负载平衡奖励
-        #machine_loads = [t for t in self.time_table]
-        #load_std = np.std(machine_loads) if machine_loads else 0
-        #load_balance_reward = -load_std * 0.1  # 负载越均衡奖励越高
-        
-        # 3. 进度奖励（鼓励推进进度）
-        #progress_reward = 0
-        #completed_ops = sum(self.current_step)
-        #total_ops = self.num_jobs * self.num_machines
-        #if total_ops > 0:
-            #progress = completed_ops / total_ops
-            #progress_reward = progress * 10
-        
-        # 4. 完成作业奖励
-        #completion_reward = 0
-        #if self.current_step[job] == self.num_machines:  # 作业完成
-            #completion_reward = 100
-        
-        # 5. 最终奖励（基于makespan）
-        #final_reward = 0
-        #if self.done:
-            #makespan = max(self.job_end_times)
-            # 基于理论下界的相对奖励
-            #theoretical_lower_bound = self.total_processing_time / len(self.all_machines)
-            #efficiency = theoretical_lower_bound / makespan if makespan > 0 else 0
-            #final_reward = efficiency * 500  # 效率越高奖励越大
-        
         # 改进后的 reward
         time_penalty = -proc_time * 0.05   
 

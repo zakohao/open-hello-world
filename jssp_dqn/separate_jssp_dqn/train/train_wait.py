@@ -26,12 +26,12 @@ else:
 EPISODES = 2000  
 GAMMA = 0.95           # 越接近1表示越重视长期回报
 LR = 0.0005           # 较小的学习率使训练更稳定但收敛较慢
-EPSILON_DECAY = 0.998  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
+EPSILON_DECAY = 0.9995  # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
 MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
-BATCH_SIZE = 64        # 固定批量大小
+BATCH_SIZE = 128        # 固定批量大小
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
 UPDATE_TARGET_FREQUENCY = 30  # 每UPDATE_TARGET_FREQUENCY步更新一次目标网络
-MIN_COMPLETE_EPISODES = 10     # 完成MIN_COMPLETE_EPISODES个数据集的完整调度后才开始训练
+MIN_COMPLETE_EPISODES = 2     # 完成MIN_COMPLETE_EPISODES个数据集的完整调度后才开始训练
 
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
@@ -81,6 +81,44 @@ class JSSPEnv:
         progress = completed_ops / total_ops if total_ops > 0 else 0
         state.append(progress)
 
+        # 5. 机器相对负载（帮助识别瓶颈）
+        if len(self.time_table) > 0:
+            max_machine_time = max(self.time_table)
+            if max_machine_time > 0:
+                machine_relative_load = [t / max_machine_time for t in self.time_table]
+                state.extend(machine_relative_load)
+            else:
+                state.extend([0] * len(self.time_table))
+        else:
+            state.extend([0] * len(self.all_machines))
+
+        # 6. 作业剩余工作量
+        for job in range(self.num_jobs):
+            remaining_ops = self.num_machines - self.current_step[job]
+            if remaining_ops > 0:
+                remaining_time = sum(self.processing_times[job, self.current_step[job]:])
+                state.append(remaining_time)
+            else:
+                state.append(0)
+
+        # 7. 可选动作的特征（处理时间分布）
+        valid_actions = self.get_valid_actions()
+        if valid_actions:
+            valid_proc_times = []
+            for job in valid_actions:
+                op = self.current_step[job]
+                proc_time = self.processing_times[job, op]
+                valid_proc_times.append(proc_time)
+        
+            if valid_proc_times:
+                state.append(min(valid_proc_times))  # 最短处理时间
+                state.append(max(valid_proc_times))  # 最长处理时间
+                state.append(np.mean(valid_proc_times))  # 平均处理时间
+            else:
+                state.extend([0, 0, 0])
+        else:
+            state.extend([0, 0, 0])
+
         return np.array(state, dtype=np.float32)
     
     def get_valid_actions(self):
@@ -122,37 +160,6 @@ class JSSPEnv:
         
         # 奖励函数
         
-        # 1. 基础时间惩罚（鼓励快速完成）
-        #time_penalty = -proc_time * 0.01
-        
-        # 2. 机器负载平衡奖励
-        #machine_loads = [t for t in self.time_table]
-        #load_std = np.std(machine_loads) if machine_loads else 0
-        #load_balance_reward = -load_std * 0.1  # 负载越均衡奖励越高
-        
-        # 3. 进度奖励（鼓励推进进度）
-        #progress_reward = 0
-        #completed_ops = sum(self.current_step)
-        #total_ops = self.num_jobs * self.num_machines
-        #if total_ops > 0:
-            #progress = completed_ops / total_ops
-            #progress_reward = progress * 10
-        
-        # 4. 完成作业奖励
-        #completion_reward = 0
-        #if self.current_step[job] == self.num_machines:  # 作业完成
-            #completion_reward = 100
-        
-        # 5. 最终奖励（基于makespan）
-        #final_reward = 0
-        #if self.done:
-            #makespan = max(self.job_end_times)
-            # 基于理论下界的相对奖励
-            #theoretical_lower_bound = self.total_processing_time / len(self.all_machines)
-            #efficiency = theoretical_lower_bound / makespan if makespan > 0 else 0
-            #final_reward = efficiency * 500  # 效率越高奖励越大
-        
-        # 改进后的 reward
         time_penalty = -proc_time * 0.05   
 
         # 进度差分奖励

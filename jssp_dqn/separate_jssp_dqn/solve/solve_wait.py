@@ -221,6 +221,7 @@ class JSSPEnv:
         self.job_end_times = [0] * self.num_jobs
         self.done = False
         self.schedule = []
+        self.completed_ops = 0  # 用于进度奖励计算
         
         # 初始化利用率相关变量
         self.machine_total_time = [0] * len(self.all_machines)
@@ -229,54 +230,117 @@ class JSSPEnv:
         return self._get_state()
     
     def _get_state(self):
-        """使用与训练代码完全相同的状态表示"""
+        """使用与训练代码完全相同的状态表示 - 56维"""
         state = []
         
-        # 1. 当前可执行操作的机器和处理时间（12维：6个作业 × 2个特征）
-        for job in range(6):  # 固定6个作业，与训练时一致
-            op = self.current_step[job]
-            if op < self.num_machines:
-                machine = self.machine_assignments[job, op]
-                proc_time = self.processing_times[job, op]
-                state.extend([machine, proc_time])
+        # 1. 每个作业的下一道工序信息（6个作业 × 2个特征 = 12维）
+        for job in range(6):  # 固定6个作业
+            if job < self.num_jobs:  # 确保不超出实际作业数
+                op = self.current_step[job]
+                if op < self.num_machines:
+                    machine = self.machine_assignments[job, op]
+                    proc_time = self.processing_times[job, op]
+                    state.extend([machine, proc_time])
+                else:
+                    state.extend([0, 0])
             else:
-                state.extend([0, 0])
+                state.extend([0, 0])  # 填充到6个作业
         
-        # 2. 机器当前负载（13维：13台机器）
-        # 如果机器数不足13，用0填充；如果超过13，截断
-        num_machines_needed = 13
-        for i in range(min(len(self.time_table), num_machines_needed)):
+        # 2. 机器当前时间（13维）
+        for i in range(min(13, len(self.time_table))):
             state.append(self.time_table[i])
         # 填充到13维
-        while len(state) < 12 + num_machines_needed:
+        while len(state) < 12 + 13:
             state.append(0)
         
-        # 3. 作业完成情况（6维：6个作业）
+        # 3. 作业完成时间（6维）
         for i in range(min(6, len(self.job_end_times))):
             state.append(self.job_end_times[i])
         # 填充到6维
-        while len(state) < 12 + num_machines_needed + 6:
+        while len(state) < 12 + 13 + 6:
             state.append(0)
         
-        # 4. 机器利用率信息（2维：只取前2个机器的利用率）
-        util_count = 2  # 训练时只用了2维
-        for i in range(min(util_count, len(self.all_machines))):
-            if self.machine_total_time[i] > 0:
-                util = self.machine_working_time[i] / self.machine_total_time[i]
+        # 4. 进度信息（1维）
+        completed_ops = sum(min(self.current_step[job], self.actual_ops_per_job[job]) 
+                           for job in range(self.num_jobs))
+        total_ops = sum(self.actual_ops_per_job)
+        progress = completed_ops / total_ops if total_ops > 0 else 0
+        state.append(progress)
+        
+        # 5. 机器相对负载（13维）
+        if len(self.time_table) > 0:
+            max_machine_time = max(self.time_table)
+            if max_machine_time > 0:
+                machine_relative_load = [t / max_machine_time for t in self.time_table]
             else:
-                util = 0
-            state.append(util)
+                machine_relative_load = [0] * len(self.time_table)
+        else:
+            machine_relative_load = []
+        
+        # 只取前13台机器的相对负载
+        for i in range(min(13, len(machine_relative_load))):
+            state.append(machine_relative_load[i])
+        # 填充到13维
+        while len(state) < 12 + 13 + 6 + 1 + 13:
+            state.append(0)
+        
+        # 6. 作业剩余工作量（6维）
+        for job in range(6):
+            if job < self.num_jobs:
+                remaining_ops = self.actual_ops_per_job[job] - self.current_step[job]
+                if remaining_ops > 0:
+                    remaining_time = 0
+                    for op in range(self.current_step[job], min(self.actual_ops_per_job[job], self.num_machines)):
+                        remaining_time += self.processing_times[job, op]
+                    state.append(remaining_time)
+                else:
+                    state.append(0)
+            else:
+                state.append(0)
+        # 填充到6维
+        while len(state) < 12 + 13 + 6 + 1 + 13 + 6:
+            state.append(0)
+        
+        # 7. 可选动作的特征（3维：最小、最大、平均处理时间）
+        valid_actions = self.get_valid_actions()
+        if valid_actions:
+            valid_proc_times = []
+            for job in valid_actions:
+                op = self.current_step[job]
+                if op < self.num_machines:
+                    proc_time = self.processing_times[job, op]
+                    valid_proc_times.append(proc_time)
+            
+            if valid_proc_times:
+                state.append(min(valid_proc_times))
+                state.append(max(valid_proc_times))
+                state.append(np.mean(valid_proc_times))
+            else:
+                state.extend([0, 0, 0])
+        else:
+            state.extend([0, 0, 0])
+        
+        # 8. 额外添加2维以匹配56维
+        # 添加机器利用率信息（2维）
+        util_count = 2
+        if len(self.all_machines) > 0:
+            for i in range(min(util_count, len(self.all_machines))):
+                if self.machine_total_time[i] > 0:
+                    util = self.machine_working_time[i] / self.machine_total_time[i]
+                else:
+                    util = 0
+                state.append(util)
         # 填充到2维
-        while len(state) < 12 + num_machines_needed + 6 + util_count:
+        while len(state) < 12 + 13 + 6 + 1 + 13 + 6 + 3 + util_count:
             state.append(0)
         
-        # 确保状态维度为33
-        if len(state) != 33:
-            print(f"警告: 状态维度为{len(state)}")
-            if len(state) > 33:
-                state = state[:33]
+        # 确保状态维度为56
+        if len(state) != 56:
+            print(f"警告: 状态维度为{len(state)}，期望56")
+            if len(state) > 56:
+                state = state[:56]
             else:
-                state.extend([0] * (33 - len(state)))
+                state.extend([0] * (56 - len(state)))
         
         return np.array(state, dtype=np.float32)
     
@@ -296,46 +360,133 @@ class JSSPEnv:
         
         # 检查动作是否有效
         if self.done or op >= self.actual_ops_per_job[job] or job not in self.get_valid_actions():
-            return self._get_state(), -10, self.done, {}
+            return self._get_state(), -50, self.done, {}  # 与训练时一致的惩罚
         
         machine_id = self.machine_assignments[job, op]
         machine_idx = self.machine_to_index[machine_id]
         proc_time = self.processing_times[job, op]
         
+        # 计算开始时间
         start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
+
+        # 保存状态用于计算延迟相关奖励
+        prev_machine_idle_time = self.time_table[machine_idx] - max(self.time_table) if self.time_table else 0
+        prev_job_wait_time = self.time_table[machine_idx] - self.job_end_times[job]
         
-        # 更新机器总时间和工作时间
-        self.machine_total_time[machine_idx] = end_time
-        self.machine_working_time[machine_idx] += proc_time
-        
+        # 更新状态
         self.job_end_times[job] = end_time
         self.time_table[machine_idx] = end_time
         
-        self.schedule.append((job, op, machine_id, start_time, end_time))
+        # 更新机器总时间和工作时间
+        self.machine_total_time[machine_idx] = max(self.machine_total_time[machine_idx], end_time)
+        self.machine_working_time[machine_idx] += proc_time
         
         self.current_step[job] += 1
+        
+        self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(step >= self.actual_ops_per_job[i] for i, step in enumerate(self.current_step))
         
-        # 使用简化的奖励函数（与训练时一致）
-        reward = -proc_time  # 基础时间惩罚
-        
-        # 完成奖励
-        if self.current_step[job] == self.actual_ops_per_job[job]:
-            reward += 10
-        
-        # 最终奖励
+        # 使用与训练时完全相同的奖励函数
+        time_penalty = -proc_time * 0.05   
+
+        # 进度差分奖励
+        total_ops = sum(self.actual_ops_per_job)
+        progress_prev = self.completed_ops / total_ops if total_ops > 0 else 0
+        self.completed_ops += 1
+        progress_now = self.completed_ops / total_ops
+        progress_reward = (progress_now - progress_prev) * 30  
+
+        # 机器负载平衡
+        machine_loads = [t for t in self.time_table]
+        if len(machine_loads) > 1:
+            load_balance_reward = -np.std(machine_loads) * 0.05
+        else:
+            load_balance_reward = 0
+
+        # 单作业完成奖励
+        completion_reward = 15 if self.current_step[job] == self.actual_ops_per_job[job] else 0
+
+        # 机会成本惩罚
+        opportunity_cost_penalty = 0
+        valid_actions = self.get_valid_actions()
+        if len(valid_actions) > 1:
+            current_proc_time = proc_time
+            fastest_job = None
+            fastest_time = float('inf')
+            for other_job in valid_actions:
+                if other_job != job:
+                    other_op = self.current_step[other_job]
+                    if other_op < self.num_machines:
+                        other_proc_time = self.processing_times[other_job, other_op]
+                        if other_proc_time < fastest_time:
+                            fastest_time = other_proc_time
+                            fastest_job = other_job
+            
+            if fastest_job is not None and current_proc_time > fastest_time:
+                opportunity_cost_penalty = -0.1 * (current_proc_time - fastest_time)
+
+        # 机器空闲时间利用奖励
+        machine_utilization_reward = 0
+        if prev_machine_idle_time > 0 and start_time == self.time_table[machine_idx]:
+            machine_utilization_reward = 0.5
+        elif prev_job_wait_time > 0:
+            machine_utilization_reward = -0.1
+
+        # 关键路径启发式奖励
+        critical_path_reward = 0
+        if not self.done:
+            remaining_work = []
+            for j in range(self.num_jobs):
+                remaining_ops = self.actual_ops_per_job[j] - self.current_step[j]
+                if remaining_ops > 0:
+                    remaining_time = 0
+                    for op_idx in range(self.current_step[j], min(self.actual_ops_per_job[j], self.num_machines)):
+                        remaining_time += self.processing_times[j, op_idx]
+                    remaining_work.append((j, remaining_time))
+            
+            if remaining_work:
+                max_remaining_job, max_remaining_time = max(remaining_work, key=lambda x: x[1])
+                if job == max_remaining_job:
+                    critical_path_reward = 0.3
+
+        # 瓶颈机器识别奖励
+        bottleneck_reward = 0
+        if len(self.time_table) > 0:
+            max_load_machine_idx = np.argmax(self.time_table)
+            max_load = self.time_table[max_load_machine_idx]
+            avg_load = np.mean(self.time_table)
+            
+            if max_load > avg_load * 1.2 and machine_idx == max_load_machine_idx:
+                bottleneck_reward = -0.2
+            elif machine_idx != max_load_machine_idx:
+                bottleneck_reward = 0.2
+
+        # 最终效率奖励
+        final_reward = 0
         if self.done:
             makespan = max(self.job_end_times)
-            reward += -makespan * 0.01
+            total_processing_time = sum(sum(self.processing_times[j, :self.actual_ops_per_job[j]]) 
+                                       for j in range(self.num_jobs))
+            theoretical_lower_bound = total_processing_time / len(self.all_machines)
+            efficiency = theoretical_lower_bound / makespan if makespan > 0 else 0
+            final_reward = efficiency * 100
+
+        # 组合奖励
+        reward = (time_penalty + load_balance_reward + progress_reward + 
+                 completion_reward + final_reward + 
+                 opportunity_cost_penalty + machine_utilization_reward + 
+                 critical_path_reward + bottleneck_reward)
         
-        return self._get_state(), reward, self.done, {
-            "schedule": self.schedule,
+        info = {
+            "schedule": self.schedule.copy(),
+            "makespan": max(self.job_end_times) if self.done else None,
             "machine_utilization": [self.machine_working_time[i] / self.machine_total_time[i] 
                                    if self.machine_total_time[i] > 0 else 0 
-                                   for i in range(len(self.all_machines))],
-            "makespan": max(self.job_end_times) if self.done else None
+                                   for i in range(len(self.all_machines))]
         }
+        
+        return self._get_state(), reward, self.done, info
 
 def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
     if machine_assignments is None or processing_times is None:
@@ -354,7 +505,7 @@ def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
     # 创建与模型匹配的模型
     model = DQN(state_dim, action_dim)
     try:
-        # 加载模型 - 修正部分
+        # 加载模型
         checkpoint = torch.load(model_path, map_location=device)
         
         # 检查checkpoint的类型并相应处理
@@ -449,10 +600,10 @@ if __name__ == "__main__":
     print(f"使用设备: {device}")
 
     # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,1000gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,99gene.csv"
     
     # 选择模型
-    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_1.pth' 
+    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_2.pth' 
     
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
