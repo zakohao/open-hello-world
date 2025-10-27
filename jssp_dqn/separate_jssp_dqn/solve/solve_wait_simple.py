@@ -260,7 +260,7 @@ def solve_jssp_wait(machine_assignments, processing_times, model_path, device='c
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,99gene.csv"
-    model_path = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_0.pth"
+    model_path = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_simple_0.pth"
 
     print(f"加载文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
