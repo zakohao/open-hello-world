@@ -28,11 +28,9 @@ class DQN(nn.Module):
     def forward(self, x):
         return self.fc(x)
 
-# -------------------------
+
 # CSV 解析（与训练一致）
-# -------------------------
 def parse_tuple(cell):
-    """专门解析元组格式 ('1', '110.0') —— 与训练代码一致"""
     try:
         cell = cell.strip().replace("'", "").replace('"', "")
         if '(' in cell and ')' in cell:
@@ -47,9 +45,7 @@ def parse_tuple(cell):
     return 0, 0.0
 
 def load_single_csv(file_path):
-    """与训练脚本一致：不做过滤，读满所有列"""
     try:
-        # 尝试几种分隔符
         data = None
         for delimiter in [',', '\t', ';']:
             try:
@@ -89,15 +85,14 @@ def load_single_csv(file_path):
             print(f"[X] 数据异常: ma.shape={ma.shape}, pt.shape={pt.shape}")
             return None, None
 
-        print(f"[✓] 加载成功: {os.path.basename(file_path)}, 形状={ma.shape}")
+        print(f"加载成功: {os.path.basename(file_path)}, 形状={ma.shape}")
         return ma, pt
     except Exception as e:
-        print(f"[X] 读取失败: {e}")
+        print(f"读取失败: {e}")
         return None, None
 
-# -------------------------
+
 # 环境（与训练一致：含等待动作0）
-# -------------------------
 class JSSPEnv:
     def __init__(self, machine_assignments, processing_times):
         self.machine_assignments = machine_assignments
@@ -295,9 +290,7 @@ class JSSPEnv:
                 "makespan": max(self.job_end_times) if self.done else None}
         return self._get_state(), reward, self.done, info
 
-# -------------------------
 # 兜底完成调度（与训练一致）
-# -------------------------
 def complete_schedule_with_fallback(env):
     steps = 0
     max_steps = env.num_jobs * env.num_machines * 5
@@ -325,13 +318,12 @@ def complete_schedule_with_fallback(env):
         steps += 1
     return max(env.job_end_times) if env.job_end_times else float('inf')
 
-# -------------------------
-# 甘特图（忽略 machine_id==0）
-# -------------------------
+
+# 甘特图
 def plot_gantt(schedule, num_jobs, all_machines, title="Gantt", filename="gantt.png"):
     sched = [t for t in schedule if t[2] != 0]
     if not sched:
-        print("[!] 无可绘制任务（全为 machine 0 占位）")
+        print("无可绘制任务")
         return
     fig, ax = plt.subplots(figsize=(14, 9))
     cmap = plt.colormaps.get_cmap("tab20").resampled(num_jobs)
@@ -356,11 +348,10 @@ def plot_gantt(schedule, num_jobs, all_machines, title="Gantt", filename="gantt.
     plt.tight_layout()
     plt.savefig(filename, dpi=200)
     plt.close()
-    print(f"[✓] 甘特图已保存: {filename}")
+    print(f"甘特图已保存: {filename}")
 
-# -------------------------
-# 推理/求解
-# -------------------------
+
+# 求解
 def solve_with_trained_model(machine_assignments, processing_times, model_path, device=None,
                              max_steps_factor=10, gantt_name="new_gantt_chart.png"):
     if device is None:
@@ -370,15 +361,15 @@ def solve_with_trained_model(machine_assignments, processing_times, model_path, 
     action_dim = env.num_jobs + 1  # 含等待动作0
     print(f"状态维度={state_dim}, 动作数={action_dim} (含等待0)")
 
-    # 构建模型并加载权重（兼容两种保存方式）
+    # 构建模型并加载权重
     model = DQN(state_dim, action_dim).to(device)
     ckpt = torch.load(model_path, map_location=device)
     if isinstance(ckpt, dict) and "model_state_dict" in ckpt:
         model.load_state_dict(ckpt["model_state_dict"])
-        print("[✓] 从checkpoint['model_state_dict']加载")
+        print("从checkpoint['model_state_dict']加载")
     else:
         model.load_state_dict(ckpt)
-        print("[✓] 从纯state_dict加载")
+        print(" 从纯state_dict加载")
     model.eval()
 
     state = env.reset()
@@ -391,7 +382,7 @@ def solve_with_trained_model(machine_assignments, processing_times, model_path, 
         steps += 1
         valid = env.get_valid_actions()
         if not valid:
-            print("[!] 无有效动作")
+            print(" 无有效动作")
             break
 
         st = torch.as_tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
@@ -422,22 +413,19 @@ def solve_with_trained_model(machine_assignments, processing_times, model_path, 
         state = next_state
 
     if not done:
-        print(f"[i] 未在 {max_steps} 步内完成，启动兜底策略...")
+        print(f"未在 {max_steps} 步内完成，启动兜底策略...")
         makespan = complete_schedule_with_fallback(env)
         done = True
     else:
         makespan = info["makespan"]
 
     dt = time.time() - t0
-    print(f"[✓] 求解结束：done={done}, steps={steps}, makespan={makespan:.2f}, 用时={dt:.2f}s")
+    print(f"求解结束:done={done}, steps={steps}, makespan={makespan:.2f}, 用时={dt:.2f}s")
 
-    # 画甘特图（忽略 machine_id==0）
+    # 画甘特图
     plot_gantt(env.schedule, env.num_jobs, env.all_machines, title=f"Makespan={makespan:.1f}", filename=gantt_name)
     return env.schedule, makespan
 
-# -------------------------
-# main
-# -------------------------
 if __name__ == "__main__":
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"使用设备: {device}")
