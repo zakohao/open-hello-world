@@ -8,8 +8,6 @@ import torch.nn as nn
 import torch.optim as optim
 from collections import deque
 from tqdm import tqdm
-from multiprocessing import Pool
-from torch.utils.data import Dataset, DataLoader
 
 # 获取当前脚本所在的目录
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,8 +21,8 @@ else:
     print("使用CPU")
 
 # Hyperparameters
-EPISODES = 800
-GAMMA = 0.90           # 越接近1表示越重视长期回报
+EPISODES = 300
+GAMMA = 0.95           # 越接近1表示越重视长期回报
 LR = 0.0005            # 较小的学习率使训练更稳定但收敛较慢
 EPSILON_DECAY = 0.9995 # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
 MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
@@ -625,33 +623,54 @@ def evaluate_model_on_datasets(model, datasets, device):
     return avg_makespan
 
 
-def plot_evaluation_results(evaluation_results, hyperparams):
-    """绘制固定测试集评估结果的折线图"""
-    if not evaluation_results:
-        print("没有评估结果可绘制")
+def plot_evaluation_results(evaluation_results, episode_losses, hyperparams):
+    if not evaluation_results and not episode_losses:
+        print("没有评估结果或loss值可绘制")
         return
         
-    episodes, makespans = zip(*evaluation_results)
+     # 创建包含两个子图的画布
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
     
-    plt.figure(figsize=(12, 8))
+     # 上子图：评估结果（平均makespan）
+    if evaluation_results:
+        episodes, makespans = zip(*evaluation_results)
+        ax1.plot(episodes, makespans, 'b-', linewidth=2, marker='o', markersize=4, label='Makespan')
+        ax1.set_xlabel('Episode')
+        ax1.set_ylabel('average Makespan')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend()
     
-    # 绘制折线图
-    plt.plot(episodes, makespans, 'b-', linewidth=2, marker='o', markersize=4)
-    plt.xlabel('Episode')
-    plt.ylabel('average Makespan')
-    plt.grid(True, alpha=0.3)
+    # 下子图：loss值
+    if episode_losses:
+        episodes_loss, losses = zip(*episode_losses)
+        #ax2.plot(episodes_loss, losses, 'r-', linewidth=2, marker='s', markersize=3, label='Loss')
+        ax2.plot(episodes_loss, losses, 'r-', linewidth=2, markersize=3, label='Loss')
+        ax2.set_xlabel('Episode')
+        ax2.set_ylabel('Loss')
+        ax2.set_yscale('log')  # 使用对数坐标，因为loss值可能变化很大
+        ax2.grid(True, alpha=0.3)
+        ax2.legend()
+        
+        # 添加平均loss标注
+        if losses:
+            avg_loss = np.mean(losses)
+            ax2.axhline(y=avg_loss, color='orange', linestyle='--', alpha=0.7, 
+                        label=f'average Loss: {avg_loss:.4f}')
+            ax2.legend()
     
     # 添加超参数信息
     hyperparam_text = "\n".join([f"{key}: {value}" for key, value in hyperparams.items()])
-    plt.figtext(0.7, 0.7, hyperparam_text, fontsize=10, 
+    plt.figtext(0.7, 0.8, hyperparam_text, fontsize=9, 
                 bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7))
     
-    # 保存图片
     plt.tight_layout()
-    plt.savefig('evaluation_results.png', dpi=300, bbox_inches='tight')
+    plt.subplots_adjust(bottom=0.15)  # 为超参数文本留出空间
+    
+    # 保存图片
+    plt.savefig('training_results.png', dpi=300, bbox_inches='tight')
     plt.show()
     
-    print(f"评估结果图已保存为 'evaluation_results.png'")
+    print(f"训练结果图已保存为 'training_results.png'")
 
 
 def train_target(training_datasets):
@@ -688,11 +707,11 @@ def train_target(training_datasets):
 
     total_steps = 0
     complete_datasets_count = 0
-    training_started = False
 
     # 新增：选择5个固定测试集
     fixed_test_datasets = random.sample(training_datasets, min(5, len(training_datasets)))
     evaluation_results = []  # 存储评估结果 (episode_index, avg_makespan)
+    episode_losses = []      # 存储每个episode的loss值 (episode_index, loss)
     
     print(f"选择了 {len(fixed_test_datasets)} 个固定测试集用于定期评估")
 
@@ -748,9 +767,8 @@ def train_target(training_datasets):
     pbar_stage1.close()
     print(f"第一阶段完成！使用了 {len(selected_datasets)} 个不同数据集")
     print("开始第二阶段：训练模型...")
-    training_started = True
 
-    # 第二阶段：带训练
+    # 第二阶段：训练
     progress_bar = tqdm(range(EPISODES), desc="训练进度")
 
     stage2_used_datasets = set()
@@ -766,6 +784,9 @@ def train_target(training_datasets):
         total_reward = 0
         steps = 0
         max_steps_per_episode = 10000  # 添加最大步数限制
+        
+        # 记录当前episode的loss
+        episode_loss_values = []
 
         while not env.done and steps < max_steps_per_episode:
             valid_actions = env.get_valid_actions()
@@ -820,7 +841,7 @@ def train_target(training_datasets):
                     
                     if (np.isnan(states_array).any() or np.isinf(states_array).any() or
                         np.isnan(next_states_array).any() or np.isinf(next_states_array).any()):
-                        print(f"Episode {ep}: 批次数据包含NaN或Inf，跳过训练")
+                        print(f"Episode {ep}: 批次数据包含NaN或Inf,跳过训练")
                         continue
 
                     states_tensor = torch.FloatTensor(states_array).to(device)
@@ -846,7 +867,7 @@ def train_target(training_datasets):
                         print(f"Episode {ep}: 损失为NaN或Inf，跳过梯度更新")
                         continue
 
-                    # 反向传播
+                    # 逆传播
                     optimizer.zero_grad()
                     loss.backward()
                     
@@ -867,6 +888,9 @@ def train_target(training_datasets):
                         continue
                     
                     optimizer.step()
+                    
+                    # 记录loss值
+                    episode_loss_values.append(loss.item())
 
                 except Exception as e:
                     print(f"Episode {ep}: 训练过程中出错: {str(e)}")
@@ -879,6 +903,29 @@ def train_target(training_datasets):
         # 检查是否达到最大步数
         if steps >= max_steps_per_episode:
             print(f"Episode {ep}: 达到最大步数限制 {max_steps_per_episode}")
+        
+        # 记录当前episode的平均loss
+        if episode_loss_values:
+            avg_episode_loss = np.mean(episode_loss_values)
+            episode_losses.append((ep + 1, avg_episode_loss))
+            # 在进度条中显示loss
+            progress_bar.set_postfix({
+                'epsilon': f'{epsilon:.3f}',
+                'best_makespan': f'{best_makespan:.1f}',
+                'avg_loss': f'{avg_episode_loss:.4f}',
+                'episode_steps': steps,
+                'memory_size': len(memory),
+                'stage2_datasets': len(stage2_used_datasets)
+            })
+        else:
+            progress_bar.set_postfix({
+                'epsilon': f'{epsilon:.3f}',
+                'best_makespan': f'{best_makespan:.1f}',
+                'avg_loss': 'N/A',
+                'episode_steps': steps,
+                'memory_size': len(memory),
+                'stage2_datasets': len(stage2_used_datasets)
+            })
 
         # 回合结束记录
         if env.done:
@@ -892,7 +939,7 @@ def train_target(training_datasets):
         # epsilon 衰减
         epsilon = max(MIN_EPSILON, epsilon * EPSILON_DECAY)
 
-        # 新增：每5个episode评估一次固定测试集
+        # 每10个episode评估一次固定测试集
         if (ep + 1) % EVALUATION_FREQUENCY == 0:
             try:
                 #print(f"开始评估固定测试集...")
@@ -905,14 +952,25 @@ def train_target(training_datasets):
                 evaluation_results.append((ep + 1, float('inf')))
 
         avg_makespan = np.mean(makespans[-100:]) if makespans else 0
-        progress_bar.set_postfix({
-            'epsilon': f'{epsilon:.3f}',
-            'best_makespan': f'{best_makespan:.1f}',
-            'avg_makespan': f'{avg_makespan:.1f}',
-            'episode_steps': steps,
-            'memory_size': len(memory),
-            'stage2_datasets': len(stage2_used_datasets)
-        })
+        
+        if 'avg_episode_loss' in locals() and episode_loss_values:
+            progress_bar.set_postfix({
+                'epsilon': f'{epsilon:.3f}',
+                'avg_makespan': f'{avg_makespan:.1f}',
+                'avg_loss': f'{avg_episode_loss:.4f}',
+                'episode_steps': steps,
+                'memory_size': len(memory),
+                'stage2_datasets': len(stage2_used_datasets)
+            })
+        else:
+            progress_bar.set_postfix({
+                'epsilon': f'{epsilon:.3f}',
+                'avg_makespan': f'{avg_makespan:.1f}',
+                'avg_loss': 'N/A',
+                'episode_steps': steps,
+                'memory_size': len(memory),
+                'stage2_datasets': len(stage2_used_datasets)
+            })
 
     # 保存模型
     torch.save({
@@ -925,9 +983,9 @@ def train_target(training_datasets):
     print(f"第一阶段使用了 {MIN_COMPLETE_EPISODES} 个不同数据集")
     print(f"第二阶段使用了 {len(stage2_used_datasets)} 个不同数据集")
     print(f"总共完成了 {complete_datasets_count} 个完整数据集调度")
-
-    # 新增：绘制评估结果图
-    plot_evaluation_results(evaluation_results, {
+        
+    # 绘制评估平均makespan结果和loss值图
+    plot_evaluation_results(evaluation_results, episode_losses, {
         'EPISODES': EPISODES,
         'GAMMA': GAMMA,
         'LR': LR,
