@@ -353,7 +353,7 @@ def plot_gantt(schedule, num_jobs, all_machines, title="Gantt", filename="gantt.
 
 # 求解
 def solve_with_trained_model(machine_assignments, processing_times, model_path, device=None,
-                             max_steps_factor=10, gantt_name="new_gantt_chart.png"):
+                             max_steps_factor=20, gantt_name="new_gantt_chart.png"):
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     env = JSSPEnv(machine_assignments, processing_times)
