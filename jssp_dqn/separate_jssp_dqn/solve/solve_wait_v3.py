@@ -9,9 +9,8 @@ import matplotlib.pyplot as plt
 from collections import deque, defaultdict
 import random
 
-# -------------------------
+
 # DQN（与训练一致）
-# -------------------------
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
         super(DQN, self).__init__()
@@ -431,7 +430,7 @@ if __name__ == "__main__":
     print(f"使用设备: {device}")
 
     # === 修改成你的实际路径 ===
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,9gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,99gene.csv"
     model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_v3_1.pth' 
 
     ma, pt = load_single_csv(problem_file)
