@@ -255,9 +255,7 @@ class JSSPEnv:
         self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(step >= self.num_machines for step in self.current_step)
 
-        # ----------------- 奖励函数 -----------------
-        # 目标：缩短makespan (最小化最后完工时间)
-        # 下面基本沿用你的原本设计，只保持语义一致
+        # 奖励函数
 
         # 1. 基础时间惩罚：鼓励选择处理时间短的任务
         time_penalty = -proc_time * 0.05
@@ -496,10 +494,12 @@ def load_folder_data(folder_path):
 
 
 def complete_schedule_with_fallback(env):
-    """使用备用策略完成调度，确保所有任务都被调度"""
+    """使用备用策略完成调度，确保所有任务都被调度，并返回 makespan 与额外 reward"""
     # 记录当前状态
     steps_after_fallback = 0
     max_fallback_steps = env.num_jobs * env.num_machines * 5
+
+    total_reward = 0.0
     
     while not env.done and steps_after_fallback < max_fallback_steps:
         valid_actions = env.get_valid_actions()
@@ -530,20 +530,22 @@ def complete_schedule_with_fallback(env):
                     best_action = action
                     break
         
-        next_state, _, done, info = env.step(best_action)
+        _, reward, done, info = env.step(best_action)
+        total_reward += reward
         steps_after_fallback += 1
     
     # 返回最终的makespan
     if env.done:
-        return max(env.job_end_times)
+        return max(env.job_end_times), total_reward
     else:
         # 如果备用策略也无法完成，返回当前最大时间
-        return max(env.job_end_times) if env.job_end_times else float('inf')
+        return max(env.job_end_times) if env.job_end_times else float('inf'), total_reward
 
 
 def evaluate_model_on_datasets(model, datasets, device):
     """使用给定模型在多个数据集上评估，返回平均makespan，确保完成完整调度"""
     makespans = []
+    total_rewards = []
     
     for i, (ma, pt) in enumerate(datasets):
         env = JSSPEnv(ma, pt)
@@ -554,6 +556,8 @@ def evaluate_model_on_datasets(model, datasets, device):
         # 记录初始状态
         initial_ops = env.num_jobs * env.num_machines
         completed_ops = 0
+
+        total_reward = 0.0
         
         while not env.done and steps < max_eval_steps:
             valid_actions = env.get_valid_actions()
@@ -593,7 +597,8 @@ def evaluate_model_on_datasets(model, datasets, device):
                     q_values_masked[~mask] = -float('inf')
                     action = q_values_masked.argmax().item()
             
-            next_state, _, done, info = env.step(action)
+            next_state, reward, done, info = env.step(action)
+            total_reward += reward
             state = next_state
             steps += 1
             
@@ -610,17 +615,21 @@ def evaluate_model_on_datasets(model, datasets, device):
         if env.done:
             makespan = info["makespan"]
             makespans.append(makespan)
+            total_rewards.append(total_reward)
             #print(f"评估数据集 {i+1}: 成功完成调度，makespan = {makespan:.2f}, 步数 = {steps}")
         else:
             # 如果未完成，使用备用策略完成调度
             #print(f"评估数据集 {i+1}: 模型未能在{max_eval_steps}步内完成调度，使用备用策略...")
-            makespan = complete_schedule_with_fallback(env)
-            makespans.append(makespan)
+            makespan_fallback, reward_fallback = complete_schedule_with_fallback(env)
+            makespans.append(makespan_fallback)
+            total_rewards.append(total_reward + reward_fallback)
             #print(f"评估数据集 {i+1}: 备用策略完成调度，makespan = {makespan:.2f}")
     
     avg_makespan = np.mean(makespans) if makespans else float('inf')
+    avg_reward = np.mean(total_rewards) if total_rewards else 0.0
     #print(f"评估完成: 平均makespan = {avg_makespan:.2f}")
-    return avg_makespan
+    
+    return avg_makespan, avg_reward
 
 
 def plot_evaluation_results(evaluation_results, episode_losses, hyperparams):
@@ -628,45 +637,67 @@ def plot_evaluation_results(evaluation_results, episode_losses, hyperparams):
         print("没有评估结果或loss值可绘制")
         return
         
-     # 创建包含两个子图的画布
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10))
+    # 创建2×2子图
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+    ax_tl = axes[0, 0]  # 左上：平均makespan
+    ax_tr = axes[0, 1]  # 右上：平均总reward
+    ax_bl = axes[1, 0]  # 左下：loss
+    ax_br = axes[1, 1]  # 右下：超参数文本
     
-     # 上子图：评估结果（平均makespan）
+    # 左上：评估结果（平均makespan）
     if evaluation_results:
-        episodes, makespans = zip(*evaluation_results)
-        ax1.plot(episodes, makespans, 'b-', linewidth=2, marker='o', markersize=4, label='Makespan')
-        ax1.set_xlabel('Episode')
-        ax1.set_ylabel('average Makespan')
-        ax1.grid(True, alpha=0.3)
-        ax1.legend()
+        # evaluation_results: [(episode, avg_makespan, avg_reward), ...]
+        episodes, makespans, rewards = zip(*evaluation_results)
+        
+        ax_tl.plot(episodes, makespans, linewidth=2, marker='o', markersize=4, label='Average Makespan')
+        ax_tl.set_xlabel('Episode')
+        ax_tl.set_ylabel('Average Makespan')
+        ax_tl.set_title('Evaluation on Fixed Jobsets: Makespan')
+        ax_tl.grid(True, alpha=0.3)
+        ax_tl.legend()
     
-    # 下子图：loss值
+    # 右上：平均总reward
+        ax_tr.plot(episodes, rewards, linewidth=2, marker='^', markersize=4, label='Average Total Reward')
+        ax_tr.set_xlabel('Episode')
+        ax_tr.set_ylabel('Average Total Reward')
+        ax_tr.set_title('Evaluation on Fixed Jobsets: Total Reward')
+        ax_tr.grid(True, alpha=0.3)
+        ax_tr.legend()
+    else:
+        ax_tl.set_visible(False)
+        ax_tr.set_visible(False)
+
+    # 左下：loss曲线 
     if episode_losses:
         episodes_loss, losses = zip(*episode_losses)
-        #ax2.plot(episodes_loss, losses, 'r-', linewidth=2, marker='s', markersize=3, label='Loss')
-        ax2.plot(episodes_loss, losses, 'r-', linewidth=2, markersize=3, label='Loss')
-        ax2.set_xlabel('Episode')
-        ax2.set_ylabel('Loss')
-        ax2.set_yscale('log')  # 使用对数坐标，因为loss值可能变化很大
-        ax2.grid(True, alpha=0.3)
-        ax2.legend()
+        ax_bl.plot(episodes_loss, losses, 'r-', linewidth=2, markersize=3, label='Loss')
+        ax_bl.set_xlabel('Episode')
+        ax_bl.set_ylabel('Loss')
+        ax_bl.set_yscale('log')  # 使用对数坐标，因为loss值可能变化很大
+        ax_bl.set_title('Training Loss')
+        ax_bl.grid(True, alpha=0.3)
         
-        # 添加平均loss标注
         if losses:
             avg_loss = np.mean(losses)
-            ax2.axhline(y=avg_loss, color='orange', linestyle='--', alpha=0.7, 
-                        label=f'average Loss: {avg_loss:.4f}')
-            ax2.legend()
+            ax_bl.axhline(y=avg_loss, linestyle='--', alpha=0.7, 
+                          label=f'Average Loss: {avg_loss:.4f}')
+        ax_bl.legend()
+    else:
+        ax_bl.set_visible(False)
     
-    # 添加超参数信息
+    # 右下：超参数文本
+    ax_br.axis('off')  
     hyperparam_text = "\n".join([f"{key}: {value}" for key, value in hyperparams.items()])
-    plt.figtext(0.7, 0.8, hyperparam_text, fontsize=9, 
-                bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7))
+    ax_br.text(
+        0.02, 0.98, hyperparam_text,
+        fontsize=9,
+        va='top', ha='left',
+        transform=ax_br.transAxes,
+        bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7)
+    )
+    ax_br.set_title('Hyperparameters', pad=10)
     
     plt.tight_layout()
-    plt.subplots_adjust(bottom=0.15)  # 为超参数文本留出空间
-    
-    # 保存图片
     plt.savefig('training_results.png', dpi=300, bbox_inches='tight')
     plt.show()
     
@@ -943,13 +974,13 @@ def train_target(training_datasets):
         if (ep + 1) % EVALUATION_FREQUENCY == 0:
             try:
                 #print(f"开始评估固定测试集...")
-                avg_makespan_test = evaluate_model_on_datasets(target_model, fixed_test_datasets, device)
-                evaluation_results.append((ep + 1, avg_makespan_test))
+                avg_makespan_test, avg_reward_test = evaluate_model_on_datasets(target_model, fixed_test_datasets, device)
+                evaluation_results.append((ep + 1, avg_makespan_test, avg_reward_test))
                 #print(f"Episode {ep+1}: 固定测试集平均makespan = {avg_makespan_test:.2f}")
             except Exception as e:
                 print(f"评估过程中出错: {str(e)}")
                 # 如果评估失败，使用一个默认值
-                evaluation_results.append((ep + 1, float('inf')))
+                evaluation_results.append((ep + 1, float('inf'), 0.0))
 
         avg_makespan = np.mean(makespans[-100:]) if makespans else 0
         
