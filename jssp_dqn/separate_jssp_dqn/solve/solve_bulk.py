@@ -443,23 +443,194 @@ def solve_jssp(machine_assignments, processing_times, model_path, device='cpu'):
     
     return schedule, makespan
 
+# =========================
+# 批量求解器：0gene.csv ~ 120gene.csv
+# =========================
+def run_batch_solve(
+    dir_path,
+    model_path,
+    start_id=0,
+    end_id=120,
+    output_csv="batch_makespan_results.csv",
+    device=None,
+    filename_prefixes=None,
+    save_gantt=False
+):
+    """
+    dir_path: 包含 gene.csv 的目录
+    model_path: 训练好的 DQN 模型路径
+    start_id, end_id: 从 start_id 到 end_id (含) 的序号
+    output_csv: 输出汇总CSV文件名（会写到 dir_path 下）
+    device: torch.device
+    filename_prefixes: 兼容不同命名：默认同时尝试 ["{i}gene.csv", "[6]r[17]c,{i}gene.csv"]
+    save_gantt: 是否为每个实例保存甘特图（默认 False 以提速）
+    """
+    if device is None:
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    if filename_prefixes is None:
+        filename_prefixes = ["{i}gene.csv", "[6]r[17]c,{i}gene.csv"]
+
+    # 先找到第一个可用实例，用来确定 state_dim / action_dim 并加载模型
+    first_instance = None
+    first_ma, first_pt = None, None
+    first_file_actual = None
+
+    for i in range(start_id, end_id + 1):
+        candidates = [os.path.join(dir_path, pat.format(i=i)) for pat in filename_prefixes]
+        for cand in candidates:
+            if os.path.exists(cand):
+                ma, pt = load_single_csv(cand)
+                if ma is not None and pt is not None:
+                    first_instance = (ma, pt)
+                    first_file_actual = cand
+                    break
+        if first_instance is not None:
+            break
+
+    if first_instance is None:
+        print("在指定范围内没有找到任何可用的 gene.csv 实例，终止。")
+        return
+
+    print(f"用于确定模型维度的首个实例: {os.path.basename(first_file_actual)}")
+    # 构建环境以确定状态维度 & 动作维度
+    tmp_env = JSSPEnv(first_instance[0], first_instance[1])
+    state_dim = len(tmp_env.reset())
+    action_dim = tmp_env.num_jobs
+
+    # 加载模型（只加载一次）
+    model = DQN(state_dim, action_dim)
+    try:
+        checkpoint = torch.load(model_path, map_location=device)
+        if isinstance(checkpoint, dict) and 'model_state_dict' in checkpoint:
+            model.load_state_dict(checkpoint['model_state_dict'])
+            print("从完整checkpoint中加载模型状态")
+        else:
+            model.load_state_dict(checkpoint)
+            print("直接加载模型状态")
+        model.to(device)
+        model.eval()
+        print(f"模型加载成功，使用设备: {device}")
+    except Exception as e:
+        print(f"模型加载失败: {e}")
+        return
+
+    # 小的内部求解器：与 solve_jssp 基本一致，但不重复加载模型 & 可选不画图
+    def solve_with_loaded_model(ma, pt, max_steps=5000):
+        env = JSSPEnv(ma, pt)
+        # 防御：确保动作维度与模型输出匹配（假设所有实例都是6个作业）
+        if env.num_jobs != action_dim:
+            return None, {
+                "status": f"action_dim_mismatch(env={env.num_jobs}, model={action_dim})",
+                "steps": 0,
+                "elapsed": 0.0
+            }
+
+        state = env.reset()
+        state_tensor = torch.FloatTensor(state).unsqueeze(0).to(device)
+        done = False
+        step_count = 0
+        total_operations = sum(env.actual_ops_per_job)
+        start_t = time.time()
+        schedule = []
+
+        while not done and step_count < max_steps:
+            step_count += 1
+            with torch.no_grad():
+                q_values = model(state_tensor)
+                valid_actions = env.get_valid_actions()
+                if not valid_actions:
+                    break
+                valid_q = q_values.clone()
+                for a in range(action_dim):
+                    if a not in valid_actions:
+                        valid_q[0, a] = -float('inf')
+                action = valid_q.argmax().item()
+
+            next_state, reward, done, info = env.step(action)
+            state_tensor = torch.FloatTensor(next_state).unsqueeze(0).to(device)
+            schedule = info.get("schedule", schedule)
+
+        elapsed = time.time() - start_t
+        if done:
+            makespan = max(env.job_end_times)
+            status = "ok"
+        else:
+            # 未完成也给出当前 makespan（可能只是已完成工序的最大结束时间）
+            makespan = max(env.job_end_times) if env.job_end_times else None
+            status = "incomplete"
+
+        # 可选绘图
+        if save_gantt and schedule:
+            try:
+                plot_gantt_chart(schedule, env.num_jobs, env.all_machines,
+                                 title=f"JSSP_DQN (Makespan={makespan})",
+                                 filename=f"gantt_{int(time.time()*1000)}.png")
+            except Exception as _:
+                pass
+
+        return makespan, {"status": status, "steps": step_count, "elapsed": elapsed}
+
+    # 批量跑
+    results = []
+    for i in range(start_id, end_id + 1):
+        # 兼容两种文件名
+        file_path = None
+        for pat in filename_prefixes:
+            cand = os.path.join(dir_path, pat.format(i=i))
+            if os.path.exists(cand):
+                file_path = cand
+                break
+
+        if file_path is None:
+            results.append((i, "MISSING", None, None, None))
+            print(f"[{i}] 文件缺失，跳过。")
+            continue
+
+        print(f"\n==== 处理文件[{i}]: {os.path.basename(file_path)} ====")
+        ma, pt = load_single_csv(file_path)
+        if ma is None or pt is None:
+            results.append((i, "INVALID", None, None, None))
+            print(f"[{i}] 数据无效，跳过。")
+            continue
+
+        makespan, meta = solve_with_loaded_model(ma, pt)
+        results.append((
+            i,
+            meta["status"],
+            makespan if makespan is not None else "",
+            meta["steps"],
+            round(meta["elapsed"], 3)
+        ))
+        print(f"[{i}] status={meta['status']}, makespan={makespan}, steps={meta['steps']}, time={meta['elapsed']:.2f}s")
+
+    # 写 CSV
+    out_path = os.path.join(dir_path, output_csv)
+    with open(out_path, "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["id", "status", "makespan", "steps", "elapsed_sec"])
+        writer.writerows(results)
+
+    print(f"\n批量完成！结果已写入：{out_path}")
+
+
 if __name__ == "__main__":
-    # 设置设备
+    # ======== 配置路径 ========
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"使用设备: {device}")
 
-    # 使用训练好的模型求解新问题
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,99gene.csv"
-    
-    # 选择模型
-    model_path = r'D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_1.pth' 
-    
-    print(f"开始加载问题文件: {problem_file}")
-    ma, pt = load_single_csv(problem_file)
-    
-    
-    if ma is not None and pt is not None:
-        print("成功加载问题数据，开始求解...")
-        solve_jssp(ma, pt, model_path=model_path, device=device)
-    else:
-        print("无法加载问题数据")
+    dir_path = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]"
+    model_path = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_1.pth"
+
+    # 如果你的文件名正是“0gene.csv ... 120gene.csv”，保留默认即可；
+    # 如果是“[6]r[17]c,99gene.csv”这种，就同时兼容（默认即包含这两种模式）
+    run_batch_solve(
+        dir_path=dir_path,
+        model_path=model_path,
+        start_id=0,
+        end_id=120,
+        output_csv="batch_makespan_results.csv",
+        device=device,
+        filename_prefixes=["{i}gene.csv", "[6]r[17]c,{i}gene.csv"],
+        save_gantt=False  # 批量时建议 False，加快速度
+    )
