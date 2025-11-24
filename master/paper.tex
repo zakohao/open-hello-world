@@ -6,25 +6,90 @@
 \usepackage{amsmath}
 \allowdisplaybreaks[4] 
 
+\begin{document}
 
-%%
-\title{%
-\jtitle{遺伝的アルゴリズムと深層強化学習に基づく\\ジョブスケジュール最適化問題\\―PCB加工プロセスをモデルとして―}%
-\etitle{Job Scheduling Optimization Based on Genetic Algorithms and Deep Reinforcement Learning\\―A Model of the PCB Manufacturing Process―}%
+% 封面
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\LARGE 修士卒業論文 \par}
+\vspace{2cm}
+{\Huge 遺伝的アルゴリズムと深層強化学習に基づく \\
+ジョブスケジュール最適化問題 \\
+―PCB加工プロセスをモデルとして―\par}
+\vspace{1cm}
+{Job Scheduling Optimization Based on Genetic Algorithms and Deep Reinforcement Learning \\
+―A Model of the PCB Manufacturing Process―\par}
+
+\vspace{3cm}
+{\Large
+関西学院大学大学院 \\
+総合政策研究科 \\
+汪 永豪 \\
+2026年1月
 }
-%%�p���͈ȉ����g�p
-%\title{Style file for manuscripts of JSAI 20XX}
+\end{titlepage}
+
+\clearpage
+
+\section*{\centering 要旨}
+\addcontentsline{toc}{section}{要旨}
+近年、市場グローバル化が進むの中、製品に対する市場ニーズは多様化しており、顧客ごとに仕様が異なる多品種少量生産方式への対応がますます重要となっている。
+従来のライン生産方式ではこのような多様化に十分対応することが困難であるため、柔軟な生産システムを実現可能なジョブショップにおける生産管理・スケジューリングの最適化が注目されている。
+本研究では、プリント基板(PCB)製造工場を対象とし、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
+静的な環境においては、遺伝的アルゴリズム(GA)および深層強化学習に基づくDeep Q-Network(DQN)を用いて最適化を行い，両手法の性能比較を実施した。
+さらに、機械故障等による環境変動が発生する動的な環境では,リアルタイムに高速にスケジュールを生成可能なDQN手法により,スケジュール適応性能の向上を図った。
+これらの結果を通じて，静的および動的な生産環境におけるスケジューリング最適化に対する強化学習手法の有効性を示した。\\
+
+キーワード：インダストリーエンジニアリング、オペレーション・リサーチ、ジョブスケジューリング最適化問題、遺伝的アルゴリズム、深層強化学習
+
+\vspace{2em}
+
+\section*{\centering Abstract}
+\addcontentsline{toc}{section}{Abstract}
+In recent years, with the progress of global market expansion, product demands have become increasingly diversified. 
+Accordingly, responding to high-mix low-volume production in which product specifications differ by customer has become more important than ever. 
+Since traditional assembly line production is not sufficiently flexible to cope with such diversification, optimization of production management and scheduling in job shop environments, which enable a more adaptable production system, has attracted considerable attention.
+In this study, a printed circuit board (PCB) manufacturing facility is considered, and a production process in which the same machines are repeatedly used is modeled to examine scheduling optimization.
+In static environments, optimization was performed using a Genetic Algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning, and the performance of both methods was evaluated and compared. 
+Furthermore, in dynamic environments where disturbances such as machine failures occur, DQN was applied to rapidly generate optimized schedules in real time, thereby improving scheduling adaptability.
+Through these evaluations, the effectiveness of reinforcement learning approaches for scheduling optimization in both static and dynamic production environments was demonstrated.\\
+Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimization Problem, Genetic Algorithm, Deep Reinforcement Learning
+
+\clearpage
+
+% 目次
+%\section*{目次}
+\addcontentsline{toc}{section}{目次}
+\tableofcontents
+%\begin{enumerate}
+    %\item 要旨
+    %\item はじめに
+    %\item 先行研究
+    %\item 問題設定
+    %\item 実験用データ自動生成ルール
+    %\item 遺伝的アルゴリズムによる解の改善
+    %\item 深層強化学習による解の改善
+    %\item 動的な環境における性能評価
+    %\item まとめ
+    %\item 謝辞
+    %\item 参考文献
+%\end{enumerate}
+\clearpage
+
+\title{
+\jtitle{遺伝的アルゴリズムと深層強化学習に基づく\\ジョブスケジュール最適化問題\\―PCB加工プロセスをモデルとして―}
+\etitle{Job Scheduling Optimization Based on Genetic Algorithms and Deep Reinforcement Learning \\―A Model of the PCB Manufacturing Process―}
+}
 
 \jaddress{関西学院大学総合政策研究科, 兵庫県三田市学園上ヶ原, ili53007@kwansei.ac.jp}
 
-\author{%
+\author{
    \jname{汪 永豪\first{}}
    \ename{Wang Yonghao}
 \and
    \jname{山田 孝子\second{}}
    \ename{Takako Yamada}
-%\and
-%Given-name Surname\third{}%%�p���͍����g�p
 }
 
 \affiliate{
@@ -33,30 +98,13 @@
 \and
 \jname{\second{}関西学院大学総合政策学部メディア情報学科}
 \ename{Department of Applied Informatics, School of Policy Studies, Kwansei Gakuin University}
-%\and
-%\third{}Affiliation \#3 in English%%�p���͍����g�p
 }
 
-%%
-%\Vol{28}        %% <-- 28th�i�ύX���Ȃ��ł��������j
-%\session{0A0-00}%% <-- �u��ID�i�K�{)
-
-\begin{abstract}
-    With the globalization of the world economy, manufacturing companies must accept orders at lower prices than their competitors.
-As a result, achieving low-cost and high-quality production management has become increasingly important, posing a challenging issue that all manufacturers must overcome.
-To reduce costs, many companies have adopted Automated Guided Vehicles (AGVs) instead of human workers to transport parts between machines in a flexible manufacturing system (FMS).
-Additionally, since machines in an FMS are not always in operation, it is crucial to utilize their idle time effectively by assigning them varying tasks.
-This study aims to achieve simultaneous scheduling of both machines and AGVs, minimizing the completion time of existing tasks while making effective use of machine idle time to process additional parts. 
-\end{abstract}
-
-%\setcounter{page}{1}
 \def\Style{``jsaiac.sty''}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em%
  T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
 \def\JBibTeX{\leavevmode\lower .6ex\hbox{J}\kern-0.15em\BibTeX}
 \def\LaTeXe{\LaTeX\kern.15em2$_{\textstyle\varepsilon}$}
-
-\begin{document}
 \maketitle
 
 \section{はじめに}
@@ -301,6 +349,29 @@ PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問�
 
 \bibitem{ref8} 村山 昇,川田 誠一, "遺伝的アルゴリズムを用いた加工機械と複積載AGVの同時スケジューリング"
 \textit{日本機械学会論文集(C編)}. vol. 12, 712, pp. 3638-3643(2005-12).
+
+\bibitem{ref9} B. Yu, Z. Hui, Z. Xin, C. Zheng, J. Riku, Y. Kun, "Toward Autonomous Multi-UAV Wireless Network: A Survey of Reinforcement Learning-Based Approaches"
+\textit{IEEE COMMUNICATIONS SURVEYS & TUTORIALS}. vol. 25, No. 4, FOURTH QUARTER 2023, pp. 3038-3067(2023).
+
+\bibitem{ref10} B. Yu, Z. Hui, Z. Xin, C. Zheng, J. Riku, Y. Kun, "Toward Autonomous Multi-UAV Wireless Network: A Survey of Reinforcement Learning-Based Approaches"
+\textit{IEEE COMMUNICATIONS SURVEYS & TUTORIALS}. vol. 25, No. 4, FOURTH QUARTER 2023, pp. 3038-3067(2023).
+
+\bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン,2022.
+
+\bibitem{book2} 野寺 隆志, 『楽々LATEX』,共立出版株式会社,1996.
+
+\bibitem{book3} 飯塚 修平, 『ウェブ最適化ではじめる機械学習』,オライリー・ジャパン,2020.
+
+\bibitem{book4} 矢沢 久雄, 『基本情報技術者 らくらく突破 Python』,技術評論社,2021.
+
+\bibitem{book5} 伊藤 多一,今津 儀充,須藤 広大,など 『現場で使える! Python 深層強化学習入門 - 強化学習と深層学習による探索と制御』,株式会社翔泳社,2025.
+
+\bibitem{book6} Kirill Bobrov, 『なっとく！並列処理プログラミング』,株式会社翔泳社,2025.
+
+\bibitem{book7} 平井 有三, 『はじめてのパターン認識』,森北出版株式会社,2023.
+
+\bibitem{book8} 大用 倉智,山田 孝子,『作りながら丁寧に学ぶ Pythonプログラミング入門』,関西学院大学出版会,2022.
+
 
 
 \end{thebibliography}
