@@ -39,7 +39,7 @@
 本研究では、プリント基板(PCB)製造工場を対象とし、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
 静的な環境においては、遺伝的アルゴリズム(GA)および深層強化学習に基づくDeep Q-Network(DQN)を用いて最適化を行い，両手法の性能比較を実施した。
 さらに、機械故障等による環境変動が発生する動的な環境では,リアルタイムに高速にスケジュールを生成可能なDQN手法により,スケジュール適応性能の向上を図った。
-これらの結果を通じて，静的および動的な生産環境におけるスケジューリング最適化に対する強化学習手法の有効性を示した。\\
+これらの結果を通じて，静的および動的な生産環境におけるスケジューリング最適化に対する強化学習手法の特徴を検討した。\\
 
 キーワード：インダストリーエンジニアリング、オペレーション・リサーチ、ジョブスケジューリング最適化問題、遺伝的アルゴリズム、深層強化学習
 
@@ -51,9 +51,9 @@ In recent years, with the progress of global market expansion, product demands h
 Accordingly, responding to high-mix low-volume production in which product specifications differ by customer has become more important than ever. 
 Since traditional assembly line production is not sufficiently flexible to cope with such diversification, optimization of production management and scheduling in job shop environments, which enable a more adaptable production system, has attracted considerable attention.
 In this study, a printed circuit board (PCB) manufacturing facility is considered, and a production process in which the same machines are repeatedly used is modeled to examine scheduling optimization.
-In static environments, optimization was performed using a Genetic Algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning, and the performance of both methods was evaluated and compared. 
+In static environments, we use a Genetic Algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning to solve optimization problems and the performance of both methods was evaluated and compared. 
 Furthermore, in dynamic environments where disturbances such as machine failures occur, DQN was applied to rapidly generate optimized schedules in real time, thereby improving scheduling adaptability.
-Through these evaluations, the effectiveness of reinforcement learning approaches for scheduling optimization in both static and dynamic production environments was demonstrated.\\
+Through these evaluations, the effectiveness of reinforcement learning approaches for scheduling optimization in both static and dynamic production environments was discussed.\\
 Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimization Problem, Genetic Algorithm, Deep Reinforcement Learning
 
 \clearpage
@@ -66,12 +66,30 @@ Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimi
     %\item 要旨
     %\item はじめに
     %\item 先行研究
-    %\item 問題設定
+    %\item 生産管理問題のモデル
+        %\subitem 問題設定　
+        %\subitem 用語の定義
     %\item 実験用データ自動生成ルール
+        %\subitem データ自動生成の考え方
+        %\subitem 実際の生成手続き
+        %\subitem データ生成結果
     %\item 遺伝的アルゴリズムによる解の改善
+        %subitem 遺伝的アルゴリズムの考え方（フローチャート）
+        %subitem PPSの考え方（フローチャート）
+        %subitem 実験手順
+        %subitem 実験結果
+        %subitem 実験考察
     %\item 深層強化学習による解の改善
+        %subitem 強化学習の考え方（フローチャート）
+        %subitem 深層強化学習の考え方（フローチャート）
+        %subitem DQNの採用理由
+        %subitem 実験手順
+        %subitem 実験結果
+        %\subitem 実験考察
     %\item 動的な環境における性能評価
-    %\item まとめ
+        %subitem 
+    %\item 遺伝的アルゴリズムと深層強化学習の結果と考察
+    %\item 今後の課題
     %\item 謝辞
     %\item 参考文献
 %\end{enumerate}
