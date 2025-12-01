@@ -2,8 +2,9 @@
 \documentclass{jarticle}
 
 \usepackage{jsaiac}
-\usepackage{graphicx}
-\usepackage{amsmath}
+\usepackage[dvipdfmx]{graphicx}
+%\usepackage{amsmath}
+\usepackage{amsmath,amssymb}
 \allowdisplaybreaks[4] 
 
 \begin{document}
@@ -34,12 +35,11 @@
 
 \section*{\centering 要旨}
 \addcontentsline{toc}{section}{要旨}
-近年、市場グローバル化が進むの中、製品に対する市場ニーズは多様化しており、顧客ごとに仕様が異なる多品種少量生産方式への対応がますます重要となっている。
-従来のライン生産方式ではこのような多様化に十分対応することが困難であるため、柔軟な生産システムを実現可能なジョブショップにおける生産管理・スケジューリングの最適化が注目されている。
-本研究では、プリント基板(PCB)製造工場を対象とし、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
-静的な環境においては、遺伝的アルゴリズム(GA)および深層強化学習に基づくDeep Q-Network(DQN)を用いて最適化を行い，両手法の性能比較を実施した。
-さらに、機械故障等による環境変動が発生する動的な環境では,リアルタイムに高速にスケジュールを生成可能なDQN手法により,スケジュール適応性能の向上を図った。
-これらの結果を通じて，静的および動的な生産環境におけるスケジューリング最適化に対する強化学習手法の特徴を検討した。\\
+近年、市場グローバル化が進む中、製品に対する市場ニーズは多様化しており、顧客ごとに仕様が異なる多品種少量生産方式への対応が重要となっている。
+本研究では、プリント基板 (PCB) 製造工場を対象に、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
+静的な環境においては、遺伝的アルゴリズム (GA) および深層強化学習に基づく Deep Q-Network(DQN)を用いて最適化を行い，両手法の性能比較を実施した。
+さらに、機械故障等による環境変動が発生する動的な環境で高速にスケジュールを生成可能な DQN により, 適応性能の向上を図った。
+これらから静的および動的な生産環境におけるスケジューリングを検討する。\\
 
 キーワード：インダストリーエンジニアリング、オペレーション・リサーチ、ジョブスケジューリング最適化問題、遺伝的アルゴリズム、深層強化学習
 
@@ -47,13 +47,11 @@
 
 \section*{\centering Abstract}
 \addcontentsline{toc}{section}{Abstract}
-In recent years, with the progress of global market expansion, product demands have become increasingly diversified. 
-Accordingly, responding to high-mix low-volume production in which product specifications differ by customer has become more important than ever. 
-Since traditional assembly line production is not sufficiently flexible to cope with such diversification, optimization of production management and scheduling in job shop environments, which enable a more adaptable production system, has attracted considerable attention.
-In this study, a printed circuit board (PCB) manufacturing facility is considered, and a production process in which the same machines are repeatedly used is modeled to examine scheduling optimization.
-In static environments, we use a Genetic Algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning to solve optimization problems and the performance of both methods was evaluated and compared. 
-Furthermore, in dynamic environments where disturbances such as machine failures occur, DQN was applied to rapidly generate optimized schedules in real time, thereby improving scheduling adaptability.
-Through these evaluations, the effectiveness of reinforcement learning approaches for scheduling optimization in both static and dynamic production environments was discussed.\\
+In recent years, as market globalization has advanced, market demands for products have become increasingly diversified, making it essential to respond to high-mix, low-volume production systems in which specifications differ for each customer.
+This study focuses on a printed circuit board (PCB) manufacturing factory and models a production process in which identical processing machines are used multiple times. Based on this model, scheduling optimization is investigated.
+Under a static production environment, this study applies a genetic algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning to perform scheduling optimization, and conducts a comparative evaluation of the performance of these two methods. 
+Furthermore, under a dynamic production environment where environmental changes such as machine failures occur, this study aims to improve adaptability by utilizing DQN, which can generate schedules rapidly in response to such changes.
+Through these approaches, this study examines scheduling optimization for both static and dynamic production environments.\\
 Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimization Problem, Genetic Algorithm, Deep Reinforcement Learning
 
 \clearpage
@@ -134,12 +132,7 @@ Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimi
 AGVの導入により生産機械間の半製品や仕掛品の運搬は自動化された.
 生産計画には,スケジューリングだけではなく,AGVの搬送計画も含まれ,経路や運搬すべき半製品の決定までを生産計画に含むことになった．
 本研究では，以下のシステムを順次作成し，生産管理計画システムとして実装し，最適解を求める計算機実験を実施，システムの性能を検証した．
-%世界経済のグローバル化に伴い、製造業企業は他社より安い価格で注文を受ける必要がある.
-%いかにして低コストと高品質な生産管理がより重要になり、製造業であれば誰でも乗り越えなければならない難しい問題である.
-%コスト削減のために、多くな企業が人間作業員の代わりに、複積載搬送ロボット(AGV)を採用し、フレキシブルシステム生産で、部品を機械の間に運ぶ方法を採用しました.
-%また、FMS生産には機械はいつも働いているわけではないので、その機械の待つ時間を活かせるために、ばらつきな仕事を機械にやらせることにしよう.
-%本研究では機械とAGV両方同時スケジューリングを求める上に、現有な仕事を出来るだけ最短時間で完成させ、さらに、本来機械が遊んでいる時間を生かして、部品を加工するシステムを開発した.
-%%
+
 本研究でこれまで行ったことをまとめる
 \begin{enumerate}
     \item 実験用ジョブセットとして，製品種別ごとの加工機械の利用順番，利用時間の組み合わせデータの自動生成システムの作成
@@ -152,28 +145,6 @@ AGVの導入により生産機械間の半製品や仕掛品の運搬は自動�
     以上を行ったうえで、本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,機械の遊休時間を活用する余剰製品を提案するシステムの開発に取り組む．
     このような問題は、JSSP(Job Shop Scheduling Problem)問題と言います。
 
-%\section{符号定義}
-%\begin{align}
-    %O &\text{: 工場が受領した注文書の集合} \nonumber\\
-    %O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
-    %OT &\text{: すべての注文書に対してもっとも遅い納期} \nonumber\\
-    %OT_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
-    %O_{i}S_{s} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
-    %K_{is} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の価格} \nonumber\\
-    %n_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文個数} \nonumber\\
-    %n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
-    %n_{s} &= \sum_{i=1}^{\infty} n_{is} \nonumber\\
-    %N &\text{: すべての製品の合計注文個数} \nonumber\\
-    %N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
-    %S_{s}Q_{q} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
-    %m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
-    %M &\text{: 使用可能な加工機械の集合} \nonumber\\
-    %m_{m} &\text{: 第$m$番の加工機械} \nonumber\\
-    %t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber\\
-    %ht_{l_{1}l_{2}} &\text{: AGVが$l_{1}$から$l_{2}$までの搬送時間} \nonumber\\
-    %l_{1},l_{2} &\subseteq (L/U,m_{1},\cdots,m_{m})  \nonumber
-%\end{align}
-
 \section{先行研究}
 グローバル経済の進展や企業のコスト削減要求に伴い、生産現場では柔軟で効率的な生産体制の構築が求められている。
 その中で、需要の多様化に対応するために、少量多品種生産が一般的となり、このような生産形態に適したスケジューリングの最適化が重要な課題となっている。
@@ -183,8 +154,9 @@ JSSPは、複数のジョブを限られた機械に割り当て、全体の処�
 この問題はNP困難であり、最適解を求めることは計算量的に非常に困難である。
 そのため、これまで多くの研究では、遺伝的アルゴリズム(Genetic Algorithm: GA)や焼きなまし法(Simulated Annealing: SA)などのヒューリスティック手法を用いて、効率的に近似解を求めるアプローチが提案されてきた。
 しかし、実際の製造現場では、機械の故障や新規ジョブの追加、処理時間の変動など、動的な要素が頻繁に発生する。そのような動的環境下では、あらかじめ定められたルールに基づくヒューリスティック手法では十分に対応できない場合がある。この問題を解決するため、近年では強化学習(Reinforcement Learning: RL)を用いて、環境変化に応じて自律的にスケジューリング方策を学習する手法が注目されている。
-静的な環境においてはGAやSAなどの伝統的アルゴリズムが一定の成果を上げている一方で、動的な生産環境では強化学習に基づくアプローチのほうが、より高い適応性と柔軟性を示すことが報告されている。このように、JSSPにおけるスケジューリング最適化の研究は、従来の探索型手法から学習型手法へと発展しつつある。\\
-実際に、近年の研究ではこの流れを反映した多様なアプローチが報告されている。\\
+静的な環境においてはGAやSAなどの伝統的アルゴリズムが一定の成果を上げている一方で、動的な生産環境では強化学習に基づくアプローチのほうが、より高い適応性と柔軟性を示すことが報告されている。このように、JSSPにおけるスケジューリング最適化の研究は、従来の探索型手法から学習型手法へと発展しつつある。
+
+実際に、近年の研究ではこの流れを反映した多様なアプローチが報告されている。
 K.T. Chungら\cite{ref1}は現在工業5.0の時代に向けて、機械学習、特に強化学習を用いて、CO(combinatorial optimization)問題を解決しようについて、現在の研究進展を述べた。
 M. Xuら\cite{ref2}は遺伝的プログラミングと強化学習を統合的に整理・比較しはJSSPスケジュール最適化問題ににおいて果たす役割と近年の研究動向を明らかにした。
 C. Ngwuら\cite{ref3}は動的なJSSP問題は強化学習や進化的ヒューリスティック、機械学習を用いた手法でリアルタイムな意思決定は可能であることを示しました。
@@ -192,111 +164,275 @@ X.R. Shaoら\cite{ref4}は小規模かつ短時間のJSSP問題に対して、�
 L.B. Wangら\cite{ref5}は機械故障や再作業などの動的な環境でのJSSP問題につい深層強化学習(DRL)を用いた動的スケジューリング手法が提案され、PPOにより最適な方策を学習することで、リアルタイムな生産スケジューリングが可能であることが示された。
 S. Leeら\cite{ref6}は射出成形金型製造プロセスにおいて、Deep Q-Networkを活用することで従来より総加重遅延を低減できる金型生産スケジューリングを最適化した。
 C. Pickardtら\cite{ref7}は半導体製造プロセスにおいて、遺伝的プログラミング(GP)と確率的離散事象シミュレーションを組み合わせることで自動的に従来のルールより性能優れたなルールを生成した。
-村山ら\cite{ref8}はJSSP問題に基づき、加工機械と複数積載型AGVの同時スケジューリングを対象とした遺伝的アルゴリズム(GA)手法が提案した。\\
+村山ら\cite{ref8}はJSSP問題に基づき、加工機械と複数積載型AGVの同時スケジューリングを対象とした遺伝的アルゴリズム(GA)手法が提案した。
+
 これらの研究から、JSSPおよびその拡張問題に対して、静的環境ではヒューリスティック手法、動的環境では強化学習や深層学習手法が有効であることが確認されている。
 
-\section{モデル}
-\subsection{モデル仮定}
-本モデルでは受注生産を行う工場の製造工程をモデル化する．
-\begin{enumerate}
-    \item 注文票はさまざまな注文主からくる。
-    \item 各注文書には製品$S$の種別が1種類が記載されている。注文する製品種別が異なる製品は異なる注文書で発注される.
-    \item 注文書ごとに価格、納期、ロット数がある。
-    \item 工場は、出荷する出荷日（納期）が同じ注文書$O_{\textit{i}}$をまとめ、これを注文書セットとする。
-    \item 製造する製品種別に応じて、使用する加工機械、加工時間とその加工機械の使用順が予め与えられる。
-    \item 工場は注文書セットで同一出荷として受注した注文書を納期日までに出荷できるよう、加工機械とAGVの最適なスケジューリングを行う。
-    \item スケジューリングの結果得られた注文書セットに含まれる受注した製品を定められた個数すべて出荷できる日を最速出荷日とする．また最速出荷日は早いほどよいとする．
-    \item 機械は注文書に記載された製品種別で指定された注文個数をすべて加工が終了するまで，作業を中途で終えたり，途中で他の製造作業を行うような割り込みはできないものとする。
-    \item 製品種別が異なるための機械のセットアップタイムは考慮しない。
-    \item 機械は製品種別ごとに定まる順番の通りに機械を使用して加工作業を行わなければならない。
-    \item 出荷が等しい注文書，すなわちある注文書セットがすべて出荷可能とればその注文書セットでの加工作業は終了となる。
-    \end{enumerate}
+\section{生産管理問題のモデル}
+本研究は受注生産を行う工場の製造工程をモデル化する。
+受注型ジョブショップスケジュール問題(Job Shop Scheduler problem:JSSP)に関する最適化問題であることで、事前にクライアント側からもらった注文書は不可欠なデータだ。
 
-\subsection{受注}
-製品を製造する工場をここでは考える．一定の期間に工場には様々な顧客から注文票が到着する．ある期間中に到着した注文票を$0$とあらわす．この注文票の集合は$O_1$から$O_i$までの$i$枚の注文票からなる．各注文票$O_i$には，注文する製品名$S_s$，納期$d_i$，各製品名注文ロット数$lnS_{is}$,注文する製品の単価$price_s$が記載されている．注文票に記載できる製品は１種類で，複数の製品を発注する場合には，注文票を分けることになっている．
-工場は当該期間に受注した注文票で最も納期の早い注文票の納期を$d_{min}$として，その期日に間に合うように，受注した製品の製造計画を立てる．
-\subsection{製造}
-製造計画の作成するためには，まず製品種別$S_s$ごとに，加工工程として使用する製造機械の順番が決まっている．製造機械を使用する時間は製造する個数による．そのため製品$S_{s}$を製造するための$q$番目の加工工程を$f_{sq}$ としてあらわし，そこで使われる製造機械番号を$m_{sq}$,加工時間を$t_{sq}$で表す．
+本研究は、実際のプリント基板(PCB)製造工場をモデルとした研究であり、本来であれば使用する注文書データは実生産に基づくものであることが望ましい。
+しかしながら、PCB製造に関する実データは、企業の営業機密や顧客情報に直結するため、企業との共同研究等がない限り、その入手は極めて困難である。
+そこで本研究では、先行研究に記載されているPCB製造工程を参考にし、各加工機械に対して加工役割を割り当てることで、PCB製造プロセスをモデル化する。
+また、PCBの種類によって必要とされる加工時間、加工工程数、あるいは加工順序が異なることを考慮し、これらの差異をモデル内に反映させている。
+本研究ではPCBを製品として定義する。例えば製品1はPCBの種類1、製品2はPCB板の種類2を表すものとする。
+まとめて注文書をセットし、ジョブセットと呼ばれる。JSSPのスケジュール最適化対象と見られる。
+なお、各機械の機能割り当ておよび加工製品に関する工程設定の詳細については、次章において述べる。
 
-\subsection{仕掛品搬送}
-加工工程で、異なる製造機械の間で仕掛品搬送にAGV(Automated Guided Vehicle)を用いる場合，製品$S_s$の第$f_{sq}$工程と第$f_{s,(q+1)}$工程間を$AGV_{j}$で搬送するとき，その輸送時間を$ut_{j,s,q,(q+1)}$で表す．
-以上を記号として整理すると，以下のようになる．
-
-\section{符号定義}
-\begin{align}
+これから制限条件に書かれている符号の定義とモデル設定を紹介する。
+\subsection{符号定義}
+\begin{align*}
     O &\text{: 工場が受領した注文書の集合} \nonumber\\
     O_{i} &\text{: 第$i$番に工場が受領した注文書} \nonumber\\
-    d_{min} &\text{: 受注した注文票で最も納期の早い注文票の納期} \nonumber\\
-    d_{i} &\text{: 第$i$番に工場が受領した注文書の納期} \nonumber\\
-    S{s} &\text{: 製品$S$の種別番号$s$} \nonumber\\
-    S{is} &\text{: 第$i$注文書に記載された注文製品$S$の種別番号$s$} \nonumber\\
-    price_{s} &\text{: 第$i$注文書で受注した製品$S$の種別番号$s$の単価} \nonumber\\
-    lnS_{is} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文ロット数} \nonumber\\
-    n_{s} &\text{: すべての注文書に記載された第$s$種別番号製品の合計注文個数} \nonumber\\
-    n_{s} &= 10\sum_{i=1}^{\infty} lnS_{is} \nonumber\\
-    N &\text{: すべての製品の合計注文個数} \nonumber\\
-    N &= \sum_{s=1}^{\infty} n_{s} \nonumber\\
-    f_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
-    m_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
+    J_{s} &\text{: 製品$J$の種別番号$s$} \nonumber\\
+    O_{i}J_{s} &\text{: 第$i$注文書に記載されたジョブ$J$の種別番号$s$} \nonumber\\
+    lotJ_{i,s} &\text{: 第$i$注文書に記載された第$s$種別番号製品の注文ロット数} \nonumber\\
+    n_{s} &\text{: 対象ジョブセットに記載された第$s$種別番号製品の合計注文個数} \nonumber\\
+    n_{s} &= 10\sum_{i=1}^{\infty} lotJ_{i,s} \quad (\text{個数} = \text{ロット数} \times 10) \nonumber\\
+    J_{s}F_{q} &\text{: 第$s$種別製品の第$q$番目の加工工程} \nonumber\\
+    m_{s,q} &\text{: 第$s$種別製品の第$q$番目の加工工程に割り当てられる機械番号} \nonumber\\
     M &\text{: 使用可能な加工機械の集合} \nonumber\\
-    m_{m} &\text{: 第$m$番目の加工機械} \nonumber\\
-    t_{sq} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber\\
-    l_{1},l_{2} &\subseteq (L/U,m_{1},\cdots,m_{m})  \nonumber\\
-    l_{1}& \ne l_{2} \nonumber\\
-    AGV_{j} & \text{: 第$j$番目のAGV} \nonumber\\
-    ht_{j,l_{1},l_{2}} &\text{: $AGV_{j}$が$l_{1}$から$l_{2}$までの搬送時間} \nonumber\\
-    ut_{j,s,q,(q+1)} &\text{: $AGV_{j}$が製品$s$の第$q$工程と第$q+1$工程間の輸送時間} \nonumber
-\end{align}
+    M_{m} &\text{: 第$m$番加工機械} \nonumber\\
+    t_{s,q} &\text{: 第$s$種別製品の第$q$番目の加工工程にかかる加工時間} \nonumber\\
+    ft_{s,q} &\text{: 第$s$種別製品の第$q$加工工程の完了時刻} \nonumber\\
+    ft_{m_{s,q}} &\text{: 機械$m_{s,q}$上で直前に処理された別製品の工程の完了時刻} \nonumber\\
+    TJ_{s} &\text{: 第$s$種別製品の加工終了時間} \nonumber\\
+    \text{makespan} &\text{: 全製品種別における最終工程完了時刻の最大値} \nonumber\\
+    OM &\text{: 対象ジョブセット各加工工程機械割り当ての行列} \nonumber\\
+    m_{s,q} &= OM_{s,q} \nonumber\\
+    OT &\text{: 対象ジョブセット各加工工程にかかる加工時間の行列} \nonumber\\
+    t_{s,q} &= OT_{s,q} \nonumber\\
+    C &\text{: 制約条件} \nonumber\\
+\end{align*}
 
-\subsection{実験用ジョブセット生成}
-一般的に企業への注文書の具体例は外部には公開されない．そのため本研究では注文書セットを予め様々な確率的に生成する計算機実験用の自動生成システムを作成し，実験用の注文書セットを作成する．
-本節ではこの自動生成の手続きとそれにより作成した注文書セットについて述べる．
-\subsection{記号定義}
+\subsection{モデル設定}
+\begin{enumerate}
+    \item 注文票はさまざまな注文主からくる。
+    \item 各注文書には製品$J$の種別が1種類以上が記載されている。
+    \item 注文書ごとに製品ごとロット数が記載されている。
+    \item 工場は、注文書$O_{i}$をまとめ、これをジョブセットとする。
+    \item 製造する製品種別に応じて、使用する加工機械、加工時間とその加工機械の使用順が予め与えられる。
+    \item 工場はジョブセットで同一出荷として受注した注文書を加工生産時間を最短にし、加工機械の最適なスケジューリングを行う。
+    \item 機械は注文書に記載された製品種別で指定された注文個数をすべて加工が終了するまで，作業を中途で終えたり，途中で他の製造作業を行うような割り込みはできないものとする。
+    \item 製品種別が異なるための機械のセットアップタイムは考慮しない。
+    \item 製品の加工間の搬送時間はこのモデルでは考慮しない。
+    \item 一つの機械は一つの加工工程のみ作業する。
+    \item 機械は製品種別ごとに定まる順番の通りに機械を使用して加工作業を行わなければならない。
+    \item 製品ごとに全部の加工工程が終了したら、その製品の加工スケジューリングが終了する。
+    \item 全部の製品の加工スケジューリングが終了したら、ジョブセットのスケジューリングが終了する
+    \end{enumerate}
+
+\subsection{問題設定}
+本研究は、JSSPを制約付き最適化問題として定式化し、目標関数としては:\\
+\begin{equation}
+\mathrm{opt.}\ JSSP = \min \left\{ \max_{s} TJ_{s} \right\}
+\label{eq:objective}
+\end{equation}
+ここで，$TJ_s$ は第 $s$ 種別製品の最終加工工程の完了時刻を表す。
+したがって，本最適化問題は，全ての製品種別における最終完了時刻の最大値，すなわち$makespan$を最小化することを目的とする。\\
+
+制約条件としては：
 \begin{align}
-    \mu_{odder} &\text{: 納期内の総オーダー数の平均値} \nonumber\\
-    %\mu_{odder} &\text{= 10} \nonumber\\
-    \sigma^2_{odder} &\text{: 納期内の総オーダー数の分散} \nonumber\\
-    %\sigma^2_{odder} &\text{= 2} \nonumber\\
-    \mu_{lot} &\text{: 各オーダーに注文された製品のロット数の平均値} \nonumber\\
-    %\mu_{lot} &\text{= 3} \nonumber\\
-    \sigma^2_{lot} &\text{: 各オーダーに注文された製品のロット数の分散} \nonumber\\
-    %\sigma^2_{lot} &\text{= 1} \nonumber\\
+\text{s.t.}\quad \text{C1: }\ 
+& ft_{s,q} \ge ft_{s,q-1} + t_{s,q}
+\label{cond:C1} \\[6pt]
+\text{s.t.}\quad \text{C2: }\ 
+& ft_{s,q} \ge ft_{s',q'} + t_{s,q}
+\label{cond:C2}
 \end{align}
 
-\subsection{生成ルール}
+
+制約条件 $C1$ は、同一製品種別$J_s$における隣接する加工工程$F_{q-1}$と$F_q$の
+加工順序制約を表しており、前工程が完了した後でなければ次工程を開始できないことを意味する。
+
+制約条件 C2 における $ft_{s',q'}$ は、
+加工工程 $J_sF_q$ と同じ機械 $m_{s,q}$ を使用するが，
+製品種別が異なる別製品 $J_{s'}$ の加工工程 $J_{s'}F_{q'}$ の完了時刻を表す。
+すなわち，$ft_{s',q'}$ は，同一機械上で $J_sF_q$ の直前に処理された工程の完了時刻に対応する。
+
+制約条件 $C2$ は、各加工機械は同時刻に一つの加工工程しか処理できないという
+機械リソース制約を表しており，ある工程が機械$M_m$上で処理中の場合，
+次の工程はその加工工程が終了するまで開始できない。
+
+JSSPにおいては、加工工程と加工機械の対応関係を表す機械割当行列$OM$と，
+各加工工程に要する加工時間を表す加工時間行列$OT$が既知である。
+$OM$と$OT$に関することは次章に述べる。
+
+各製品種別の加工順序が与えられた場合，
+各加工工程$J_sF_q$の完了時刻は次の式に基づいて算出することができる。
+
+\begin{equation}
+ft_{s,q} = \max \left( ft_{s,q-1},\,ft_{m_{s,q}} \right) + t_{s,q}
+\label{eq:ft_calc}
+\end{equation}
+
+ここで，$ft_{s,q}$は第$s$種別製品の第$q$加工工程の完了時刻を表す。
+本式は，各加工工程の完了時刻が，
+同一製品における直前工程の完了時刻$ft_{s,q-1}$と，
+同一加工機械$m_{s,q}$上で直前に処理された別製品工程の完了時刻$ft_{m_{s,q}}$
+のいずれか遅い方に，加工時間$t_{s,q}$を加えた値として決定されることを示している。
+
+ジョブショップスケジューリングの目的は、各加工機械をできるだけ連続的に稼働させるとともに、
+各製品の加工工程を待ち時間なく加工することにより、総加工時間を最小化することである。
+したがって、JSSPは待機している加工機械に対して加工対象となるジョブを割り当てる逐次意思決定問題として見られる。
+スケジューリング過程は、加工機械上で各加工工程の処理完了イベントによって駆動される。
+同一製品内における加工工程の順序制約および、各加工工程が指定された加工機械で加工されなければならないという制約を考慮すると、
+待機中の加工機械に製品の加工工程を割り当てる際には、現時点で処理可能な加工工程が存在するかどうかを判断する必要がある。
+処理可能な加工工程の集合が複数存在する場合には、その中から一つを選択して加工を開始する。
+一方，現時点で処理可能な加工工程が存在しない場合には，次の加工工程完了イベントが発生するまで待機する。
+この意思決定過程は次の図\ref{fig:JSSP flow chat}に示します。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/jssp_flow_chat.png}
+  \caption{ジョブスケジューリング問題フローチャート}
+  \label{fig:JSSP flow chat}
+\end{figure}
+
+
+\section{実験用データ自動生成ルール}
+本研究では、実際のPCB製造工場をモデルとしたスケジューリング問題を対象とする。
+本来であれば、行列 $OM$ および $OT$ に用いる機械加工順序データや加工時間データは、実工場から取得した実績データに基づくことが望ましい。
+しかしながら、個々の製品の加工順序や加工時間、注文書などの生産情報は企業の営業機密および顧客情報に関連しており、
+企業と共同研究等がない限り、入手することは困難である。
+そこで本研究では、文献\cite{ref22}に記載された多層PCBの製造工程を基づく、各製品種別ごとの加工工程と使用機械を仮定、
+その上で注文書のばらつきやロット構成を確率モデルにより生成することで、実工場を模擬した実験用データを自動生成する。
+
+
+\subsection{データ自動生成の考え方}
+多層PCBの製造工程は以下の加工工程は不可欠だ。
+
 \begin{enumerate}
-    \item 多層回路基盤を作る工場等、同じ工程が何回も加工する加工工程に向けて、生成する。
-    \item 正規分布を用いてオーダー数$O_{i}$を生成($\mu_{odder}$ = 10、$\sigma^2_{odder}$ = 2)。
-    \item 負の値やゼロを除外し、サンプルからランダムに1つの整数を選んで、今回のシミュレーションの注文数とする。
-    \item 各注文は最大で6種類の製品を含む。
-    \item 各種別の製品について、固定されている制作工程がある、工程間は転倒しない。
-    \item 各製品のロット数は正規分布($\mu_{lot}$ = 3、$\sigma^2_{lot}$ = 1)から生成し、負またはゼロを除外。
-    \item 各製品は注文内で0.7の確率で含まれるによる制御。
-    \item 各製品の総数量は、すべての注文におけるその製品のロット数合計に10を掛けて算出。
-    \item $m_{1}$から$m_{13}$まで13個それぞれ役目が重ねない加工機械がある。
-    \item 各加工工程の操作時間 $T_{J}$:一部は製品数量に単位時間を掛けて決定、一部は固定時間。
-    \item 各製品種別に対し、加工工程と対応する操作時間の組み合わせを記録する。
+    \item 材料準備
+    \item 材料表面の汚れや油分を除去し
+    \item パターン転写（一回にフォトリソグラフィ方式とダイレクト印刷方式どちらを選ぶ）
+    \item エッチングとレジスト除去（複数回加工する場合ある）
+    \item 積層（複数回加工する場合ある）
+    \item ドリル加工
+    \item スルーホールめっき
+    \item ソルダーレジスト塗布
+    \item 表面処理
+    \item 電気検査
+    \item 包装
     \end{enumerate}
 
-    同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しない.\\
+ここまでの加工ができましたら、出荷までの作業は終了とする。このような加工工程があって、加工機械に役割を割り当ては以下のように設定する。
 
-\begin{enumerate}
-    \item $before\{m_{sq}\} \neq m_{sq}$ \\
-    \item $after\{m_{sq}\} \neq m_{sq}$ \\
-    \end{enumerate}
+\begin{align*}
+    M_{1} &\text{: 銅箔付きの絶縁板1を取る} \nonumber\\
+    M_{2} &\text{: 銅箔付きの絶縁板2を取る} \nonumber\\
+    M_{3} &\text{: 表面の汚れや油分を除去し} \nonumber\\
+    M_{4} &\text{: パターン転写(フォトリソグラフィ方式)} \nonumber\\
+    M_{5} &\text{: パターン転写(ダイレクト印刷方式)} \nonumber\\
+    M_{6} &\text{:エッチングとレジスト除去} \nonumber\\
+    M_{7} &\text{:積層} \nonumber\\
+    M_{8} &\text{:ドリル加工} \nonumber\\
+    M_{9} &\text{:スルーホールめっき} \nonumber\\
+    M_{10} &\text{:ソルダーレジスト塗布} \nonumber\\
+    M_{11} &\text{:表面処理} \nonumber\\
+    M_{12} &\text{:電気検査} \nonumber\\
+    M_{13} &\text{:包装} \nonumber\\
+\end{align*}
 
-\subsection{レイアウト、AGV搬送設定}
+本研究は６種類の製品が生産可能な工場と仮定する。この６種類の製品の加工工程順序は以下のように設定する。
+
+\[
+OM =
+\begin{bmatrix}
+1 & 3 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 3 & 4 & 6 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+1 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 10 & 11 & 12 & 13 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 5 & 6 & 10 & 11 & 12 & 13
+\end{bmatrix}
+\]
+
+
+このOM行列はジョブセット各加工工程機械割り当ての行列、
+$OM_{s,q} = \{1,2,\dots,12,13\}$ ということは製品$s$の第$q$番目加工工程の加工機械は$OM_{s,q}$である。
+$OM_{s,q} = 0$の場合、製品$s$の第$q$番目加工工程自体はないことだ。
+
+エッチングとレジスト除去、積層、スルーホールめっき、この三つの加工操作はPCBをまとめて操作可能な加工工程のことで、加工時間は定値に設定する。
+この三つの加工工程を除いて、他すべての加工工程の加工時間は$n_{s} \times {単位時間}$の積だ。
+次は各機械の単位加工時間もしくは定値加工時間を設定する。
+\begin{align*}
+    MT_{1} &\text{= 0.5(単位加工時間)} \nonumber\\
+    MT_{2} &\text{= 0.5(単位加工時間)} \nonumber\\
+    MT_{3} &\text{= 2(単位加工時間)} \nonumber\\
+    MT_{4} &\text{= 8(単位加工時間)} \nonumber\\
+    MT_{5} &\text{= 7(単位加工時間)} \nonumber\\
+    MT_{6} &\text{= 250(基準加工時間)} \nonumber\\
+    MT_{7} &\text{= 600(基準加工時間)} \nonumber\\
+    MT_{8} &\text{= 3(単位加工時間)} \nonumber\\
+    MT_{9} &\text{= 750(基準加工時間)} \nonumber\\
+    MT_{10} &\text{= 5(単位加工時間)} \nonumber\\
+    MT_{11} &\text{= 4(単位加工時間)} \nonumber\\
+    MT_{12} &\text{= 3(単位加工時間)} \nonumber\\
+    MT_{13} &\text{= 1(単位加工時間)} \nonumber\\
+\end{align*}
+
+次に受注数およびロット数のばらつきを表現するために、
+受注数は平均 $\mu_{odder}=10$、分散 $\sigma^2_{odder}=2$ の正規分布に従う乱数から生成し、
+ロット数は平均 $\mu_{lot}=3$、分散 $\sigma^2_{lot}=1$ の正規分布に従う乱数から生成する。
+負の値および $0$ は現実的でないため除外し、正の値のみを採用する。
+
+\begin{align}
+    \mu_{odder} &\text{:総オーダー数の平均値} \nonumber\\
+    \sigma^2_{odder} &\text{: 総オーダー数の分散} \nonumber\\
+    \mu_{lot} &\text{: 各オーダーに注文された製品のロット数の平均値} \nonumber\\
+    \sigma^2_{lot} &\text{: 各オーダーに注文された製品のロット数の分散} \nonumber\\
+\end{align}
+
+これにより、実際の生産現場に見られる受注量とロットサイズのゆらぎを簡易的に表現する。
+
+各注文には、最大 $6$ 種類の製品種別が含まれ得るものとし、確率 $P=0.7$ で当該製品が注文に含まれると仮定する。
+これにより，オーダーごとの製品構成行列 $odder$ を生成し、各製品種別ごとの総注文件数 $n_{s}$ はロット数の合計に基板1ロットあたり10枚という仮定を掛け合わせて算出する。
+その後、各加工工程の処理時間は、この $n_{s}$ と機械別の単位加工時間または基準加工時間パラメータに基づいて決定する。
+例えば、ドリル加工や電気検査など加工時間が枚数に比例すると考えられる工程では、$n_{s} \times MT_{m},m = \{1,2,3,4,5,8,10,11,12,13\}$ で工程時間を設定し、
+一方、エッチングや積層などバッチ処理的な工程では、製品枚数に依存しない基準時間 $MT_{m},m = \{6,7,9\}$ を用いる。
+こうして得られた処理時間行列が、行列 $OT$ に相当する。
+
+\[
+OT_{s,q}=
+\begin{cases}
+    n_{s} * MT_{m}  & m = \{1,2,3,4,5,8,10,11,12,13\} \\
+    MT_{m} & m = \{6,7,9\}
+\end{cases}
+\]
+
+以上のように、本研究の自動生成データは、
 \begin{enumerate}
-    \item 工場にはL/U(Lording/Unlording)、機械($m_{1} \sim m_{m}$)がある。
-    \item 各AGVはL/Uから出発、各機械の間を部品を搬送する。
-    \item 製品の最後の一つ加工操作が終わった後に、AGVは最後の一つの加工操作を務めた機械のところで、部品を受取、L/Uまで搬送する。
-    \item 注文書に書かれているすべての製品がL/Uまで搬送したら、加工終了し総操作時間加算する。
-    \item AGVは一回限りに一種類の部品を搬送します、容量は考慮しません。
-    \item $AGV_j$がL/Uから各機械への搬送時間は同じく$ht_{j,L/U,m_{m}}=30$。
-    \item AGVが機械の間での搬送時間は、相隣の機械は同じく20、機械の間に挟まれた機械の個数分かける10加算する。
-    \item 一つの搬送作業に対して、AGV1台で搬送する。
-    \item 一つの搬送作業に対して、一回しかしない。
+    \item 多層プリント基板の代表的な加工工程列を反映した機械割当行列 $OM$
+    \item 受注数・ロット構成のばらつきと機械特性を考慮して決定される処理時間行列 $OT$
     \end{enumerate}
+から構成され、実工場の特徴を保ちつつ、パラメータを変えることで多様な実験用ジョブセットを大量に生成できるように設計している。
+
+\subsection{実際の生成手続き}
+具体的なデータ生成手続きは、Python により実装したプログラムに従って以下の手順で行う。
+\begin{enumerate}
+  \item 乱数seed $seed_{value}=3$ を設定し、受注数およびロット数の正規分布パラメータ，機械別単位加工時間・基準加工時間パラメータを初期化する。
+  \item 生成するジョブセット数を $gene=10000$ とし、$gene =0,\ldots, gene-1$ について以下の処理を繰り返す。
+  \item 受注数の候補として、平均 $\mu_{odder}$、分散$\sigma^2_{odder}$ の正規分布からサンプルサイズ $odder_{size}$ 個の乱数系列を生成し、$0$ 以下の値を除外する。その中から1つをランダムに選択し、実際の受注数 $odder_{number}$ とする。
+  \item 同様に，ロット数についても平均 $\mu_{lot}$，分散$\sigma^2_{lot}$ の正規分布からサンプルサイズ $lot_{size}$ 個の乱数系列を生成し、$0$ 以下を除外した上でロット数候補集合を得る。
+  \item 受注数 $odder_{number}$ と製品種類数 $6$ に基づき、オーダー原始データ行列 $odder$(サイズ $odder_{number} \times count_{type}$)を初期化する。
+        各注文 $O_{i}$ と製品種別 $J_{s}$ について、確率 $P=0.7$ で当該製品が注文に含まれるとし、含まれる場合にはロット数候補集合から1つをランダムに選択して $odder_{i,s}$ に代入する。
+  \item 行列 $odder$ の列方向の合計に基板1ロットあたり10枚を乗じることで、各製品種別ごとの総基板枚数ベクトル $product_{count}$ を算出する。
+  \item 各製品種別 $J_{s}$ および各工程番号 $q$ について、機械割当行列 $OM$ の要素 $OM_{s,q}$ を参照し、その値に応じて処理時間行列 $OT_{s,q}$ を決定する。
+        枚数に比例する工程では $product_{count}[s]$ と単位時間を乗じ、バッチ処理工程では基準時間をそのまま用いる。
+  \item 行列 $OM$ および $OT$ をもとに、行列 $JOBSET$ を作成する。
+        $JOBSET$ は行方向に製品種別(製品1〜製品6)、列方向に工程番号(加工工程1〜加工工程17)を取り、各要素には「(機械番号, 加工時間)」の組を文字列として格納する。
+        これにより、$JOBSET$ の機械番号部分が $OM$、加工時間部分が $OT$ に対応する。
+  \item 生成条件（分布種別、受注数分布パラメータ、ロット数分布パラメータ、使用機械数，シード値）に基づいて出力ディレクトリおよびファイル名を構成し、$JOBSET$ を .csv 形式で保存する。
+\end{enumerate}
+
+    そして同じジョブの作業について、前作業と後作業があり、作業の前作業と後作業のどれかの作業機械は一致しないと設定する。
+
+\begin{cases}
+    before\{m_{s,q}\} \neq m_{s,q} \\
+    after\{m_{s,q}\} \neq m_{s,q}
+\end{cases}
 
 \section{提案手法}
 本研究では、JSSP問題に対して、GAを用いた探索手法を提案する。また、こういう加工順序が厳格に定められている問題には、PPS(Precedence Preservative Crossover)という交差手法を採用します。
