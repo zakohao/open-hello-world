@@ -6,6 +6,8 @@
 %\usepackage{amsmath}
 \usepackage{amsmath,amssymb}
 \usepackage{array} 
+\usepackage{subcaption}
+
 \allowdisplaybreaks[4] 
 
 \begin{document}
@@ -606,6 +608,7 @@ PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問�
 
 \subsection{GAの実験結果}
 以上の手順で120個データをスケジュールして、最後の許容解総加工時間とガントチャートを結果としてアウトプットした。
+
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/GA_result.png}
@@ -614,7 +617,71 @@ PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問�
 \end{figure}
 
 本研究を背景としての問題設定およびジョブセットの規模でしたら、ジェネレーショ終えて許容解を出せるまで概ね17秒左右がかかる。
-以下は注文タイプにより、ジェネレーショの最短総加工時間折れ線グラフとガントチャート。
+以下は注文タイプにより、三つ種類の中でランダムに選択された注文のジェネレーショの最短総加工時間折れ線グラフとガントチャート。
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/generation_19_small.png}
+    \caption{注文書19(小さい注文)のジェネレーショ折れ線グラフ}
+    \label{fig:19 generation}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/gantt_19.png}
+    \caption{注文書19(小さい注文)の許容解ガントチャート}
+    \label{fig:19 gantt}
+\end{subfigure}
+\caption{注文書19(小さい注文)の実験結果}
+\label{fig:small odder ga result}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/generation_68_normal.png}
+    \caption{注文書68(一般注文)のジェネレーショ折れ線グラフ}
+    \label{fig:68 generation}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/gantt_68.png}
+    \caption{注文書68(一般注文)の許容解ガントチャート}
+    \label{fig:68 gantt}
+\end{subfigure}
+\caption{注文書68(一般注文)の実験結果}
+\label{fig:normal odder ga result}
+\end{figure}
+
+\begin{figure}[htbp]
+\centering
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/generation_93_large.png}
+    \caption{注文書93(大きい注文)のジェネレーショ折れ線グラフ}
+    \label{fig:93 generation}
+\end{subfigure}
+\hfill
+\begin{subfigure}{0.48\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{figures/gantt_93.png}
+    \caption{注文書93(大きい注文)の許容解ガントチャート}
+    \label{fig:93 gantt}
+\end{subfigure}
+\caption{注文書93(大きい注文)の実験結果}
+\label{fig:large odder ga result}
+\end{figure}
+\clearpage
+GAの実験結果を見て、ジェネレーショ回数は50回以下でも、場合によって許容解を出せる。さいあくでも200回以下でいい許容解を出せる。
+ガントチャートから見ると、加工工程のスケジューリングも詰まられて仕事した。
+JSSPは典型的なNP問題であることで、問題により厳密解を出せるためには総当たり法が必要となります。
+こうやって、GAによりJSSPのスケジュール最適化は高速に受けれる解を出せるのが見られます。
+
+\section{深層強化学習による解の改善}
 
 \clearpage
 
