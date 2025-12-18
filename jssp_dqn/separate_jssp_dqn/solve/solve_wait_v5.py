@@ -522,7 +522,7 @@ def solve_with_trained_model(ma, pt, model_path,
 # =========================
 if __name__ == "__main__":
     # === 修改成你的实际路径 ===
-    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,30gene.csv"
+    problem_file = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]\[6]r[17]c,5gene.csv"
     model_path = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_v5_1.pth"
 
     ma, pt = load_single_csv(problem_file)
