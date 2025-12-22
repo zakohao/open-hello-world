@@ -36,9 +36,9 @@ class JSSPEnv:
     """
     改进点：
     1) 事件驱动(event-based)：每一步优先处理“最早空闲的机器”上的可加工工序
-    2) 等待(action=0)不再是dt=1全局平移，而是“对齐等待”：直接跳到该机器下一次有工序可开的时刻
-    3) 如果该机器当前有可加工工序，你却选了别的job（或等待） => 立即惩罚（missed_dispath_penalty）
-    4) Reward主项采用 -ΔCmax（makespan增量），强力促使紧凑排程
+    2) 等待(action=0)不再是dt=1全局平移,而是“对齐等待”：直接跳到该机器下一次有工序可干的时刻
+    3) 如果该机器当前有可加工工序,你却选了别的job(或等待),则立即惩罚(missed_dispath_penalty)
+    4) Reward函数更新 -ΔCmax(makespan增量) + 行动的奖励以及惩罚
     """
 
     def __init__(self, machine_assignments, processing_times,
@@ -56,8 +56,8 @@ class JSSPEnv:
         self.index_to_machine = {idx: machine for idx, machine in enumerate(self.all_machines)}
 
         # reward参数
-        self.idle_weight = idle_weight      # 强化“机器空转”的代价
-        self.miss_weight = miss_weight      # “有可做不做”的惩罚强度
+        self.idle_weight = idle_weight      # 强化机器待机的代价
+        self.miss_weight = miss_weight      # “有可做任务但不做”的惩罚强度
         self.skip_weight = skip_weight      # action=0（交给启发式）时的小惩罚
         self.immediate_bonus = immediate_bonus      
 
@@ -76,7 +76,7 @@ class JSSPEnv:
     # 事件驱动：选“最早空闲机器”
     def _earliest_machine(self):
         min_t = min(self.time_table) if self.time_table else 0.0
-        # 多台机器同一最早时间 -> 固定选最小idx，避免随机性
+        # 多台机器同一最早时间时，固定选最小idx
         m_idx = int(np.argmin(self.time_table)) if self.time_table else 0
         return m_idx, min_t
 
@@ -106,7 +106,7 @@ class JSSPEnv:
 
         return valid
 
-    # state（尽量少改你的结构，但加入关键“最早机器信息”）
+    # state（加入“最早机器信息”）
     def _get_state(self):
         state = []
 
@@ -151,7 +151,7 @@ class JSSPEnv:
             else:
                 state.append(0.0)
 
-        # 7) 加入“最早空闲机器信息”（关键！让网络知道当前该关注谁）
+        # 7) 加入“最早空闲机器信息”
         m_idx, t_free = self._earliest_machine()
         state.append(float(m_idx))
         state.append(float(t_free))
@@ -212,7 +212,7 @@ class JSSPEnv:
             tuple(self.job_end_times),
         )
 
-        # 当前“应关注”的机器：最早空闲机器
+        # 当前应关注的机器：最早空闲机器
         m_idx, t_free = self._earliest_machine()
         valid_actions = self.get_valid_actions()
 
@@ -225,7 +225,7 @@ class JSSPEnv:
 
         # action == 0：等待 or 启发式替代
         if action == 0:
-            # 情况1：其实有可调度 job（action=0 是在“逃避决策”）
+            # 情况1：其实有可调度 job（action=0 是在逃避决策）
             if len(valid_actions) > 1:
                 # 明确惩罚
                 missed_penalty = -self.miss_weight
@@ -238,9 +238,8 @@ class JSSPEnv:
                 )
 
                 action = best_action
-                # 注意：这里不 return，直接进入下面“执行 job”逻辑
 
-            # 情况2：真的没 job，只能等
+            # 情况2：真的没可执行 job，只能等
             else:
                 idle = self._align_wait(m_idx, t_free)
                 idle_penalty = -self.idle_weight * idle
@@ -262,11 +261,11 @@ class JSSPEnv:
             if len(valid_actions) > 1 and action not in valid_actions:
                 missed_penalty = -self.miss_weight
 
-        # 执行选择的job（可能是启发式替代后的）
+        # 执行选择的job（可能是启发式选择后的）
         job = action - 1
         op = self.current_step[job]
 
-        # 安全：若选到已完成job -> 当作等待
+        # 安全：若选到已完成job，当作等待
         if op >= self.num_machines:
             idle = self._align_wait(m_idx, t_free)
             idle_penalty = -self.idle_weight * idle
@@ -282,11 +281,11 @@ class JSSPEnv:
         start_time = max(self.job_end_times[job], self.time_table[machine_idx])
         end_time = start_time + proc_time
 
-        # 如果你选的不是最早空闲机器，而导致“最早机器”继续闲着，也给一点惩罚（更紧凑）
+        # 如果你选的不是最早空闲机器，而导致“最早机器”继续闲着，也给一点小惩罚
         # 注意：我们用“最早机器闲置到它下一次被更新”的信息不容易即时得到，所以用近似：
         extra_idle_penalty = 0.0
         if machine_idx != m_idx and len(valid_actions) > 1:
-            # 有机会在最早机器上开工，但你跑去别的机器安排 -> 视为浪费机会
+            # 有机会在最早机器上开工，但你跑去别的机器安排，视为浪费机会
             extra_idle_penalty = -0.5
 
         # 更新
@@ -305,16 +304,16 @@ class JSSPEnv:
         # 主项：让Cmax增长越慢越好
         reward_main = -delta_cmax
 
-        # 小奖励：如果你确实在“最早空闲机器”上立刻开工（减少空转）
+        # 奖励：如果确实在“最早空闲机器”上立刻开工
         immediate_reward = 0.0
         if machine_idx == m_idx and start_time <= t_free + 1e-9:
             immediate_reward = self.immediate_bonus
 
-        # 若该机器本可以更早开工但你选的job要等很久，也惩罚等待（局部空转）
-        local_idle = max(0.0, start_time - self.time_table[machine_idx] + proc_time)  # 简单近似
-        # 更合理的 local idle：start_time - prev_machine_available
-        # 但我们没存 prev_machine_available，这里用轻惩罚即可
-        local_idle_penalty = -0.0  # 先不加太重，避免冲突
+        ## 若该机器本可以更早开工但你选的job要等很久，也惩罚等待（局部空转）
+        #local_idle = max(0.0, start_time - self.time_table[machine_idx] + proc_time) 
+        ## 更合理的 local idle：start_time - prev_machine_available
+        ## 但我们没存 prev_machine_available，这里用轻惩罚即可
+        local_idle_penalty = -0.0
 
         reward = (reward_main
                   + immediate_reward
@@ -347,7 +346,6 @@ class JSSPEnv:
             self.time_table[m_idx] += 1e-2
 
         return self._get_state(), reward, self.done, info
-
 
 
 class DQN(nn.Module):
