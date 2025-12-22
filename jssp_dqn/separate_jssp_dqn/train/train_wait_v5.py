@@ -21,7 +21,7 @@ else:
     print("使用CPU")
 
 # Hyperparameters
-EPISODES = 1000
+EPISODES = 2000
 GAMMA = 0.9           # 越接近1表示越重视长期回报
 LR = 0.0005            # 较小的学习率使训练更稳定但收敛较慢
 EPSILON_DECAY = 0.998 # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
