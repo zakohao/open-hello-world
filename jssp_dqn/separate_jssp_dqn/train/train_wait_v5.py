@@ -30,7 +30,7 @@ BATCH_SIZE = 64       # 固定批量大小
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
 UPDATE_TARGET_FREQUENCY = 30  # 每UPDATE_TARGET_FREQUENCY步更新一次目标网络
 MIN_COMPLETE_EPISODES = 2     # 完成MIN_COMPLETE_EPISODES个数据集的完整调度后才开始训练
-EVALUATION_FREQUENCY = 10      # 每10次episode评估一次固定测试集
+EVALUATION_FREQUENCY = 10      # 每EVALUATION_FREQUENCY次episode评估一次固定测试集
 
 class JSSPEnv:
     """
@@ -50,12 +50,12 @@ class JSSPEnv:
         self.processing_times = processing_times
         self.num_jobs, self.num_machines = machine_assignments.shape
 
-        # 获取所有机器ID并创建映射（保持你原来的映射方式）
+        # 获取所有机器ID并创建映射
         self.all_machines = np.unique(machine_assignments)
         self.machine_to_index = {machine: idx for idx, machine in enumerate(self.all_machines)}
         self.index_to_machine = {idx: machine for idx, machine in enumerate(self.all_machines)}
 
-        # reward超参数（可以后续调）
+        # reward参数
         self.idle_weight = idle_weight      # 强化“机器空转”的代价
         self.miss_weight = miss_weight      # “有可做不做”的惩罚强度
         self.skip_weight = skip_weight      # action=0（交给启发式）时的小惩罚
@@ -73,18 +73,14 @@ class JSSPEnv:
         self.completed_ops = 0
         return self._get_state()
 
-    # -------------------------
     # 事件驱动：选“最早空闲机器”
-    # -------------------------
     def _earliest_machine(self):
         min_t = min(self.time_table) if self.time_table else 0.0
         # 多台机器同一最早时间 -> 固定选最小idx，避免随机性
         m_idx = int(np.argmin(self.time_table)) if self.time_table else 0
         return m_idx, min_t
 
-    # -------------------------
     # 在“最早空闲机器”上，此刻可开工的job集合
-    # -------------------------
     def get_valid_actions(self):
         """
         动作空间仍保持：0(等待/交给启发式) + 1..num_jobs (选job)
@@ -110,9 +106,7 @@ class JSSPEnv:
 
         return valid
 
-    # -------------------------
     # state（尽量少改你的结构，但加入关键“最早机器信息”）
-    # -------------------------
     def _get_state(self):
         state = []
 
@@ -164,9 +158,8 @@ class JSSPEnv:
 
         return np.array(state, dtype=np.float32)
 
-    # -------------------------
+
     # 对齐等待：跳到该机器下一次可能开工的时刻
-    # -------------------------
     def _align_wait(self, m_idx, t_free):
         """
         强制时间推进到下一个“任何事件”：
@@ -230,11 +223,9 @@ class JSSPEnv:
         # 计算当前Cmax
         cmax_prev = max(self.job_end_times) if self.job_end_times else 0.0
 
-        # -------------------------
         # action == 0：等待 or 启发式替代
-        # -------------------------
         if action == 0:
-            # ===== 情况1：其实有可调度 job（action=0 是在“逃避决策”）=====
+            # 情况1：其实有可调度 job（action=0 是在“逃避决策”）
             if len(valid_actions) > 1:
                 # 明确惩罚
                 missed_penalty = -self.miss_weight
@@ -247,9 +238,9 @@ class JSSPEnv:
                 )
 
                 action = best_action
-                # ★注意：这里不 return，直接进入下面“执行 job”逻辑
+                # 注意：这里不 return，直接进入下面“执行 job”逻辑
 
-            # ===== 情况2：真的没 job，只能等 =====
+            # 情况2：真的没 job，只能等
             else:
                 idle = self._align_wait(m_idx, t_free)
                 idle_penalty = -self.idle_weight * idle
@@ -271,9 +262,7 @@ class JSSPEnv:
             if len(valid_actions) > 1 and action not in valid_actions:
                 missed_penalty = -self.miss_weight
 
-        # -------------------------
         # 执行选择的job（可能是启发式替代后的）
-        # -------------------------
         job = action - 1
         op = self.current_step[job]
 
@@ -309,9 +298,7 @@ class JSSPEnv:
         self.schedule.append((job, op, machine_id, start_time, end_time))
         self.done = all(s >= self.num_machines for s in self.current_step)
 
-        # -------------------------
         # Reward：主项 -ΔCmax + 辅助惩罚/奖励
-        # -------------------------
         cmax_now = max(self.job_end_times) if self.job_end_times else 0.0
         delta_cmax = cmax_now - cmax_prev
 
@@ -348,7 +335,7 @@ class JSSPEnv:
             }
         }
 
-        # ===== anti-stall：如果状态完全没变，强制推进时间 =====
+        # anti-stall：如果状态完全没变，强制推进时间
         new_signature = (
             tuple(self.current_step),
             tuple(self.time_table),
@@ -744,7 +731,7 @@ def train_target(training_datasets):
     total_steps = 0
     complete_datasets_count = 0
 
-    # 新增：选择5个固定测试集
+    # 选择5个固定测试集
     fixed_test_datasets = random.sample(training_datasets, min(5, len(training_datasets)))
     evaluation_results = []  # 存储评估结果 (episode_index, avg_makespan)
     episode_losses = []      # 存储每个episode的loss值 (episode_index, loss)
