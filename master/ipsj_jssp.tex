@@ -22,26 +22,24 @@
 
 \section{はじめに}
 
-本研究では、プリント基板 (PCB) 製造工場を対象に、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
-静的な環境においては、遺伝的アルゴリズム (GA) および深層強化学習に基づく Deep Q-Network (DQN) を用いて最適化を行い、両手法の性能比較を実施した。 
-さらに、機械故障等による環境変動が発生する動的な環境で高速にスケジュールを生成可能な DQN により、適応性能の向上を図った。
+本研究では,プリント基板 (PCB) 製造工場を対象に,同一加工機械を複数回使用する生産プロセスをモデル化しスケジューリング最適化をした.
+静的な環境では遺伝的アルゴリズム (GA) と深層強化学習に基づく Deep Q-Network (DQN) を用い手法を性能比較した.
+さらに機械故障等が発生する動的な環境に柔軟に再スケジュールできる DQN の適応性能を検討した.
 
 \section{生産管理問題のモデル}
-本研究では受注生産を行う工場の製造工程、受注型ジョブショップスケジュール問題 (Job Shop Scheduler prob-lem:JSSP) を最適化問題として解く。
-JSSPを制約付き最適化問題として定式化し、目標関数としては:\\
+本研究では受注生産する工場の製造工程,受注型ジョブショップスケジュール問題 (Job Shop Scheduler prob-lem:JSSP) を対象とし.
+JSSPを制約付き最適化問題として定式化する.目標関数としては:\\
 \begin{equation}
 \mathrm{opt.}\ JSSP = \min \left\{ \max_{s} TJ_{s} \right\}
 \label{eq:objective}
 \end{equation}
-ここで、$TJ_{s}$ は第 $s$ 種別製品の最終加工工程の完了時刻を表す。
+ここで,$TJ_{s}$ は第 $s$ 種別製品の最終加工工程の完了時刻を表す.
 
-したがって、本最適化問題は、ジョブセットに記載された全製品種別の最終加工完了時刻の最大値を求める。
-様々なスケジューリング案の最終加工完了時刻の中で最小のものを本論文では$makespan$と呼ぶ、すなわち、最適化とは、この$makespan$の最小化である。
+本最適化問題では各ジョブセットに含まれる全製品種別の最終加工完了時刻の最大値をスケジューリング案の終了時刻として求め,
+各スケジューリング案の終了時刻の中で最小終了時刻（$makespan$）のスケジューリング案を最適とする.
 
-ジョブショップスケジューリングの目的は、各加工機械をできるだけ連続的に稼働させるとともに、
-各製品の加工工程を待ち時間なく加工することにより、総加工時間を最小化することである。
-したがって、JSSP は待機している加工機械に対して加工対象となるジョブを割り当てる逐次意思決定問題とみることができる。
-この意思決定過程は次の図\ref{fig:JSSP flow chat}に示します。
+このJSSPは待機している加工機械に対して加工対象となるジョブを割り当てる逐次意思決定問題とみることができる.
+この意思決定過程は次の図\ref{fig:JSSP flow chat}に示します.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/jssp_flow_chat.png}
@@ -50,27 +48,22 @@ JSSPを制約付き最適化問題として定式化し、目標関数として�
 \end{figure}
 
 \section{実験用データ自動生成}
-モデルとしてクライアント側から提供される注文書が最適化の対象となり，このようなデータは不可欠である。
-PCB 製造に関する実データは、企業の営業機密や顧客情報に直結するデータのためこうしたデータは入手困難で、
-共同研究であっても外部に具体的な数値の利用は難しい。
-そのため本研究では、先行研究に記載されている PCB 製造工程を参考にして、各加工機械に対して加工役割を割り当てた
-人工的なデータをまず生成する。
-そこで文献\cite{ref5}に記載された多層 PCB の製造工程を基づく各製品種別ごとの加工工程と使用機械をもとに、
-注文書のばらつきやロット数を確率的にデータとして生成するし、ジョブセットを得る。
-
+JSSPの検討には,クライアント側から提供される注文書が不可欠である.
+ただし実データの入手は困難であるので,本研究では先行研究\cite{ref3}の PCB 製造工程を参考に、
+各加工機械に対して加工役割を割り当てた人工的なデータを生成する.
+データ生成では注文書のばらつきやロット数を確率的に変動させた.
 
 \section{遺伝的アルゴリズムによる解の改善}
-本研究では、JSSPに対して、GAを用いたスケジューリングの最適解探索手法を採用する。
+本研究では,JSSPに対してGAを用いた最適解探索手法を採用する.
 
-各染色体は、全ジョブに属する加工工程を一度ずつ含む遺伝子列として表現され、各遺伝子は「ジョブ $J_s$ の第 $q$ 工程」を表す。
-遺伝子列の順序に従い、制約を満たすようスケジュールを構成する。
-各ジョブは処理可能なジョブからランダムに工程を選択と配置することで初期染色体を生成する。
-各染色体をデコードし、得られた総加工時間$makespan$を適応度として評価する。
-トーナメント選択により最良個体を選択し，親染色体を決定する。
-制約を保持可能な交差手法を用いて子個体を生成する。
-子個体を生成後に修復処理を行い、解の実行可能性を保証する。
-進化計算を繰り返し，得られた最良染色体を最終解として採用する。
-最終解に対応するカントチャートと世代ごとの$makespan$の折れ線グラフで視覚的に評価する。
+各染色体は,全ジョブに属する加工工程を一度ずつ含む遺伝子列として表現する.各遺伝子は「ジョブ $J_s$ の第 $q$ 工程」とし,
+制約を満たすようスケジュールを構成する.
+各ジョブは処理可能なジョブからランダムに工程を選択配置して初期染色体を生成する.
+各染色体デコードで得られた総加工時間$makespan$を適応度として評価する.
+トーナメント選択により最良個体を選択し,親染色体を決定して制約を保持する交差手法として
+PPS(Precedence Preservative Crossover)という交差手法で子個体を生成する.
+以上の進化計算を繰り返し，収束後に得られる最良染色体を最終解とする.
+最終解に対応するカントチャートと世代ごとの$makespan$の折れ線グラフで視覚的に評価する.
 
 \begin{figure}[htbp]
   \centering
@@ -79,45 +72,53 @@ PCB 製造に関する実データは、企業の営業機密や顧客情報に�
   \label{fig:GA flow chat}
 \end{figure}
 
-加工順序が厳密に定まる問題なので、PPS(Precedence Preservative Crossover)という交差手法を採用する。
-
 \section{深層強化学習による解の改善}
-本研究では、価値関数に基づく強化学習手法であるDeep Q-Network(DQN)を用いる。
-DQN では、各状態 $s_t$ における行動 $a_t$ の価値を表す
-行動価値関数 $Q(s_t,a_t)$ をニューラルネットワークにより近似し、
-各状態における行動選択を $Q$ 値に基づいて行う。
+本研究では価値関数に基づく強化学習手法であるDeep Q-Network(DQN)を用いる.
+DQN では,各状態 $s_t$ における行動 $a_t$ の価値を表す
+行動価値関数 $Q(s_t,a_t)$ をニューラルネットワークにより近似し,
+各状態における行動選択を $Q$ 値に基づいて行う.
 
-メインネットとターゲットネットを用いる。
-メインネットは、状態 $s_t$ を入力として各行動の $Q$ 値を出力し、
-$\varepsilon$-greedy 法により実行行動 $a_t$ を決定するために用いられる。
-また、経験再生でサンプルされた $(s_t,a_t,r_t,s_{t+1})$ に対して、
-メインネットワーク出力から $Q(s_t,a_t)$ を算出し、
-誤差逆伝播によりメインネットのパラメータ更新を行う。
-一定ステップ間隔ごとにメインネットワークのパラメータを
-ターゲットネットワークへコピーするハード更新を行う。
-また、固定テストデータ集合に対する定期評価では、
-評価値のばらつきを抑える目的からターゲットネットワークを用いて計算を行う。
+DQNのメインネットとターゲットネットとして,
+メインネットでは、状態 $s_t$ を入力として各行動の $Q$ 値を出力し,
+$\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用いる.
+また,経験再生でサンプルされた $(s_t,a_t,r_t,s_{t+1})$ に対して,
+メインネット出力から $Q(s_t,a_t)$ を算出し,
+誤差逆伝播によりメインネットのパラメータ更新を行う.
+一定ステップ間隔ごとにメインネットのパラメータを
+ターゲットネットへコピーするハード更新を行う,
+固定テストデータ集合に対する定期評価では,
+評価値のばらつきを抑える目的からターゲットネットを用いて計算を行う.
 
 \section{実験結果}
-実験結果として、散布図による、
+121個のジョブセットにGAとDQN両方により最適スケジューリングの$makespan$の比較は図\ref{fig:GA vs DQN}に示した通り,
+多くのケースで DQN の $makespan$ は GA と同程度（比率 1.0 前後）で,一部では GA を上回る結果も見られるが,
+ジョブセットによっては性能が低下する場合も存在した.
 
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{ipsj_figures/GA_vs_DQN.png}
+  \caption{DQNとGAのmakespanの比較}
+  \label{fig:GA vs DQN}
+\end{figure}
 
+散布図は\ref{fig:scatter_makespan}は横軸を$makespan$とし,縦軸をジョブセットの縦軸とし,GAとDQNで得られた$makespan$の差を表現した.
+ジョブセットのプロセス処理時間の分散が小さいまたは大きいほど,DQNはGAに匹敵する性能が明らかにする.
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=1\linewidth]{ipsj_figures/makespan_scatter_ga_dqn_1.png}
+  \caption{同じジョブセットによりGAとDQNのmakespan比較}
+  \label{fig:scatter_makespan}
+\end{figure}
 
 \begin{thebibliography}{99}
 
-\bibitem{ref1} K.T. Chung, C.K.M.Lee and Y.P. Tsang, "Neural combinatorial optimization with reinforcement learning in industrial engineering: a survey"
-\textit{Artif Intell Rev}. vol. 58, 130(2025).
-
-\bibitem{ref2} S. Lee, Y. Cho and Y.H. Lee, "Injection Mold Production Sustainable Scheduling Using Deep Reinforcement Learning"
+\bibitem{ref1} S. Lee, Y. Cho and Y.H. Lee, "Injection Mold Production Sustainable Scheduling Using Deep Reinforcement Learning"
 \textit{Sustainability}. vol. 12, 8718(2020).
 
-\bibitem{ref3} L.B. Wang, X. Hu, Y. Wang, S. Xu, S. Ma, K. Yang, Z. Liu and W. Wang, "Dynamic job-shop scheduling in smart manufacturing using deep reinforcement learning"
+\bibitem{ref2} L.B. Wang, X. Hu,..., "Dynamic job-shop scheduling in smart manufacturing using deep reinforcement learning"
 \textit{Computer Networks}. vol. 190, 107937(2021).
 
-\bibitem{ref4} 村山 昇,川田 誠一, "遺伝的アルゴリズムを用いた加工機械と複積載AGVの同時スケジューリング"
-\textit{日本機械学会論文集(C編)}. vol. 12, 712, pp. 3638-3643(2005-12).
-
-\bibitem{ref5} Andrzej Kiernich, Jerzy Kalenik, Wojciech Steplewski, Marek Koscielski and Aneta Chołaj, "Impact of Particular Stages of the Manufacturing Process on the Reliability of Flexible Printed Circuits"
+\bibitem{ref3} Andrzej Kiernich, Jerzy Kalenik,..., "Impact of Particular Stages of the Manufacturing Process on the Reliability of Flexible Printed Circuits"
 \textit{Sensors}.25, 140, (2025).
 
 \end{thebibliography}
