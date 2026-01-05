@@ -101,7 +101,7 @@ total_counts = df["order_type"].value_counts()
 # 表示順を固定
 order_list = ["regular", "small", "large"]
 
-lines = ["<b>DQN better count</b> (DQN < GA)"]
+lines = ["<b>num. of jobsets</b> ( DQN makespan <NA )"]
 for t in order_list:
     b = int(counts.get(t, 0))
     n = int(total_counts.get(t, 0))
@@ -110,7 +110,7 @@ for t in order_list:
 stats_text = "<br>".join(lines)
 
 fig.add_annotation(
-    x=1.35, y=0.02,                 # 右側＆下寄せ（凡例の下に来やすい）
+    x=1.35, y=1.2,                 # 右側＆下寄せ（凡例の下に来やすい）
     xref="paper", yref="paper",
     text=stats_text,
     showarrow=False,

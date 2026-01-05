@@ -48,10 +48,10 @@ JSSPを制約付き最適化問題として定式化する.目標関数として
 \end{figure}
 
 \section{実験用データ自動生成}
-JSSPの検討にはクライアント側から提供される注文書が必要だが,
-実データの入手は困難なため本研究では先行研究\cite{ref3}の PCB 製造工程を参考に,
-製品種別ごとに加工機械と加工役割を割り当てた生成データを用いる.
-ジョブセットに含まれる注文書数,注文書に記載される製品種別やロット数は確率的に変動させて生成した.
+JSSPの検討には,クライアント側から提供される注文書が不可欠である.
+ただし実データの入手は困難であるので,本研究では先行研究\cite{ref3}の PCB 製造工程を参考に、
+各加工機械に対して加工役割を割り当てた人工的なデータを生成する.
+データ生成では注文書のばらつきやロット数を確率的に変動させた.
 
 \section{遺伝的アルゴリズムによる解の改善}
 本研究では,JSSPに対してGAを用いた最適解探索手法を採用する.
@@ -101,9 +101,8 @@ $\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用い�
   \label{fig:GA vs DQN}
 \end{figure}
 
-散布図は\ref{fig:scatter_makespan}は横軸を$makespan$とし,縦軸をジョブセットとし,GAとDQNで得られた$makespan$の差を表現した.
-図で示す
-
+散布図は\ref{fig:scatter_makespan}は横軸を$makespan$とし,縦軸をジョブセットの縦軸とし,GAとDQNで得られた$makespan$の差を表現した.
+ジョブセットのプロセス処理時間の分散が小さいまたは大きいほど,DQNはGAに匹敵する性能が明らかにする.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{ipsj_figures/makespan_scatter_ga_dqn_1.png}
