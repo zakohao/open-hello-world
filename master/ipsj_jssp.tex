@@ -22,24 +22,25 @@
 
 \section{はじめに}
 
-本研究では,プリント基板 (PCB) 製造工場を対象に,同一加工機械を複数回使用する生産プロセスをモデル化しスケジューリング最適化をした.
-静的な環境では遺伝的アルゴリズム (GA) と深層強化学習に基づく Deep Q-Network (DQN) を用い手法を性能比較した.
-さらに機械故障等が発生する動的な環境に柔軟に再スケジュールできる DQN の適応性能を検討した.
+本研究では,プリント基板 (PCB) 製造工程を対象に,同一の加工機械を複数回使用する生産プロセスのスケジューリング最適化に取り組んだ.
+まず静的な環境では遺伝的アルゴリズム (GA) と深層強化学習に基づく Deep Q-Network (DQN) を用い，各手法の性能を比較した.
+次に機械故障等が発生する動的な環境に柔軟に再スケジュールできる DQN の性能を検討した.
 
 \section{生産管理問題のモデル}
-本研究では受注生産する工場の製造工程,受注型ジョブショップスケジュール問題 (Job Shop Scheduler prob-lem:JSSP) を対象とし.
-JSSPを制約付き最適化問題として定式化する.目標関数としては:\\
+本研究では受注生産する工場の製造工程として受注型ジョブショップスケジュール問題 (Job Shop Scheduler prob-lem:JSSP) を扱う.
+このJSSPを制約付き最適化問題として定式化する.目標関数は:\\
 \begin{equation}
 \mathrm{opt.}\ JSSP = \min \left\{ \max_{s} TJ_{s} \right\}
 \label{eq:objective}
 \end{equation}
-ここで,$TJ_{s}$ は第 $s$ 種別製品の最終加工工程の完了時刻を表す.
+ここで$TJ_{s}$は,第 $s$ 種別製品の最終加工工程の完了時刻を表す.
 
-本最適化問題では各ジョブセットに含まれる全製品種別の最終加工完了時刻の最大値をスケジューリング案の終了時刻として求め,
-各スケジューリング案の終了時刻の中で最小終了時刻（$makespan$）のスケジューリング案を最適とする.
+最適化問題ではジョブセット(同一の締め切りを持つ注文書集合)に対し,
+セットに含まれる全製品種別の加工完了時刻の最大値を当該スケジューリング案の終了時刻とする.
+そして代替スケジューリング案の終了時刻から,最小終了時刻（$makespan$）をもつスケジューリング案を最適案とする.
 
-このJSSPは待機している加工機械に対して加工対象となるジョブを割り当てる逐次意思決定問題とみることができる.
-この意思決定過程は次の図\ref{fig:JSSP flow chat}に示します.
+本論文のJSSPは,待機中の加工機械に対し,加工対象ジョブを割り当てる逐次意思決定問題とみなし,
+その意思決定過程を図\ref{fig:JSSP flow chat}に示す.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=0.5\linewidth]{figures/jssp_flow_chat.png}
@@ -50,19 +51,19 @@ JSSPを制約付き最適化問題として定式化する.目標関数として
 \section{実験用データ自動生成}
 JSSPの検討にはクライアント側から提供される注文書が必要だが,
 実データの入手は困難なため本研究では先行研究\cite{ref3}の PCB 製造工程を参考に,
-製品種別ごとに加工機械と加工役割を割り当てた生成データを用いる.
+製品種別ごとに加工機械、加工役割と生産手順を予め与え,
 ジョブセットに含まれる注文書数,注文書に記載される製品種別やロット数は確率的に変動させて生成した.
 
 \section{遺伝的アルゴリズムによる解の改善}
-本研究では,JSSPに対してGAを用いた最適解探索手法を採用する.
+ここではJSSPに対しGAを用いた最適解探索手法を述べる.
 
 各染色体は,全ジョブに属する加工工程を一度ずつ含む遺伝子列として表現する.各遺伝子は「ジョブ $J_s$ の第 $q$ 工程」とし,
 制約を満たすようスケジュールを構成する.
 各ジョブは処理可能なジョブからランダムに工程を選択配置して初期染色体を生成する.
 各染色体デコードで得られた総加工時間$makespan$を適応度として評価する.
-トーナメント選択により最良個体を選択し,親染色体を決定して制約を保持する交差手法として
+トーナメント選択により最良個体を選択し,親染色体を決定して制約を保持するように
 PPS(Precedence Preservative Crossover)という交差手法で子個体を生成する.
-以上の進化計算を繰り返し，収束後に得られる最良染色体を最終解とする.
+以上の進化計算を繰り返し，十分に収束した後に得られる染色体を最適解とする.
 最終解に対応するカントチャートと世代ごとの$makespan$の折れ線グラフで視覚的に評価する.
 
 \begin{figure}[htbp]
@@ -73,26 +74,26 @@ PPS(Precedence Preservative Crossover)という交差手法で子個体を生成
 \end{figure}
 
 \section{深層強化学習による解の改善}
-本研究では価値関数に基づく強化学習手法であるDeep Q-Network(DQN)を用いる.
+ここでは価値関数に基づく深層強化学習手法Deep Q-Network(DQN)を用いる.
 DQN では,各状態 $s_t$ における行動 $a_t$ の価値を表す
 行動価値関数 $Q(s_t,a_t)$ をニューラルネットワークにより近似し,
-各状態における行動選択を $Q$ 値に基づいて行う.
+各状態の行動選択を $Q$ 値に基づいて選択する.
 
-DQNのメインネットとターゲットネットとして,
+DQNのメインネットとターゲットネットがあり,
 メインネットでは、状態 $s_t$ を入力として各行動の $Q$ 値を出力し,
-$\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用いる.
+$\varepsilon$-greedy 法により実行行動 $a_t$ を決定に用いる.
 また,経験再生でサンプルされた $(s_t,a_t,r_t,s_{t+1})$ に対して,
 メインネット出力から $Q(s_t,a_t)$ を算出し,
 誤差逆伝播によりメインネットのパラメータ更新を行う.
 一定ステップ間隔ごとにメインネットのパラメータを
-ターゲットネットへコピーするハード更新を行う,
+ターゲットネットへコピーするハード更新を行う.
 固定テストデータ集合に対する定期評価では,
 評価値のばらつきを抑える目的からターゲットネットを用いて計算を行う.
 
 \section{実験結果}
-121個のジョブセットにGAとDQN両方により最適スケジューリングの$makespan$の比較は図\ref{fig:GA vs DQN}に示した通り,
+図\ref{fig:GA vs DQN}に121のジョブセットに対しGAとDQNで得られた最適スケジューリングの$makespan$を示す.
 多くのケースで DQN の $makespan$ は GA と同程度（比率 1.0 前後）で,一部では GA を上回る結果も見られるが,
-ジョブセットによっては性能が低下する場合も存在した.
+ジョブセットにより性能が低下する場合も存在する.
 
 \begin{figure}[htbp]
   \centering
@@ -101,8 +102,8 @@ $\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用い�
   \label{fig:GA vs DQN}
 \end{figure}
 
-散布図は\ref{fig:scatter_makespan}は横軸を$makespan$とし,縦軸をジョブセットとし,GAとDQNで得られた$makespan$の差を表現した.
-図で示す
+図\ref{fig:scatter_makespan}には$makespan$を横軸，縦軸はジョブセット番号順で並べた．
+ここではジョブセットに含まれる注文の処理時間の分散を３段階で色分けし, GAとDQNの$makespan$差を示す.
 
 \begin{figure}[htbp]
   \centering
@@ -110,6 +111,8 @@ $\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用い�
   \caption{同じjobsetにより両手法のmakespan比較}
   \label{fig:scatter_makespan}
 \end{figure}
+
+現時点ではGAのほうが安定してスケジュール案を作成している,動的な状況のDQNの適用を引き続き検討する.
 
 \begin{thebibliography}{99}
 
@@ -121,9 +124,6 @@ $\varepsilon$-greedy 法により実行行動 $a_t$ を決定するため用い�
 
 \bibitem{ref3} Andrzej Kiernich, Jerzy Kalenik,..., "Impact of Particular Stages of the Manufacturing Process on the Reliability of Flexible Printed Circuits"
 \textit{Sensors}.25, 140, (2025).
-
-\bibitem{ref4} K.T. Chung, C.K.M.Lee and Y.P. Tsang, "Neural combinatorial optimization with reinforcement learning in industrial engineering: a survey"
-\textit{Artif Intell Rev}. vol. 58, 130(2025).
 
 \end{thebibliography}
 
