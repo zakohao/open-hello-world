@@ -30,8 +30,8 @@ df["jobset_id"] = range(1, len(df) + 1)
 
 # ===== 类别映射 =====
 type_name_map = {
-    1: "regular",
     0: "small",
+    1: "regular",
     2: "large",
 }
 df["order_type"] = df["order_m_type"].map(type_name_map)
@@ -39,14 +39,14 @@ df["order_type"] = df["order_m_type"].map(type_name_map)
 # ===== 颜色映射 =====
 palette = px.colors.qualitative.Plotly
 color_map = {
-    "regular": palette[1],
     "small": palette[0],
+    "regular": palette[1],
     "large": palette[2],
 }
 
 fig = go.Figure()
 
-for t in ["regular", "small", "large"]:
+for t in [ "small","regular", "large"]:
     sub = df[df["order_type"] == t]
     if sub.empty:
         continue
@@ -99,7 +99,7 @@ counts = better["order_type"].value_counts()
 total_counts = df["order_type"].value_counts()
 
 # 表示順を固定
-order_list = ["regular", "small", "large"]
+order_list = [ "small","regular","large"]
 
 lines = ["<b>num. of jobsets</b> ( DQN makespan <NA )"]
 for t in order_list:
@@ -127,13 +127,24 @@ fig.update_layout(margin=dict(r=220))
 
 
 fig.update_layout(
-    title="Makespan Scatter (GA vs DQN)",
     xaxis_title="Makespan",
     yaxis_title="Jobset ID",
     template="simple_white",
     width=900,
     height=650,
-    legend_title_text="Order Variance / Method"
+    legend_title_text="Order Variance / Method",
+    
+    # === X轴 ===
+    xaxis=dict(
+        title_font=dict(size=22),  # X轴标题
+        tickfont=dict(size=16)     # X轴刻度
+    ),
+
+    # === Y轴 ===
+    yaxis=dict(
+        title_font=dict(size=22),  # Y轴标题
+        tickfont=dict(size=16)     # Y轴刻度
+    )
 )
 
 fig.write_image(OUT_PATH, scale=2)
