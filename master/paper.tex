@@ -1155,7 +1155,7 @@ r_t = r_t^{\mathrm{main}} + r_t^{\mathrm{imm}} + r_t^{\mathrm{pen}}
 報酬設計によるバイアスが小さく，
 本研究の実験では複合型より $makespan$ を安定的に改善できる傾向が確認された．
 
-\subsection{実験結果}
+\subsection{モデル訓練結果}
 
 本章では,DQN のモデル訓練結果について評価を行う.
 具体的には,複合型報酬関数および単純型報酬関数のそれぞれに対して学習を行い,
@@ -1408,6 +1408,101 @@ $makespan$ 中心型報酬関数では，
   機械資源の有効活用を促進する。
 \end{itemize}
 
+図\ref{fig:siple reward result}は，$makespan$ 中心型報酬関数を用いて学習を行った際の，
+エピソード数に対する平均 $makespan$ 、損失関数(loss)と平均総報酬の推移を示したものである。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/wait_v5_2_graph.png}
+  \caption{中心型報酬関数DQNでの実験}
+  \label{fig:simple reward result}
+\end{figure}
+
+図\ref{fig:simple reward result}から分かるように，
+複合型報酬関数の場合とは異なり，
+いずれの観測指標においても明確な収束傾向は確認されない。
+
+特に，平均 $makespan$ および平均総報酬は，
+エピソードの進行に伴って大きなばらつきを維持しており，
+学習が単調に改善方向へ進行しているとは言いずらい。
+また，損失関数についても，
+学習全体を通じて大きな変動が観測されており，
+Q 値推定が安定的に収束しているとは言えない動きを示す。
+
+ですが，本モデルを用いて実際の JSSP に対するスケジューリングを行った結果，図\ref{fig:simple reward vs ga}に示すように,
+得られた解の性能は，
+GAによる解と互角している,
+さらに一部の問題例においては，
+GA によって得られた解を上回る場合も確認された。
+このことは，学習過程における評価指標の収束性と，
+最終的な問題解決能力とが必ずしも一致しないことがわかる。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/simple_reward_dqnvsga.png}
+  \caption{中心型報酬関数DQNとGAの総加工時間性能差}
+  \label{fig:simple reward vs ga}
+\end{figure}
+
+$makespan$ 中心型報酬関数では，
+報酬関数が $C_{\max}$ の増分に直接基づいて与えられるため，
+局所的な意思決定の良否が即時的に評価される一方，
+環境の非定常性により，学習過程全体としては不安定な挙動を示しやすい。
+しかしながら，
+このような報酬設計は，
+スケジューリングにおける有効なヒューリスティックを
+ネットワーク内部に獲得させるには十分であり，
+結果として実用上有効な解を導出できたものと考えられる。
+
+このような，
+学習過程において損失関数や評価指標が明確に収束しない一方で，
+最終的に得られる解の性能が一定水準に達するという挙動は，
+強化学習において必ずしも例外的な現象ではない。
+Sutton および Barto は，
+強化学習における価値関数学習では，
+損失関数(TD 誤差など)が
+教師あり学習における誤差指標とは本質的に異なり，
+学習の進行とともに環境分布や方策分布が変化するため，
+単調な収束を示さない場合が多いことを指摘している \cite{ref_sutton2018}。
+そのため，損失関数の挙動のみから，
+最終的な方策性能を直接評価することは困難である。
+
+さらに、Tsitsiklis および Van Roy は，
+関数近似とブートストラップを併用する価値関数学習においては，
+理論的にも学習過程が振動または非収束となる可能性があることを示している \cite{ref_tsitsiklis1997}。
+この結果は，
+DQN のようなオフポリシー学習に基づく手法において，
+損失関数の安定性が保証されない状況下でも，
+必ずしも方策が無意味になるわけではないことを示唆している。
+
+また、JSSP を対象とした深層強化学習の研究においても，
+学習過程の収束性よりも，
+最終的に得られるスケジューリング解の品質が重視される傾向が報告されている \cite{ref_zhang2020}。
+Zhang らは，
+学習曲線が大きく変動する場合であっても，
+適切なディスパッチング方策が獲得されれば，
+従来のヒューリスティック手法と同等の性能が得られることを示している。
+
+以上の文献を踏まえると，
+本研究において観測された
+「学習指標の非収束性」と「実問題に対する解探索能力」との乖離は，
+$makespan$ 中心型報酬関数の特性と，
+強化学習における価値関数学習の性質に起因するものと考えられる。
+すなわち，本報酬設計は，
+安定した学習曲線の獲得には課題を残すものの，
+スケジューリングに有効なヒューリスティックを
+ネットワーク内部に形成するには十分であり，
+その結果として GA と同程度，
+あるいは一部問題においてそれを上回る解が得られたと解釈できる。
+
+\subsection{訓練済みモデルでの実験結果}
+本章で学習したモデルを用いて得られたスケジューリング解と，
+GAによって得られた解とを比較し,
+$makespan$およびスケジューリング構造の観点から，
+両手法の性能差について詳細に検討する。
+
+\subsubsection{複合型報酬関数での実験結果}
+
 
 \clearpage
 
@@ -1478,6 +1573,25 @@ $makespan$ 中心型報酬関数では，
 
 \bibitem{ref22} Andrzej Kiernich, Jerzy Kalenik, Wojciech Steplewski, Marek Koscielski and Aneta Chołaj, "Impact of Particular Stages of the Manufacturing Process on the Reliability of Flexible Printed Circuits"
 \textit{Sensors}.25, 140, (2025).
+
+\bibitem{ref_mnih2015} V. Mnih, K. Kavukcuoglu, D. Silver \textit{et al.},"Human-level control through deep reinforcement learning",
+\textit{Nature}, vol. 518, no. 7540, pp. 529-533 (2015).
+
+\bibitem{ref_sutton2018} R.S. Sutton and A.G. Barto,
+\textit{Reinforcement Learning: An Introduction}, 2nd ed., MIT Press, Cambridge, MA (2018).
+
+\bibitem{ref_nazari2018} M. Nazari, A. Oroojlooy, L. Snyder and M. Tak{\'a}{\v{c}},"Reinforcement learning for solving the vehicle routing problem",
+\textit{arXiv preprint}, arXiv:1802.04240 (2018).
+
+\bibitem{ref_zhang2020} C. Zhang, W. Song, Z. Cao \textit{et al.},"Learning to dispatch for job shop scheduling via deep reinforcement learning",
+in \textit{Advances in Neural Information Processing Systems} (NeurIPS) (2020).
+
+\bibitem{ref_silver2017}D. Silver, J. Schrittwieser, K. Simonyan \textit{et al.},"Mastering the game of Go without human knowledge",
+\textit{Nature}, vol. 550, pp. 354-359 (2017).
+
+\bibitem{ref_tsitsiklis1997} J.N. Tsitsiklis and B. Van Roy,"An analysis of temporal-difference learning with function approximation",
+\textit{IEEE Transactions on Automatic Control}, vol. 42, no. 5, pp. 674--690 (1997).
+
 
 \bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン,2022.
 
