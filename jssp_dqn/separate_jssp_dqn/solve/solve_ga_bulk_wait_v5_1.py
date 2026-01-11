@@ -21,7 +21,18 @@ if torch.cuda.is_available():
 else:
     device = torch.device("cpu")
     print("使用CPU")
-
+    
+# =========================
+# Global font / style
+# =========================
+plt.rcParams.update({
+    "font.size": 14,
+    "axes.titlesize": 18,
+    "axes.labelsize": 16,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "legend.fontsize": 12,
+})
 
 # =========================================================
 # CSV loader (same as your solve)

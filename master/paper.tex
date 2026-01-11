@@ -711,62 +711,64 @@ PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問�
 本研究を背景としての問題設定およびジョブセットの規模でしたら、ジェネレーショ終えて許容解を出せるまで概ね17秒左右がかかる。
 以下は注文タイプにより、三つ種類の中でランダムに選択された注文のジェネレーショの最短総加工時間折れ線グラフとガントチャート。
 
-\begin{figure}[htbp]
+\begin{figure}[p]
 \centering
-\begin{subfigure}{0.48\linewidth}
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/generation_19_small.png}
-    \caption{注文書19(小さい注文)のジェネレーショ折れ線グラフ}
+    \includegraphics[width=0.9\linewidth]{figures/generation_19_small.png}
+    \caption{注文書19(小さい注文)のジェネレーション折れ線グラフ}
     \label{fig:19 generation}
 \end{subfigure}
-\hfill
-\begin{subfigure}{0.48\linewidth}
+\vspace{1.5em} % 上下间距，可调
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/gantt_19.png}
+    \includegraphics[width=0.9\linewidth]{figures/gantt_19.png}
     \caption{注文書19(小さい注文)の許容解ガントチャート}
     \label{fig:19 gantt}
 \end{subfigure}
+
 \caption{注文書19(小さい注文)の実験結果}
-\label{fig:small odder ga result}
+\label{fig:small order ga result}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[p]
 \centering
-\begin{subfigure}{0.48\linewidth}
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/generation_68_normal.png}
-    \caption{注文書68(一般注文)のジェネレーショ折れ線グラフ}
+    \includegraphics[width=0.9\linewidth]{figures/generation_68_normal.png}
+    \caption{注文書68(一般注文)のジェネレーション折れ線グラフ}
     \label{fig:68 generation}
 \end{subfigure}
-\hfill
-\begin{subfigure}{0.48\linewidth}
+\vspace{1.5em}
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/gantt_68.png}
+    \includegraphics[width=0.9\linewidth]{figures/gantt_68.png}
     \caption{注文書68(一般注文)の許容解ガントチャート}
     \label{fig:68 gantt}
 \end{subfigure}
 \caption{注文書68(一般注文)の実験結果}
-\label{fig:normal odder ga result}
+\label{fig:normal order ga result}
 \end{figure}
 
-\begin{figure}[htbp]
+\begin{figure}[p]
 \centering
-\begin{subfigure}{0.48\linewidth}
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/generation_93_large.png}
-    \caption{注文書93(大きい注文)のジェネレーショ折れ線グラフ}
+    \includegraphics[width=0.9\linewidth]{figures/generation_93_large.png}
+    \caption{注文書93(大きい注文)のジェネレーション折れ線グラフ}
     \label{fig:93 generation}
 \end{subfigure}
-\hfill
-\begin{subfigure}{0.48\linewidth}
+\vspace{1.5em}
+\begin{subfigure}{\linewidth}
     \centering
-    \includegraphics[width=\linewidth]{figures/gantt_93.png}
+    \includegraphics[width=0.9\linewidth]{figures/gantt_93.png}
     \caption{注文書93(大きい注文)の許容解ガントチャート}
     \label{fig:93 gantt}
 \end{subfigure}
 \caption{注文書93(大きい注文)の実験結果}
-\label{fig:large odder ga result}
+\label{fig:large order ga result}
 \end{figure}
+
 \clearpage
 GAの実験結果を見て、ジェネレーショ回数は50回以下でも、場合によって許容解を出せる。さいあくでも200回以下でいい許容解を出せる。
 ガントチャートから見ると、加工工程のスケジューリングも詰まられて仕事した。
@@ -954,13 +956,17 @@ L_t(\theta) & 時刻 $t$ における損失\\
 \hline
 \end{tabular}
 \end{table}
+\clearpage
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/dqn.png}
+  \rotatebox{90}{
+    \includegraphics[width=0.8\textheight]{figures/dqn.png}
+  }
   \caption{DQNの仕組み}
   \label{fig:dqn}
 \end{figure}
+\clearpage
 
 \subsection{DQN を JSSP に適用する理由}
 前章では、GAを用いてJSSPに対するスケジューリング最適化を行い、
@@ -995,7 +1001,7 @@ DQN は学習コストを伴うものの、
 報酬設計は学習の収束性、アクション選択方策の偏りまたは訓練済みモデルの性能に強く影響するため,
 \begin{itemize}
 \item 複数指標を組み合わせた複合型報酬関数
-\item $makespan$を直接最適化する単純型報酬関数
+\item $makespan$を直接最適化する$makespan$ 中心型報酬関数
 \end{itemize}
 の2種類を実装し,比較した.
 
@@ -1122,9 +1128,9 @@ r^{\mathrm{final}}_t .
 本研究の実験でも，複合型報酬は学習の安定性は得られる場合がある一方，
 最終的な $makespan$ 改善が限定的となる傾向が確認された．
 
-\subsubsection{$makespan$ 単純型報酬関数}
+\subsubsection{$makespan$ 中心型報酬関数}
 次に，目的関数と報酬の整合性を高めるため，
-$makespan$ の増分に基づく単純型報酬を設計する．
+$makespan$ の増分に基づく中心型報酬関数を設計する．
 step における $makespan$(推測完了時刻の最大値)を $C_{\max}(t)$ とすると，
 \begin{equation}
 \label{eq:reward_delta_cmax}
@@ -1151,14 +1157,14 @@ r_t = r_t^{\mathrm{main}} + r_t^{\mathrm{imm}} + r_t^{\mathrm{pen}}
   スケジュール生成に推進しない行動に負報酬を与える．
 \end{itemize}
 
-この単純型報酬関数は目的関数 $C_{\max}$ と直接かかわっているため，
+この$makespan$ 中心型報酬関数は目的関数 $C_{\max}$ と直接かかわっているため，
 報酬設計によるバイアスが小さく，
 本研究の実験では複合型より $makespan$ を安定的に改善できる傾向が確認された．
 
 \subsection{モデル訓練結果}
 
 本章では,DQN のモデル訓練結果について評価を行う.
-具体的には,複合型報酬関数および単純型報酬関数のそれぞれに対して学習を行い,
+具体的には,複合型報酬関数および$makespan$ 中心型報酬関数のそれぞれに対して学習を行い,
 得られた訓練済みモデル（すなわちニューラルネットワークのパラメータ）を用いて,
 実際の加工順序行列 $OM$ および加工時間行列 $OT$ に対するスケジューリングを実行し,
 生成されたスケジュールの性能を評価する.
@@ -1169,7 +1175,7 @@ r_t = r_t^{\mathrm{main}} + r_t^{\mathrm{imm}} + r_t^{\mathrm{pen}}
 そのため,本研究では複数のハイパーパラメータの組み合わせを試行し,
 学習挙動およびスケジューリング結果の両面から性能評価を行った.
 
-複合型報酬関数および単純型報酬関数のいずれにおいても,
+複合型報酬関数および$makespan$ 中心型報酬関数のいずれにおいても,
 共通して調整対象とした主なハイパーパラメータを
 表\ref{tab:reward hyperparameter}に示す.
 
@@ -1361,7 +1367,7 @@ Q 値推定が速やかに安定方向へ向かっていることが分かる。
 見かけ上は学習が進行しているように見えても，
 実際の問題解決能力には必ずしも結び付かない場合がある。
 
-そこで次節では，報酬構造を簡略化した単純型報酬関数について検討する。
+そこで次節では，報酬構造を簡略化した$makespan$ 中心型報酬関数について検討する。
 
 \subsubsection{$makespan$ 中心型報酬関数での訓練}
 本小節では，複合型報酬関数とは異なり，
@@ -1408,12 +1414,14 @@ $makespan$ 中心型報酬関数では，
   機械資源の有効活用を促進する。
 \end{itemize}
 
-図\ref{fig:siple reward result}は，$makespan$ 中心型報酬関数を用いて学習を行った際の，
+図\ref{fig:simple reward result}は，$makespan$ 中心型報酬関数を用いて学習を行った際の，
 エピソード数に対する平均 $makespan$ 、損失関数(loss)と平均総報酬の推移を示したものである。
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/wait_v5_2_graph.png}
+  \rotatebox{90}{
+    \includegraphics[width=0.8\textheight]{figures/wait_v5_2_graph.png}
+  }
   \caption{中心型報酬関数DQNでの実験}
   \label{fig:simple reward result}
 \end{figure}
@@ -1501,9 +1509,339 @@ GAによって得られた解とを比較し,
 $makespan$およびスケジューリング構造の観点から，
 両手法の性能差について詳細に検討する。
 
+前章に述べた3タイプの注文(小、並、大)ごとに対して,
+複合型報酬関数でのDQNと中心型報酬関数でのDQN両方をGAと比較する。
+複合型報酬関数でのDQNで得られた解はほどんどGAに超えられないので,
+3タイプの注文ごとにそれぞれGAと比べて近い例(比率1.3ぐらい)、離れた例(比率1.5ぐらい)とだいぶ離れた例(比率1.8ぐらい)を示す.
+中心型報酬関数でのDQNで得られた解はGAと互角しているので、
+3タイプの注文ごとにそれぞれGAを超える例(比率0.9ぐらい)、GA相当な例(比率1ぐらい)とGAを劣る例(比率1.2ぐらい)を示す.
+\clearpage
+
 \subsubsection{複合型報酬関数での実験結果}
+図\ref{fig:complex reward vs ga result 1.34(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.34の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.34(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.34)}
+  \label{fig:complex reward vs ga result 1.34(small)}
+\end{figure}
+\clearpage
 
+図\ref{fig:complex reward vs ga result 1.48(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.48の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.48(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.48)}
+  \label{fig:complex reward vs ga result 1.48(small)}
+\end{figure}
+\clearpage
 
+図\ref{fig:complex reward vs ga result 1.76(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.76の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.76(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.76)}
+  \label{fig:complex reward vs ga result 1.76(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.2(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \label{fig:complex reward vs ga result 1.2(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.5(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.5(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
+  \label{fig:complex reward vs ga result 1.5(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.72(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.72の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.72(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.72)}
+  \label{fig:complex reward vs ga result 1.72(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.22(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.22の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.22(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.22)}
+  \label{fig:complex reward vs ga result 1.22(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.5(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.5(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
+  \label{fig:complex reward vs ga result 1.5(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.71(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.71の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.71(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.71)}
+  \label{fig:complex reward vs ga result 1.71(large)}
+\end{figure}
+\clearpage
+
+図群に示す複合型報酬関数を用いた DQN のスケジューリング結果では，
+GA により得られた解と比較して$makespan$ が大きく悪化することが確認された。
+特に，工序数が多い Job5 および Job6 に処理が集中し，
+他ジョブの実行可能な工序が十分に挿入されないスケジュール構造が共通して観測される。
+
+この要因の一つとして，
+本研究で設計した複合型報酬関数における即時報酬と将来報酬の相対的な影響の偏りが挙げられる。
+本環境では，残作業量が最大のジョブを優先する項が強く作用しており，
+Job5 および Job6 を連続的に選択する行動系列は，
+将来の報酬を含めた行動価値として高く評価されやすい。
+その結果，ある時点で Job5 または Job6 を選択した後は，
+同一ジョブを継続して処理する行動が高い将来報酬を見込める選択として学習される。
+
+一方で，空き機械を利用して他ジョブの工序を挿入する行動は，
+その時点で得られる即時報酬が比較的小さい。
+たとえ長期的には待ち時間の削減や$makespan$ の短縮に寄与する可能性があったとしても，
+当該行動に対する即時報酬が，
+直前まで選択されていた Job5 または Job6 の継続処理によって期待される将来報酬を上回らない場合,DQN はこれを選択しにくい。
+すなわち，「他ジョブを挿入する」という行動は，即時報酬の観点から不利であるだけでなく，
+既に形成された行動系列に基づく将来報酬と比較しても行動価値が低く評価される傾向にある。
+
+このように，即時報酬が小さいが長期的には有効な行動と，即時および将来報酬の両面で高く評価されやすい行動との間で
+報酬構造に非対称性が存在する場合，エージェントは後者に過度に依存した方策を学習しやすい。
+その結果,Job5 および Job6 の処理が過度に優先され，他ジョブの工序を柔軟に挿入する探索が十分に行われず，
+GA が実現している空き時間活用型のスケジューリングと比較して$makespan$ が悪化したものと考えられる。
+
+\subsubsection{$makespan$中心型報酬関数での実験結果}
+図\ref{fig:simple reward vs ga result 0.95(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.95の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.95(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.95)}
+  \label{fig:simple reward vs ga result 0.95(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.99(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.99(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
+  \label{fig:simple reward vs ga result 0.99(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.24(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.24の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.24(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.24)}
+  \label{fig:simple reward vs ga result 1.24(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.97(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.97の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.97(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.97)}
+  \label{fig:simple reward vs ga result 0.97(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.99(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.99(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
+  \label{fig:simple reward vs ga result 0.99(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.2(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \label{fig:simple reward vs ga result 1.2(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.94(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.94の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.94(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.94)}
+  \label{fig:simple reward vs ga result 0.94(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1)}
+  \label{fig:simple reward vs ga result 1(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.16(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.16の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.16(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1)}
+  \label{fig:simple reward vs ga result 1.16(large)}
+\end{figure}
+\clearpage
+
+以上に示した図より，$makespan$ 中心型報酬関数を用いた場合，
+多くの問題例においては, DQN がスケジューリング方策を適切に学習し，
+GA による解と同等，あるいはそれを上回る性能を示すことが確認された。
+これは，報酬が $C_{\max}$ の変化に直接基づいて与えられることで，
+ネットワークが調度全体の完工時間を意識した意思決定を獲得できたためであると考えられる。
+
+一方で，一部の問題例においては，
+加工工程数が最も多い Job6 がスケジュールの最後に集中して配置され，
+結果として $makespan$ が大きく悪化するケースも観測された。
+この挙動は，$makespan$ 中心型報酬関数における
+即時報酬と将来報酬の相対的な評価に起因すると考えられる。
+
+すなわち，
+Job6 に対して他の作業を挿入する行動は，
+短期的には即時報酬が小さく評価される一方で，
+過去の選択によって見込まれる将来報酬が相対的に大きくなる場合がある。
+その結果，エージェントは局所的に高い Q 値を持つ行動を優先し，
+加工工程数の多いジョブを後回しにする方策を選択する傾向を示す。
+
+このように，
+$makespan$ 中心型報酬関数は，
+全体として有効なスケジューリング戦略を学習させる能力を持つ一方で，
+報酬設計の性質上，特定のジョブ構成に対しては
+$makespan$ の増大を招く意思決定が強化される可能性があることが示唆される。
+
+\subsection{実験考察}
+以上の実験結果より，本研究で検討した二種類の報酬関数は，
+いずれも DQN によるJSSPスケジューリング方策の学習に寄与する一方で,
+異なる課題を含まれていることが明らかとなった。
+
+まず，複合型報酬関数を用いた場合，
+平均 $makespan$ や損失関数の推移から，
+エージェントが学習を進めているように見える挙動が確認された。
+しかしながら，
+報酬関数に含まれる要素が多岐にわたることで，各要素間の影響が相互に干渉し，
+学習信号にノイズが多く含まれる結果となった。
+そのため，学習過程では一定の収束傾向が観測されるものの，
+最終的に得られた方策は実際の JSSP に対して十分に有効な解を導出できていない場合が多かった。
+すなわち，複合型報酬関数は「学習しているように見えるが，本質的な方策改善に結びつきにくい」
+という特性を有していると考えられる。
+
+一方，$makespan$ 中心型報酬関数を用いた場合，
+報酬が $C_{\max}$ の変化に直接対応するため，
+エージェントはスケジューリング全体を意識した意思決定戦略を比較的明確に学習できる。
+その結果,多くの問題例において,GA と同等水準の解，あるいはそれを上回る解が得られた。
+しかし，即時報酬と将来報酬の評価バランスの影響により，
+加工工程数の多いジョブが後回しにされるなど，
+極端なスケジューリング方策が選択されるケースも確認された。
+これは，戦略そのものは学習できているものの，
+評価基準の歪みにより，特定条件下で性能劣化を引き起こす可能性を示している。
+
+以上より，複合型報酬関数は安定した学習挙動を示しやすい反面，
+ノイズの多さにより有効な方策獲得が困難であり，
+$makespan$ 中心型報酬関数は実用的な戦略を学習可能である一方，
+評価設計に起因する極端解の問題を内包していることが分かった。
+
+\section{今後の課題}
+本研究を通じて,DQN を用いた JSSP スケジュール最適化の有効性と課題が明らかとなった。
+これらを踏まえ，今後の課題として以下の二点が挙げられる。
+
+第一に，
+報酬関数設計の高度化が挙げられる。
+本研究では，複合型報酬関数と $makespan$ 中心型報酬関数をそれぞれ独立に検討したが，
+複合型は学習挙動が安定しているように見える一方で，多様な評価要素が同時に作用することにより報酬のノイズが増大し，
+必ずしも有効なスケジューリング方策の獲得に結びつかない場合があった。
+一方，$makespan$ 中心型報酬関数では，スケジュール方策そのものは比較的明確に学習されるものの，
+即時報酬と将来報酬のバランスが偏ることで，一部の作業を後回しにする極端な意思決定が選択される傾向が確認された。
+特に，加工工程数の多いジョブに対して，他ジョブを挿入することによる即時的な報酬改善よりも，
+過去の行動に基づく将来的報酬が過大に評価される場合，結果として総 $makespan$ を悪化させる調度が生成される可能性がある。
+今後は，即時報酬と将来報酬の寄与度を適切に調整する仕組みや，
+学習段階に応じて報酬構造を変化させる手法を導入することで，
+GA と比較しても極端な解を生じにくい，より安定したスケジューリング方策の獲得が期待される。
+
+第二に，
+モデルの一般化性能の向上が課題として挙げられる。
+本研究では，製造する製品の加工工程順序をあらかじめ固定した問題設定を採用した。
+そのため，学習済みモデルは，訓練時と同一または類似した加工工程構造を持つ問題に対しては有効である一方，
+訓練時に出現しなかった加工工程順序を持つ製品に対する適応性には制限がある。
+今後は，加工工程順序が異なる製品を含む学習データの拡張や，
+状態表現の改良を通じて，未知の加工工程構造に対しても柔軟に対応可能な，
+より汎用的なスケジューリングモデルの構築が望まれる。
 \clearpage
 
 \begin{thebibliography}{99}
@@ -1592,7 +1930,6 @@ in \textit{Advances in Neural Information Processing Systems} (NeurIPS) (2020).
 \bibitem{ref_tsitsiklis1997} J.N. Tsitsiklis and B. Van Roy,"An analysis of temporal-difference learning with function approximation",
 \textit{IEEE Transactions on Automatic Control}, vol. 42, no. 5, pp. 674--690 (1997).
 
-
 \bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン,2022.
 
 \bibitem{book2} 野寺 隆志, 『楽々LATEX』,共立出版株式会社,1996.
@@ -1608,8 +1945,6 @@ in \textit{Advances in Neural Information Processing Systems} (NeurIPS) (2020).
 \bibitem{book7} 平井 有三, 『はじめてのパターン認識』,森北出版株式会社,2023.
 
 \bibitem{book8} 大用 倉智,山田 孝子,『作りながら丁寧に学ぶ Pythonプログラミング入門』,関西学院大学出版会,2022.
-
-
 
 \end{thebibliography}
 

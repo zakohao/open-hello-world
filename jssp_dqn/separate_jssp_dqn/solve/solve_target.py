@@ -457,7 +457,6 @@ if __name__ == "__main__":
     print(f"开始加载问题文件: {problem_file}")
     ma, pt = load_single_csv(problem_file)
     
-    
     if ma is not None and pt is not None:
         print("成功加载问题数据，开始求解...")
         solve_jssp(ma, pt, model_path=model_path, device=device)
