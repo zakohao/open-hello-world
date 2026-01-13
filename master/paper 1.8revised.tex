@@ -1,0 +1,467 @@
+%\documentclass[twocolumn]{jarticle}
+\documentclass{jarticle}
+
+\usepackage{jsaiac}
+\usepackage[dvipdfmx]{graphicx}
+\usepackage{amsmath,amssymb}
+\usepackage{array}
+\usepackage[compatibility=false]{caption}
+\usepackage{subcaption}
+\usepackage{todonotes}
+
+\allowdisplaybreaks[4]
+
+\newcommand{\BodyFont}{\fontsize{12pt}{18pt}\selectfont}
+
+\renewcommand{\arraystretch}{1.2}
+\setlength{\tabcolsep}{6pt}
+
+\makeatletter
+\renewcommand{\section}{%
+  \@startsection{section}{1}{\z@}%
+  {1.5ex plus .2ex minus .2ex}%
+  {1.0ex plus .2ex}%
+  {\LARGE\bfseries}%
+}
+\renewcommand{\subsection}{%
+  \@startsection{subsection}{2}{\z@}%
+  {1.2ex plus .2ex minus .2ex}%
+  {0.8ex plus .2ex}%
+  {\Large\bfseries}%
+}
+\renewcommand{\subsubsection}{%
+  \@startsection{subsubsection}{3}{\z@}%
+  {1.0ex plus .2ex minus .2ex}%
+  {0.6ex plus .2ex}%
+  {\large\bfseries}%
+}
+\makeatother
+
+\usepackage{setspace}
+\setstretch{1.3} %行距
+
+\begin{document}
+
+% 封面
+\begin{titlepage}
+\centering
+\vspace*{4cm}
+{\LARGE 修士卒業論文 \par}
+\vspace{2cm}
+{\Huge 遺伝的アルゴリズムと深層強化学習に基づく \\
+ジョブスケジュール最適化問題 \\
+―PCB加工プロセスをモデルとして―\par}
+\vspace{1cm}
+{Job Scheduling Optimization Based on Genetic Algorithms and Deep Reinforcement Learning \\
+―A Model of the PCB Manufacturing Process―\par}
+
+\vspace{3cm}
+{\Large
+関西学院大学大学院 \\
+総合政策研究科 \\
+汪 永豪 \\
+2026年1月
+}
+\end{titlepage}
+
+\clearpage
+\BodyFont 
+
+\section*{\centering 要旨}
+\addcontentsline{toc}{section}{要旨}
+近年、市場グローバル化が進む中、製品に対する市場ニーズは多様化しており、顧客ごとに仕様が異なる多品種少量生産方式への対応が重要となっている。
+本研究では、プリント基板 (PCB) 製造工場を対象に、同一加工機械を複数回使用する生産プロセスをモデル化した上で、スケジューリング最適化に関する検討を行った。
+静的な環境においては、遺伝的アルゴリズム (GA) および深層強化学習に基づく Deep Q-Network(DQN)を用いて最適化を行い，両手法の性能比較を実施した。
+さらに、機械故障等による環境変動が発生する動的な環境で高速にスケジュールを生成可能な DQN により, 適応性能の向上を図った。
+これらから静的および動的な生産環境におけるスケジューリングを検討する。\\
+
+キーワード：インダストリーエンジニアリング、オペレーション・リサーチ、ジョブスケジューリング最適化問題、遺伝的アルゴリズム、深層強化学習
+
+\vspace{2em}
+
+\section*{\centering Abstract}
+\addcontentsline{toc}{section}{Abstract}
+In recent years, as market globalization has advanced, market demands for products have become increasingly diversified, making it essential to respond to high-mix, low-volume production systems in which specifications differ for each customer.
+This study focuses on a printed circuit board (PCB) manufacturing factory and models a production process in which identical processing machines are used multiple times. Based on this model, scheduling optimization is investigated.
+Under a static production environment, this study applies a genetic algorithm (GA) and a Deep Q-Network (DQN) based on deep reinforcement learning to perform scheduling optimization, and conducts a comparative evaluation of the performance of these two methods. 
+Furthermore, under a dynamic production environment where environmental changes such as machine failures occur, this study aims to improve adaptability by utilizing DQN, which can generate schedules rapidly in response to such changes.
+Through these approaches, this study examines scheduling optimization for both static and dynamic production environments.\\
+Keywords : Industry Engineering, Operations Research, Job Shop Scheduling Optimization Problem, Genetic Algorithm, Deep Reinforcement Learning
+
+\clearpage
+
+% 目次
+%\section*{目次}
+\addcontentsline{toc}{section}{目次}
+\tableofcontents
+%\begin{enumerate}
+    %\item 要旨
+    %\item はじめに
+    %\item 先行研究
+    %\item 生産管理問題のモデル
+        %\subitem 問題設定　
+        %\subitem 用語の定義
+    %\item 実験用データ自動生成ルール
+        %\subitem データ自動生成の考え方
+        %\subitem 実際の生成手続き
+        %\subitem データ生成結果
+    %\item 遺伝的アルゴリズムによる解の改善
+        %subitem 遺伝的アルゴリズムの考え方（フローチャート）
+        %subitem PPSの考え方（フローチャート）
+        %subitem 実験手順
+        %subitem 実験結果
+        %subitem 実験考察
+    %\item 深層強化学習による解の改善
+        %subitem 強化学習の考え方（フローチャート）
+        %subitem 深層強化学習の考え方（フローチャート）
+        %subitem DQNの採用理由
+        %subitem 実験手順
+        %subitem 実験結果
+        %\subitem 実験考察
+    %\item 動的な環境における性能評価
+        %subitem 
+    %\item 遺伝的アルゴリズムと深層強化学習の結果と考察
+    %\item 今後の課題
+    %\item 謝辞
+    %\item 参考文献
+%\end{enumerate}
+\clearpage
+\todo[inline]{表紙があるので以下のタイトルなどは不要}
+\title{
+\jtitle{遺伝的アルゴリズムと深層強化学習に基づく\\ジョブスケジュール最適化問題\\―PCB加工プロセスをモデルとして―}
+\etitle{Job Scheduling Optimization Based on Genetic Algorithms and Deep Reinforcement Learning \\―A Model of the PCB Manufacturing Process―}
+}
+
+\jaddress{関西学院大学総合政策研究科, 兵庫県三田市学園上ヶ原, ili53007@kwansei.ac.jp}
+
+\author{
+   \jname{汪 永豪\first{}}
+   \ename{Wang Yonghao}
+\and
+   \jname{山田 孝子\second{}}
+   \ename{Takako Yamada}
+}
+
+\affiliate{
+\jname{\first{}関西学院大学大学院総合政策研究科}%
+\ename{Graduate School of Policy Studies, Kwansei Gakuin University}%
+\and
+\jname{\second{}関西学院大学総合政策学部メディア情報学科}
+\ename{Department of Applied Informatics, School of Policy Studies, Kwansei Gakuin University}
+}
+
+\def\Style{``jsaiac.sty''}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em%
+ T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\def\JBibTeX{\leavevmode\lower .6ex\hbox{J}\kern-0.15em\BibTeX}
+\def\LaTeXe{\LaTeX\kern.15em2$_{\textstyle\varepsilon}$}
+\maketitle
+
+\section{はじめに}
+
+世界経済のグローバル化に伴い、製造業企業は他社より安い価格で注文を受ける必要がある.
+いかにして低コストな生産システムと高品質な品質管理を両立させ，安定的に維持するかは、製造業が必ず直面すると言って過言ではない難しい問題である.
+昨今ではこの両立にさらに安全管理を含むワークライフバランスを考えた労務管理が加わり，生産現場では達成するべき課題が複雑化している．
+コスト削減のため、多くな企業は人間作業員の代わりに、製造工程のロボットを採用し，工場内物流には複積載搬送ロボット(AGV)の導入をすすめている．
+AGVの導入により生産機械間の半製品や仕掛品の運搬は自動化された.
+生産計画には,スケジューリングだけではなく,AGVの搬送計画も含まれ,経路や運搬すべき半製品の決定までを生産計画に含むことになった．
+本研究では，以下のシステムを順次作成し，生産管理計画システムとして実装し，最適解を求める計算機実験を実施，システムの性能を検証した．
+
+本研究でこれまで行ったことをまとめる
+\begin{enumerate}
+    \item 実験用ジョブセットとして，製品種別ごとの加工機械の利用順番，利用時間の組み合わせデータの自動生成システムの作成
+    \item 生成されたデータを用いた生産機械のスケジューリングを総当たり法で厳密解を求める最短生産スケジュール算出システムの作成
+    \item 生産スケジュールの可視化システムの作成
+    \item 遺伝的アルゴリズムをベースとする，緩和手法による許容解算出と解の改善システムの作成
+    \item 生産機械に加え複数台AGVを導入した生産スケジュールの最適化システムの作成
+    \item 求められた生産スケジュールに基づく生産機械の遊休時間活用する余剰生産品提案システムの作成
+    \end{enumerate}
+    以上を行ったうえで、本研究では機械とAGV両方同時スケジューリングを求め、現有な仕事を最短時間で終了する許容解を導出し,その許容解のもとで,機械の遊休時間を活用する余剰製品を提案するシステムの開発に取り組む．
+    このような問題は、JSSP(Job Shop Scheduling Problem)問題と言います。
+
+\section{先行研究}
+グローバル経済の進展や企業のコスト削減要求に伴い、生産現場では柔軟で効率的な生産体制の構築が求められている。
+その中で、需要の多様化に対応するために、少量多品種生産が一般的となり、このような生産形態に適したスケジューリングの最適化が重要な課題となっている。
+特に、ジョブショップスケジューリング問題(Job Shop Scheduling Problem: JSSP)は、生産システムにおける代表的な最適化課題として広く研究されている。
+JSSPは、複数のジョブを限られた機械に割り当て、全体の処理時間や納期遅延を最小化することを目的とする問題である。
+また、各ジョブには処理順序が定められており、この順序を厳密に守る必要がある点が特徴である。
+この問題はNP困難であり、最適解を求めることは計算量的に非常に困難である。
+そのため、これまで多くの研究では、遺伝的アルゴリズム(Genetic Algorithm: GA)や焼きなまし法(Simulated Annealing: SA)などのヒューリスティック手法を用いて、効率的に近似解を求めるアプローチが提案されてきた。
+しかし、実際の製造現場では、機械の故障や新規ジョブの追加、処理時間の変動など、動的な要素が頻繁に発生する。そのような動的環境下では、あらかじめ定められたルールに基づくヒューリスティック手法では十分に対応できない場合がある。この問題を解決するため、近年では強化学習(Reinforcement Learning: RL)を用いて、環境変化に応じて自律的にスケジューリング方策を学習する手法が注目されている。
+静的な環境においてはGAやSAなどの伝統的アルゴリズムが一定の成果を上げている一方で、動的な生産環境では強化学習に基づくアプローチのほうが、より高い適応性と柔軟性を示すことが報告されている。このように、JSSPにおけるスケジューリング最適化の研究は、従来の探索型手法から学習型手法へと発展しつつある。
+
+実際に、近年の研究ではこの流れを反映した多様なアプローチが報告されている。
+K.T. Chungら\cite{ref1}は現在工業5.0の時代に向けて、機械学習、特に強化学習を用いて、CO(combinatorial optimization)問題を解決しようについて、現在の研究進展を述べた。
+M. Xuら\cite{ref2}は遺伝的プログラミングと強化学習を統合的に整理・比較しはJSSPスケジュール最適化問題ににおいて果たす役割と近年の研究動向を明らかにした。
+C. Ngwuら\cite{ref3}は動的なJSSP問題は強化学習や進化的ヒューリスティック、機械学習を用いた手法でリアルタイムな意思決定は可能であることを示しました。
+X.R. Shaoら\cite{ref4}は小規模かつ短時間のJSSP問題に対して、多層畳み込みニューラルネットワーク(ML-CNN)と反復局所探索(ILS)を組み合わせ、ML-CNNで全体経路を学習し、ILSで最適な局所経路を探索する手法が提案した。
+L.B. Wangら\cite{ref5}は機械故障や再作業などの動的な環境でのJSSP問題につい深層強化学習(DRL)を用いた動的スケジューリング手法が提案され、PPOにより最適な方策を学習することで、リアルタイムな生産スケジューリングが可能であることが示された。
+S. Leeら\cite{ref6}は射出成形金型製造プロセスにおいて、Deep Q-Networkを活用することで従来より総加重遅延を低減できる金型生産スケジューリングを最適化した。
+C. Pickardtら\cite{ref7}は半導体製造プロセスにおいて、遺伝的プログラミング(GP)と確率的離散事象シミュレーションを組み合わせることで自動的に従来のルールより性能優れたなルールを生成した。
+村山ら\cite{ref8}はJSSP問題に基づき、加工機械と複数積載型AGVの同時スケジューリングを対象とした遺伝的アルゴリズム(GA)手法が提案した。
+
+これらの研究から、JSSPおよびその拡張問題に対して、静的環境ではヒューリスティック手法、動的環境では強化学習や深層学習手法が有効であることが確認されている。
+
+
+\section{生産管理問題のモデル}
+本研究では受注生産を行う工場の製造工程,受注型ジョブショップスケジュール問題 (Job Shop Scheduler prob-lem:JSSP) を最適化問題として解く.
+したがってモデルとしてクライアント側から提供される注文書が最適化の対象となり，このようなデータは不可欠である.
+
+ここでは実際のプリント基板 (PCB) 製造工場をモデルの対象とする製造工程としてとりあげる.
+本来は使用する注文書データが実生産に基づくものであることが望ましい.
+しかし,PCB 製造に関する実データは,企業の営業機密や顧客情報に直結するデータのため,こうしたデータは入手困難で,
+共同研究であっても外部に具体的な数値の提示は難しい.
+
+本研究では,先行研究\cite{ref22}に記載されてた PCB 製造工程を参考に,
+各加工機械に対して加工役割を割り当てた人工的なデータをまず生成する.
+
+本研究の最適化問題として解くのは,このデータを用いたPCB 製造プロセスの生産スケジューリング問題である.
+PCB製造工程では,注文種類によって必要とされる加工時間、加工工程数、あるいは加工順序が異なる.
+そこでこれらの差異を反映したデータを生成する.
+
+%本研究は、実際のプリント基板(PCB)製造工場をモデルとした研究であり、本来であれば使用する注文書データは実生産に基づくものであることが望ましい。
+%しかしながら、PCB製造に関する実データは、企業の営業機密や顧客情報に直結するため、企業との共同研究等がない限り、その入手は極めて困難である。
+%そこで本研究では、先行研究に記載されているPCB製造工程を参考にし、各加工機械に対して加工役割を割り当てることで、PCB製造プロセスをモデル化する。
+%また、PCBの種類によって必要とされる加工時間、加工工程数、あるいは加工順序が異なることを考慮し、これらの差異をモデル内に反映させている。
+%本研究ではPCBを製品として定義する。例えば製品1はPCBの種類1、製品2はPCB板の種類2を表すものとする。
+%まとめて注文書をセットし、ジョブセットと呼ばれる。JSSPのスケジュール最適化対象と見られる。
+%なお、各機械の機能割り当ておよび加工製品に関する工程設定の詳細については、次章において述べる。
+
+以下で本論文のPCB製造工程におけるモデル設定とモデルで使用する符号を定義する。
+
+\begin{table}[htbp]
+\centering
+\caption{本研究に用いる記号の定義}
+\label{tab:notation}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+記号 & 説明 \\
+\hline
+O & 工場が受領した注文書の集合（ジョブセットと呼ばれる） \\
+O_i & 第$i$番に工場が受領した注文書 \\
+J_s & ジョブ（製品）でその製品種別が$s$\\
+O_iJ_s & 第$i$注文書に記載された種別番号$s$のジョブ$J$ \\
+lotJ_{i,s} & 第$i$注文書に記載された製品種別$s$のジョブの注文ロット数（１ロットの製品個数は10） \\
+n_s & 対象ジョブセットに記載された製品種別$s$の総製造個数 \\
+ & $10\sum_{i=1} lotJ_{i,s}$(個数＝ロット数$\times 10$) \\
+J_sF_q & 製品種別$s$の第$q$番目の加工工程 \\
+m_{s,q} & 製品種別$s$の第$q$工程に割り当てられる機械番号 \\
+M & 工場で稼働する加工機械の集合 \\
+M_m & 第$m$番目の加工機械 \\
+N_{ops} & ジョブセット内全製品種別の総加工工程の数 \\
+t_{s,q} & 製品種別$s$が第$q$工程に要する加工時間 \\
+ft_{s,q} & 製品種別$s$の第$q$工程の完了時刻 \\
+ft_{m_{s,q}} & 機械$m_{s,q}$上で第$q$番目の工程の直前に処理された工程の完了時刻 \\
+TJ_s & 製品種別$s$の加工終了時間 \\
+$makespan$ & ジョブセットに含まれる全製品種別の最終工程完了時刻で最大値となる時刻 \\
+OM & 各加工工程の機械割当を表す行列 \\
+m_{s,q}=OM_{s,q} & 機械割当行列の要素定義 \\
+OT & 各加工工程の加工時間を表す行列 \\
+t_{s,q}=OT_{s,q} & 加工時間行列の要素定義 \\
+C & 制約条件の集合 \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{モデル設定}
+\begin{enumerate}
+    \item 注文票は不特定の注文主から複数くる。
+    \item 各注文書には複数の製品種別が記載されている。ただし一つの注文書で，製品種別が重複することはない。    
+    \item 注文書には製品種別$s$ごとに注文するロット数が記載されている。
+    \item 加工工程の１ロットの製品単位は10個とする．
+    \item 加工工場は、一定期間に様々な注文主からくる注文書$O_{i}$をまとめる．同一出荷日をもつ注文書の束をジョブセットと呼ぶ。
+    \item 製品種別に応じて、使用する加工機械、加工時間とその加工機械の使用順は予め決められている.ただし加工時間はロット数に依存する.
+    \item ジョブセットごとに同一出荷日が設定されるが，工場は出荷日が早いほどよいので,受注した注文書の加工機械の利用順番をスケジューリング最適化し最短総加工生産時間を求める.
+    \item 各機械はそれぞれ待機状態と稼働状態がある。
+    
+          待機状態：機械は製品の加工作業していない状態にあり、いつでも新たな加工工程を開始できる。
+
+          稼働状態：機械は製品の加工作業している、加工している作業が終わるまで、新たな製品の加工工程は開始できない。
+    \item 機械は注文書に記載された製品種別で指定されたロット数をまとめて加工する．加工中に他の製品加工の割り込みはない．
+    \item 機械のセットアップタイムは考慮しない。
+    \item 製品の加工機械間の搬送時間は本モデルでは考慮しない。
+    \item 機械はあらかじめ与えた特定の加工工程のみ処理できる．別加工工程への転用はできないものとする．
+    \item モデルはイベント駆動型である。
+    
+          イベント：加工工程の処理完了や機械の待機状態の発生など、スケジューリング状態が更新される契機となる事象を指す。
+    \item ある製品の全加工工程が終了したら、当該製品の加工スケジューリングは終了とする。
+    \item ジョブセットに含まれる全製品の加工スケジューリングが終了したら、当該ジョブセットのスケジューリングは終了する。
+    \end{enumerate}
+ 
+\subsection{問題設定}
+本研究は、JSSPを制約付き最適化問題として定式化し、目標関数としては:\\
+\begin{equation}
+\mathrm{opt.}\ JSSP = \min \left\{ \max_{s} TJ_{s} \right\}
+\label{eq:objective}
+\end{equation}
+ここで，$TJ_s$ は第 $s$ 製品種別の最終加工工程の完了時刻を表す。
+したがって,本最適化問題は,ジョブセットに記載された全製品種別の最終加工完了時刻の最大値を求める.
+そして様々なスケジューリング案の中で最終加工完了時刻が最小のスケジューリング案を本論文では $makespan$と呼ぶ,すなわち,最適化とは,この$makespan$の最小化であり，最小となる$makespan$
+のスケジューリング案を作成することである.
+
+ここで制約条件は：
+\begin{align}
+\text{s.t.}\quad \text{C1: }\ 
+& ft_{s,q} \ge ft_{s,q-1} + t_{s,q}
+\label{cond:C1} \\[6pt]
+\text{s.t.}\quad \text{C2: }\ 
+& ft_{s,q} \ge ft_{s',q'} + t_{s,q}
+\label{cond:C2}
+\end{align}
+
+これらの式は以下のことを意味する．
+
+\begin{enumerate}
+     \item 制約条件 $C1$ は、同一製品種別$J_s$における隣接する加工工程$F_{q-1}$と$F_q$の加工順序制約を表しており、
+     前工程が完了した後でなければ次工程を開始できないことを意味する。
+     \item 制約条件 $C2$ における $ft_{s',q'}$ は、加工工程 $J_sF_q$ と同じ機械 $m_{s,q}$ を使用するが，
+     製品種別が異なる別製品 $J_{s'}$ の加工工程 $J_{s'}F_{q'}$ の完了時刻を表す。
+     すなわち，$ft_{s',q'}$ は，同一機械上で $J_sF_q$ の直前に処理された工程の完了時刻に対応する。
+     \item 従って制約条件 $C2$ は、各加工機械は同時刻に一つの加工工程しか処理できない機械リソース制約を表しており，
+     ある工程が機械$M_m$上で処理中の場合，次の工程はその加工工程が終了するまで開始できない制約に対応する。
+     \item JSSPでは、加工工程と加工機械の対応関係を表す機械割当行列$OM$と，
+     各加工工程に要する加工時間を表す加工時間行列$OT$は予め既知なものとして，モデルでは与える。
+     この$OM$と$OT$に関することは次章に述べる。
+    \end{enumerate}
+
+各製品種別の加工順序が与えられた場合，
+各加工工程$J_sF_q$の完了時刻は次の式に基づいて算出することができる。
+
+\begin{equation}
+ft_{s,q} = \max \left( ft_{s,q-1},\,ft_{m_{s,q}} \right) + t_{s,q}
+\label{eq:ft_calc}
+\end{equation}
+
+ここで，$ft_{s,q}$は第$s$製品種別の第$q$加工工程の完了時刻を表す。
+本式は，各加工工程の完了時刻が，
+同一製品における直前工程の完了時刻$ft_{s,q-1}$と，
+同一加工機械$m_{s,q}$上で直前に処理された別製品工程の完了時刻$ft_{m_{s,q}}$
+のいずれか遅い方に，加工時間$t_{s,q}$を加えた値として決定されることを示している。
+
+ジョブショップスケジューリングの目的は、各加工機械をできるだけ連続的に稼働させるとともに、
+各製品の加工工程を待ち時間なく加工することにより、総加工時間を最小化することである。
+したがって、JSSPは待機している加工機械に対して加工対象となるジョブを割り当てる逐次意思決定問題とみなすことができる.
+スケジューリングは、加工機械上で各加工工程の処理完了イベントにごとに次に行う加工工程をジョブセットから選択することで逐次的に決まる。
+同一製品内における加工工程の順序制約および、各加工工程が指定された加工機械で加工されなければならないという制約を考慮すると、
+待機中の加工機械に製品の加工工程を割り当てるには、現時点で処理可能な加工工程が存在するかどうかを判断する必要がある。
+処理可能な加工工程がジョブセットに複数存在する場合には、その中から一つを選択して次の加工を開始する。
+一方，現時点で処理可能な加工工程が存在しない場合には，その加工機械は次の加工工程完了イベントが発生するまで待機状態となる。
+この意思決定過程をまとめると次の図\ref{fig:JSSP flow chat}となる。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/jssp_flow_chat.png}
+  \caption{ジョブスケジューリング問題の逐次解を求める手続き}
+  \label{fig:JSSP flow chat}
+\end{figure}
+
+
+\section{実験用データ自動生成}
+本来であれば、行列 $OM$ および $OT$ に用いる機械加工順序データや加工時間データは、実工場から取得した実績データに基づくことが望ましい。
+しかしながら、個々の製品の加工順序や加工時間、注文書などの生産情報は企業の機密および顧客情報として保護される.
+これらは共同研究等であっても外部公表は困難である。
+そこで本研究では、文献\cite{ref22}に記載された多層 PCB の製造工程を基づく各製品種別ごとの加工工程と使用機械をもとに，
+注文書のばらつきやロット数を確率的にデータとして生成し，ジョブセットを得る．本節ではその実験データの自動生成について述べる．
+
+\subsection{多層 PCB の製造工程}
+多層 PCB の製造工程は以下の通りとする．
+
+\begin{enumerate}
+    \item 材料準備
+    \item 材料表面の汚れや油分を除去し
+    \item パターン転写（フォトリソグラフィ方式かダイレクト印刷方式のいずれか一方とする）
+    \item エッチングとレジスト除去（複数回加工する場合ある）
+    \item 積層（複数回加工する場合ある）
+    \item ドリル加工
+    \item スルーホールめっき
+    \item ソルダーレジスト塗布
+    \item 表面処理
+    \item 電気検査
+    \item 包装
+    \end{enumerate}
+
+ここまでの加工で作業は終了し出荷可能となる.この加工工程に対して,それぞれの工程に用いる加工機械の種類と役割を表\ref{tab:machine_process}に示す．
+
+\begin{table}[htbp]
+\centering
+\caption{加工機械および工程内容の定義}
+\label{tab:machine_process}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+機械番号 & 工程内容 \\
+\hline
+M_1  & 銅箔付きの絶縁板1を取る \\
+M_2  & 銅箔付きの絶縁板2を取る \\
+M_3  & 表面の汚れや油分を除去する \\
+M_4  & パターン転写（フォトリソグラフィ方式） \\
+M_5  & パターン転写（ダイレクト印刷方式） \\
+M_6  & エッチングおよびレジスト除去 \\
+M_7  & 積層 \\
+M_8  & ドリル加工 \\
+M_9  & スルーホールめっき \\
+M_{10} & ソルダーレジスト塗布 \\
+M_{11} & 表面処理 \\
+M_{12} & 電気検査 \\
+M_{13} & 包装 \\
+\hline
+\end{tabular}
+\end{table}
+
+本研究の生成データのため、製品種別として６種類の製品を生産する工場を仮定する。この６種類の製品の加工工程順序は以下のようにあらかじめ設定する。
+製品種別により各加工工程を一度しか要しない製品もあれば，複数回，同一加工工程を何度か他工程をはさみながら行き来する製品種別もある．
+
+\subsection{６製品種別の加工工程順序}
+加工工場は６種類の製品種別に生産が可能で，以下一行目から６行目までの各行を製品種別ごとの加工工程順序として工程番号を行列$OM$の形式で表す．
+%行は製品種別，列は各製品の加工工程順番に対応する．
+
+\[
+OM =
+\left[
+\begin{array}{*{17}{c}}
+1 & 3 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 3 & 4 & 6 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+1 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 10 & 11 & 12 & 13 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 5 & 6 & 10 & 11 & 12 & 13
+\end{array}
+\right]
+\]
+
+$OM_{s,q} = \{1,2,\dots,12,13\}$ は製品$s$の第$q$番目加工工程の加工機械は$OM_{s,q}$の要素を意味する。
+$OM_{s,q} = 0$の場合は、製品$s$の第$q$番目加工工程自体がないことを意味する。
+
+エッチングとレジスト除去、積層、スルーホールめっき、この三つの加工操作は PCB をロット単位で一度に加工できる工程となる。
+したがってこの３つの工程に要する加工時間は定値とする.
+これ以外の加工工程ではその工程の加工時間は $n_{s} \times {単位時間}$の積となる。
+各機械の単位加工時間もしくは定値加工時間を設定は以下は表\ref{tab:machine_time}とする．
+
+\begin{table}[htbp]
+\centering
+\caption{加工機械別加工時間パラメータの設定}
+\label{tab:machine_time}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+加工時間パラメータ & 設定値 \\
+\hline
+MT_{1}  & $0.5$（単位加工時間） \\
+MT_{2}  & $0.5$（単位加工時間） \\
+MT_{3}  & $2$（単位加工時間） \\
+MT_{4}  & $8$（単位加工時間） \\
+MT_{5}  & $7$（単位加工時間） \\
+MT_{6}  & $250$（基準加工時間） \\
+MT_{7}  & $600$（基準加工時間） \\
+MT_{8}  & $3$（単位加工時間） \\
+MT_{9}  & $750$（基準加工時間） \\
+MT_{10} & $5$（単位加工時間） \\
+MT_{11} & $4$（単位加工時間） \\
+MT_{12} & $3$（単位加工時間） \\
+MT_{13} & $1$（単位加工時間） \\
+\hline
+\end{tabular}
+\end{table}
+
+次に注文票の生成について述べる．\todo[inline]{次に注文票の生成について述べる．注文票には製品種別とその種別ごとのロットサイズが記載される．}
+\todo[inline]{ふつうここで，製品種別の作り方を書き，その次にその製品種別のロットサイズをどう作るかの説明があると思うが，その逆に書いたのは何か理由があるのか？
+理由がないなら，修正してください．
+}

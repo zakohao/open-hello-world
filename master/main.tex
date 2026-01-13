@@ -1,0 +1,183 @@
+\documentclass[a4paper,11pt,dvipdfmx]{jsreport}
+
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{enumitem}
+
+\usepackage{cleveref}
+
+\usepackage{todonotes}
+
+\usepackage{setspace}
+
+\usepackage{booktabs}
+
+
+% cleveref の日本語化（章）
+\crefname{chapter}{第\!\!章}{第\!\!章}
+\Crefname{chapter}{第\!\!章}{第\!\!章}
+
+% 表示形式：第〈番号〉章
+\crefformat{chapter}{第#2#1#3章}
+\Crefformat{chapter}{第#2#1#3章}
+
+\usepackage[backend=biber,style=numeric-comp,sorting=none]{biblatex}
+
+\addbibresource{references/Detection_of_lodging_using_aerial_imagery/Detection_of_lodging_using_aerial_imagery.bib}
+\addbibresource{references/drone/drone.bib}
+\addbibresource{references/Estimation_of_Vegetation_Index/Estimation_of_Vegetation_Index.bib}
+\addbibresource{references/inasaku/inasaku.bib}
+\addbibresource{references/U-Net/U-Net.bib}
+\addbibresource{references/seminar/seminar.bib}
+
+
+% --- ページレイアウト ---
+\usepackage[top=2.5cm,bottom=3cm,left=2.5cm,right=2.5cm]{geometry}
+
+% --- 欧文フォントまわり（警告除去） ---
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\usepackage{textcomp}
+
+% --- 目次デザイン ---
+\usepackage{tocloft}
+\renewcommand{\cftchapfont}{\bfseries}
+\setlength{\cftchapnumwidth}{4em}
+\setlength{\cftchapindent}{2em}
+\setlength{\cftsecindent}{4em}
+\setlength{\cftsubsecindent}{6em}
+
+% --- fancyhdr ---
+\usepackage{fancyhdr}
+\setlength{\headheight}{37pt} % ← 推奨値 36.7577pt より少し大きく
+\pagestyle{fancy}
+\fancyhf{}
+\cfoot{\thepage}
+\rhead{\chapterTitle}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- ページスタイル ---
+\fancypagestyle{TocStyle}{
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhf{}
+  \chead{\large \bfseries 普及型ドローンを利用した稲の倒伏モニタリング \\[2mm]
+  ～酒米：山田錦の圃場を対象に～}
+}
+
+\fancypagestyle{ChapStyle}{
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhf{}
+  \cfoot{\thepage}
+}
+
+\fancypagestyle{AcknStyle}{
+  \renewcommand{\headrulewidth}{0pt}
+  \fancyhf{}
+  \cfoot{\thepage}
+}
+
+% --- 章タイトルをヘッダーへ反映 ---
+\makeatletter
+\newcommand{\chapterTitle}{}
+\def\@makechapterhead#1{
+  \vspace*{20pt}
+  {\parindent \z@ \raggedright \normalfont
+    \Huge\bfseries \ifnum\c@chapter>0 第\thechapter 章\space \fi #1\par\nobreak
+    \vskip 30pt
+    \xdef\chapterTitle{\ifnum\c@chapter>0 第\thechapter 章\space \fi #1}}}
+\def\@makeschapterhead#1{%
+  \vspace*{20pt}%
+  {\parindent \z@ \raggedright \normalfont
+    \Huge\bfseries #1\par\nobreak
+    \vskip 30pt
+    \xdef\chapterTitle{#1}}
+}
+\makeatother
+
+% --- section / subsection 設定 ---
+\makeatletter
+\renewcommand{\chapter}{
+  \if@openright\cleardoublepage\else\clearpage\fi
+  \global\@topnum\z@
+  \secdef\@chapter\@schapter}
+\renewcommand{\section}{\@startsection{section}{1}{\z@}
+  {3.5ex \@plus 1ex \@minus .2ex}
+  {2.3ex \@plus.2ex}
+  {\normalfont\Large\bfseries}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+  {3.25ex\@plus 1ex \@minus .2ex}
+  {1.5ex \@plus .2ex}
+  {\normalfont\large\bfseries}}
+\makeatother
+
+\setcounter{tocdepth}{2}
+
+% ===============================
+\begin{document}
+% ===============================
+
+% --- 表紙 ---
+\begin{titlepage}
+  \vspace*{2cm}
+  \begin{center}
+    \Large 関西学院大学
+  \end{center}
+  \begin{center}
+    \Large 2026年度\space\space 修士論文
+  \end{center}
+  \vspace{1cm}
+  \begin{center}
+    \Large \bfseries 普及型ドローンを利用した稲の倒伏モニタリング \\[5mm]
+    ～酒米：山田錦の圃場を対象に～
+  \end{center}
+  \vspace{7cm}
+  \begin{center}
+    \large 総合政策研究科\space\space 総合政策専攻
+  \end{center}
+  \begin{center}
+    \large 指導教員\space\space 山田\hspace{1em} 孝子\space\space 教授
+  \end{center}
+  \vspace{1cm}
+  \begin{center}
+    \large 学生番号\space\space 49024016
+  \end{center}
+  \begin{center}
+    \large 星川\hspace{1em} 裕志
+  \end{center}
+\end{titlepage}
+
+% --- 目次 ---
+\newgeometry{top=4cm,bottom=3cm,left=2.5cm,right=2.5cm}
+\tableofcontents
+\setcounter{page}{0}
+\thispagestyle{TocStyle}
+\newgeometry{top=2.5cm,bottom=3cm,left=2.5cm,right=2.5cm}
+
+% --- 本文 ---
+\onehalfspacing
+
+\include{chapters/chap1.tex}
+
+\include{chapters/chap2.tex}
+
+\include{chapters/chap3.tex}
+
+\include{chapters/chap4.tex}
+
+\include{chapters/chap5.tex}
+
+\thispagestyle{ChapStyle}
+\printbibliography[title={参考文献}, heading=bibintoc]
+
+
+\chapter*{謝辞}
+\addcontentsline{toc}{chapter}{謝辞}
+\thispagestyle{AcknStyle}
+
+本研究を遂行し，本論文を完成させるにあたり，多大なるご協力とご助言を賜りましたすべての皆様に，心より感謝申し上げます. 
+
+本研究の対象である酒米「山田錦」の圃場を経営されている和田様には, ご多忙の中にもかかわらず，圃場での調査やドローン撮影に快くご協力いただきました. また，実際の栽培現場に基づく貴重なお話やご意見を頂戴し，本研究を現場に即した内容として進めることができました。ここに深く感謝申し上げます. 
+
+また，農業分野に関する専門的な知見や助言を賜りました高原様には，本研究の内容を検討するうえで多くの示唆をいただきました. 実践的な視点からのご助言は，研究全体の理解を深めるうえで大きな支えとなりました. 心より御礼申し上げます. 
+
+\end{document}

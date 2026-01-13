@@ -1,0 +1,5 @@
+PWD d:/vscode/open-hello-world/master
+INPUT d:/texlive/2024/texmf.cnf
+INPUT d:/texlive/2024/texmf-dist/web2c/texmf.cnf
+INPUT d:/texlive/2024/texmf-var/web2c/euptex/platex.fmt
+INPUT d:/vscode/open-hello-world/master/paper.tex

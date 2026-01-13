@@ -1,0 +1,1584 @@
+
+\todo[inline]{先に説明，あとで「まとめると」では全く理解できないので，最初に「まとめると」の内容をもってきて，後でわかりにくいところを説明に変更してください}
+
+本研究に用いるジョブセットの生成手続きを以下に述べる．
+まず最初に
+\begin{enumerate}
+    \item 多層プリント基板の代表的な加工工程列を反映した機械割当行列 $OM$
+    \item 受注数・ロット構成のばらつきと機械特性を考慮して決定される処理時間行列 $OT$
+\end{enumerate}
+の二つの行列を用意する．
+\todo[inline]{この二つの行列をどう準備したのか，その考え方，手続きについての記述が一切なく，根拠が不明}
+
+
+\subsection{加工工程順序と加工時間構成}
+加工工場は６種類の製品種別に生産が可能とする。６種類の製品種別ごとの加工工程順序を行列$OM$の形式で表す．行は製品種別，列は各製品の加工工程順番に対応する．
+
+\[
+OM =
+\left[
+\begin{array}{*{17}{c}}
+1 & 3 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 & 0 & 0 \\
+1 & 3 & 4 & 6 & 5 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 10 & 11 & 12 & 13 & 0 & 0 & 0 & 0 \\
+1 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 10 & 11 & 12 & 13 & 0 & 0 \\
+2 & 3 & 5 & 6 & 4 & 6 & 7 & 8 & 9 & 4 & 6 & 5 & 6 & 10 & 11 & 12 & 13
+\end{array}
+\right]
+\]
+
+ここで$OM_{s,q} = \{1,2,\dots,12,13\}$ は製品$s$の第$q$番目加工工程の加工機械は$OM_{s,q}$の要素を意味する。
+$OM_{s,q} = 0$の場合、製品$s$の第$q$番目加工工程自体がないことを意味する。
+
+エッチングとレジスト除去、積層、スルーホールめっき、この三つの加工操作は PCB をロット単位で一度に加工できる工程となる。
+したがってこの３つの工程の加工時間は定値とする.
+これ以外の加工工程ではその工程の加工時間は $n_{s} \times {単位時間}$の積となる。
+次は各機械の単位加工時間もしくは定値加工時間を設定する。
+
+\begin{table}[htbp]
+\centering
+\caption{加工機械別加工時間パラメータの設定}
+\label{tab:machine_time}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+加工時間パラメータ & 設定値 \\
+\hline
+MT_{1}  & $0.5$（単位加工時間） \\
+MT_{2}  & $0.5$（単位加工時間） \\
+MT_{3}  & $2$（単位加工時間） \\
+MT_{4}  & $8$（単位加工時間） \\
+MT_{5}  & $7$（単位加工時間） \\
+MT_{6}  & $250$（基準加工時間） \\
+MT_{7}  & $600$（基準加工時間） \\
+MT_{8}  & $3$（単位加工時間） \\
+MT_{9}  & $750$（基準加工時間） \\
+MT_{10} & $5$（単位加工時間） \\
+MT_{11} & $4$（単位加工時間） \\
+MT_{12} & $3$（単位加工時間） \\
+MT_{13} & $1$（単位加工時間） \\
+\hline
+\end{tabular}
+\end{table}
+
+\todo[inlune]{この数値とした根拠が２つの行列について全く示されていない．書いたほうがいいです．}
+
+
+\subsection{ジョブセットに含まれる注文データ生成}
+
+本実験のためにジョブセットと呼ぶ同一出荷日をもつ注文書の集合を$10000$セット作成した．その各ジョブセットは注文書を要素とし，注文書には
+製品種別とそのロット数が複数記載される．この記載内容をデータとして生成する手順をここでは述べる．
+
+受注数およびロット数のばらつきを表現するために、
+受注数は平均 $\mu_{odder}=10$、分散 $\sigma^2_{odder}=2$ の正規分布に従う乱数で生成し、
+ロット数は平均 $\mu_{lot}=3$、分散 $\sigma^2_{lot}=1$ の正規分布に従う乱数として生成する。
+ただし負の値および0は現実的でないため除外し,正の値のみを採用する。
+以上の手順で受注量とロットサイズにランダムネスを持つジョブセットを作る。
+
+\begin{table}[htbp]
+\centering
+\caption{オーダー数およびロット数に関する確率分布パラメータ}
+\label{tab:order_lot_param}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+パラメータ & 説明 \\
+\hline
+\mu_{order} & 総オーダー数の平均値 \\
+\sigma^2_{order} & 総オーダー数の分散 \\
+\mu_{lot} & 各オーダーに注文された製品ロット数の平均値 \\
+\sigma^2_{lot} & 各オーダーに注文された製品ロット数の分散 \\
+\hline
+\end{tabular}
+\end{table}
+
+
+上記のパラメータ設定の平均や分散を用いて実際の生産現場に見られる受注量とロットサイズのランダムネスでデータとして生成する。
+具体的なデータ生成はPythonで実装した.その手順を以下にまとめる.
+
+\begin{description}
+  \item[手順1:] 乱数 seed $seed_{value}$ を設定し，
+  受注数およびロット数の正規分布パラメータ，
+  ならびに機械別単位加工時間・基準加工時間パラメータを初期化する．
+
+  \item[手順2:] 生成するジョブセット数を $gen=10000$ とし，
+  $gen=0,\ldots,gen-1$ について手順2$\sim$8 を繰り返す．
+
+  \item[手順3:] 受注数の候補として，
+  平均 $\mu_{odder}$，分散 $\sigma^2_{odder}$ の正規分布から
+  サンプルサイズ $odder_{size}$ 個の乱数系列を生成する．
+  生成された乱数のうち $0$ 以下の値を除外し，
+  残った候補の中から 1 つをランダムに選択して，
+  実際の受注数 $odder_{number}$ とする．
+
+  \item[手順4:] 同様に，ロット数を生成するために
+  平均 $\mu_{lot}$，分散 $\sigma^2_{lot}$ の正規分布から
+  ロット数候補を生成し，
+  $0$ 以下を除外したロット数の候補集合を得る．
+
+  \item[手順5:] 受注数 $odder_{number}$ と製品種類数 $6$ に基づき，
+  オーダー原始データ行列 $odder$
+  （サイズ $odder_{number} \times count_{type}$）を初期化する．
+  各注文 $O_i$ と製品種別 $J_s$ について，二項分布に従い
+  確率 $P=0.7$ で当該製品が注文に含まれるとし，
+  含まれる場合にはロット数候補集合から 1 つをランダムに選択して
+  $odder_{i,s}$ に代入する．
+
+  \item[手順6:] 行列 $odder$ の列方向の合計に，
+  基板 1 ロットあたり 10 枚を乗じることで，
+  各製品種別ごとの総基板枚数ベクトル
+  $product_{count}$ を算出する．
+
+  \item[手順7:] 各製品種別 $J_s$ および工程番号 $q$ について，
+  機械割当行列 $OM$ の要素 $OM_{s,q}$ を参照し，
+  処理時間行列 $OT_{s,q}$ を決定する．
+  枚数に比例する工程では
+  $product_{count}[s]$ と単位加工時間を乗じ，
+  バッチ処理工程では基準加工時間をそのまま用いる．
+
+  \item[手順8:] 行列 $OM$ および $OT$ の数値を参照して，
+  行列 $JOBSET$ を作成する．
+  $JOBSET$ は行方向に製品種別(製品1~製品6),
+  列方向に工程番号(加工工程1~加工工程17)を取り，
+  各要素に「(機械番号, 加工時間)」の組を文字列として格納する．
+  これにより，$JOBSET$ の機械番号部分が $OM$,
+  加工時間部分が $OT$ に対応する．
+
+ただし，同じジョブの作業について、同じ機械で連続的な二つの加工工程を加工しないように、作業の前作業と後作業のどれかの作業機械は一致しないと設定し，次の条件を加えている．
+
+\begin{equation}
+\begin{cases}
+\mathrm{before}\{m_{s,q}\} \neq m_{s,q} \\
+\mathrm{after}\{m_{s,q}\} \neq m_{s,q}
+\end{cases}
+\label{eq:machine_exclusion}
+\end{equation}
+
+  \item[手順9:] データの保存
+  （分布種別，受注数分布パラメータ，
+  ロット数分布パラメータ，
+  使用機械数，シード値）に基づいて
+  出力ディレクトリおよびファイル名を構成し，
+  $JOBSET$ を \texttt{.csv} 形式で保存する．
+\end{description}
+
+
+以上の手順で実際の生産現場に見られるランダムネスを持つ受注量とロットサイズのデータが生成される。
+
+補足として，製品種別と処理時間の考え方について，説明する．
+製品種別は確率 P = 0.7の二項分布に従い注文票に記載される．
+一つの注文票の製品種別に重複はないものとし，
+注文票別の製品種別行列 $odder$ を構成する.
+ロット数の考え方は，
+各注文票の製品種別ごとの総注文件数 $n_{s}$ をロット数とする.
+1 ロットあたりの基板数は 10 枚とし，加工時間は定数で決まる工程以外はロット単位で決まる．
+各加工工程の処理時間は、$n_{s}$とあらかじめ機械別に与えた単位加工時間または基準加工時間パラメータで決定する。
+例えば、ドリル加工や電気検査など加工時間が枚数に比例すると考えられる工程では、$n_{s} \times MT_{m},m = \{1,2,3,4,5,8,10,11,12,13\}$ で工程時間を設定し、
+エッチングや積層などバッチ処理的な工程では、製品枚数に依存しない基準時間 $MT_{m},m = \{6,7,9\}$ を用いる。
+こうして得られた処理時間行列が $OT$ となる。
+
+\begin{equation}
+OT_{s,q}=
+\begin{cases}
+n_{s} * MT_{m} & m \in \{1,2,3,4,5,8,10,11,12,13\} \\
+MT_{m}            & m \in \{6,7,9\}
+\end{cases}
+\label{eq:OT_definition}
+\end{equation}
+
+
+
+\subsection{データ生成結果}
+
+先節で述べた通りに10000個のジョブセットデータを実際に生成した。
+\bf{最適化の実験ではこの10000のジョブセットから121個をランダムに選択した．これを1つの実験セットの単位として最適スケジュール案を探索する対象とする．}
+\todo[inline]{これがもっとちゃんとわかるように書かないと，非常に重要な点です．また121のジョブセットを集めたデータに名称を付けないと，とても分かりにくいと思います．}
+
+
+この実験セット単位に含まれる121ジョブセットの加工工程の加工時間の分散を計算し、
+分散の大きさを基準として、ジョブセットの特徴を含まれる注文書の多様性で(小)、(並)(大)のように３タイプに分類する。
+注文書の多様性が小さい（小）とは，比較的注文書内容の均一性が高く，一方で（大）であれば，注文書の内容のバラツキが大きく，生産スケジュールを計算する際に，非常に短時間で加工がおわる単純な加工依頼から，ほぼ全加工機械の処理を必要とし，ロット数の変動も大きなものまで対象に，様々な生産管理スケジュールを
+検討しなくてはならない．計算機実験での最適化の評価は３タイプの属性
+選択されたデータを次章の実験で利用する。
+\todo[inline]{この大中小をどういう計算式で分類したかをここで書くほうがよい．}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/odder_type.png}
+  \caption{データ分類}
+  \label{fig:odder type}
+\end{figure}
+
+\section{遺伝的アルゴリズムによる解の改善}
+本研究では、JSSPに対して、GAを用いたスケジューリングの最適解探索手法を採用する。
+加工順序が厳密に定まる問題なので、PPS(Precedence Preservative Crossover)という交差手法を採用する。
+
+\subsection{遺伝的アルゴリズムの考え方}
+\todo[inline]{ジョブという言葉が，ここから頻出するけど，ジョブセットは定義したけど，注文書単位で今まで記述してきたので，ジョブセットに含まれる製品要素（製品種別とロット数）を以下でジョブと呼ぶ．というような定義がいるのでは？途中で私が見落とした可能性もありますが．}
+
+本研究では、JSSPに対して、ジョブごとの工程順序を厳密に保持しつつ、
+複数の製品に属する加工工程の加工順序を染色体として表現する遺伝的アルゴリズム(GA)を用い、
+解の改善を行う。
+
+まず、注文書であるジョブセットの製品種別$s$の注文のジョブ $J_s$ の加工工程列は、機械割当行列 $OM$ および加工時間行列 $OT$ に基づく。
+1 つのジョブは、「使用機械 $m_{s,q}$ と加工時間 $t_{s,q}$ の列からなる工程」として表現される。
+まず染色体として、全ジョブの各工程を含む遺伝子列
+\[
+\text{genes} = \bigl[J_{s}F_{q},J_{s'}F_{q'}, \dots \bigr]
+\]
+を定義する。ここで各遺伝子は「ジョブ $J_{s}$ の第 $q$ 工程」を表す。
+スケジュールの手順について、遺伝子列に従って工程を順に配置し、
+同一製品ジョブ内の工程順序制約および各機械が同時に 1 工程しか処理できないという制約を満たすように
+処理開始時刻と終了時刻を更新し、
+スケジュール全体の総加工時間を算出する。
+
+まず遺伝的アルゴリズムのスタート時の初期解として、各製品ジョブ内の加工工程順序を保したランダムな遺伝子列に導入する方法で生成する。
+具体的には、各ジョブについて「次に処理すべき工程インデックス」を管理し、
+未処理工程を有するジョブの集合からランダムに 1 ジョブを選択し、
+そのジョブの次の加工工程を遺伝子列の末尾に追加する操作を繰り返す。
+この手続きを全ジョブの全加工工程が配置されるまで継続することで、
+すべての工程を一度ずつ含み、かつ製品ジョブ内の加工工程順序が必ず守られた初期解が得られる。
+
+GAの適応度評価は、各染色体が表現するスケジュールの品質，ここではJSSPにおける代表的な性能指標である総加工時間を評価基準として採用する。
+
+既存のスケジュール案から次のスケジュール案を作成するために，各染色体が示す遺伝子列をスケジュールへとデコードし、
+製品ジョブ内の工程順序制約および機械資源制約を満たす実行計画を構成した上で、
+対応する総加工時間を算出することで、よりよいスケジュール案の総加工時間を比較し採用する。
+
+適応度評価では、各染色体に対してスケジュールを配置し、
+対応する総加工時間を適応度として計算する。
+本研究では総加工時間の最小化を目的とするため、
+適応度は値が小さいほど良好な解であることを意味する。
+計算された総加工時間は染色体オブジェクト内に保存され、
+同一染色体に対する重複総加工時間計算を避けることで、計算効率の向上を図っている。
+
+親個体の選択にはトーナメント選択を採用する。
+許容解集団からランダムに複数個体（本研究では 5 個体）を抽出し、
+その中で総加工時間が最小の個体を勝者として選択する操作を 2 回行うことで、
+二つの親染色体を決定する。
+この選択方式により、適応度の高い個体が次世代に残りやすくなる一方で、
+一定のランダム性が維持され、探索の多様性が確保される。
+
+GAで二つの親から特徴を継承し子個体を生成するためには、交叉操作が必要となる。
+交叉操作には、PPS(Precedence Preservative Crossover)と呼ばれる順序保持型の交叉手法を用いる。
+この交差手法の紹介は次節に述べる。
+生成後は染色体修復処理を行う、加工工程の欠落や重複が生じないように解の有効性を保証する。
+
+また、本研究の GA ではエリート保存戦略を採用する。
+即ち各世代において総加工時間が最小となる個体から、あらかじめ定めた個数
+（本研究では 2 個体）を次世代集団へそのまま引き継ぐことで、
+進化の過程で得られた最良解が失われることを防止する。
+残りの個体は、選択・交叉操作によって生成された子個体で構成され、
+所定の最大ジェネレーション世代数（本実装では 200 世代）に達するまで進化計算を繰り返す。
+最終的に、全ジェネレーション世代を通じて得られた最良染色体を GA の解として採用し、
+対応するスケジュールについて甘特図\todo[inline]{意味不明,ガントチャート？}と各ジェネレーション世代にもっとも短い総加工時間の折れ線グラフを描画し、視覚的に評価の適切さを確認できる。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.3\linewidth]{figures/GA_flow_chat.png}
+  \caption{遺伝的アルゴリズムフローチャート}
+  \label{fig:GA flow chat}
+\end{figure}
+
+\subsection{PPS交差法の考え方}
+PPS交差法は、JSSP問題などの順序制約を伴う組合せ最適化問題において有効な交差手法の一つである。
+本手法は、親個体の遺伝子列情報を交差する際に、工程間の優先順序を保持しつつ、新たな子個体を生成することを目的としている。
+
+PPSの交差手順は次の通りである。
+
+\begin{enumerate}
+    \item 2つの親染色体(Parent1, Parent2)を許容解集団から選択する。
+    \item Parent1とParent2から操作配列を主に利用する。
+    \item 子個体の染色体を初期化する。
+    \item Parent1とParent2をランダムに選択する。選択された親個体の頭から、選択されない操作を子個体操作配列の最後に挿入する。
+    \item すべての操作が配置されるまで4を繰り返す。
+    \end{enumerate}
+記号：
+\todo[inline]{操作と記号が混合している表記で非常に気持ちが悪い}
+\begin{itemize}
+    \item $J = \{J_1, J_2, \dots, J_s\}$：製品種類の集合
+    \item 各製品$J_s$は$q$個の加工操作を持ち、$F_q = \{J_{s}F_{1}, J_{s}F_{2}, \dots, J_{s}F_{q}\}$とする。
+    \item 親個体の操作列：$P_1 = [o_1^1, o_2^1, \dots, o_\theta^1]$, $P_2 = [o_1^2, o_2^2, \dots, o_\theta^2]$
+    \item 親個体を頭に子個体に未配置の操作列：$P_{1}o \in [o_1^1, o_2^1, \dots, o_\theta^1] , P_{1}o \notin C $ 、 $P_{2}o \in [o_1^2, o_2^2, \dots, o_\theta^2] , P_{2}o \notin C $
+    \item 子個体$C$の初期値の空列：$C \leftarrow [\ ]$
+    \end{itemize}
+
+\todo[inline]{以下はdescriptionで記述,「以上を用いた交差配列の手続きは以下のようになる。」，を入れるほうが良い}
+\begin{description}
+    \item[step1.] $i \leftarrow 1$
+    \item[step2.] \textbf{while} $|C| < \theta$ \textbf{do}:
+    \begin{descriptionm}
+        \item[step2-1.] $Po = random\{P_{1}o,P_{2}o\}$
+        \item[step2-2.] $C \leftarrow Po$
+        \item[step2-3.] $i \leftarrow i + 1$
+    \end{description}
+    \item[step3.] \textbf{return} $C$
+\end{description}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.3\linewidth]{figures/PPS_flow_chat.png}
+  \caption{PPSフローチャート}
+  \label{fig:PPS flow chat}
+\end{figure}
+
+\subsection{GAの実験結果}
+以上の手順で121個データをスケジュールして、最後の許容解総加工時間とガントチャートを結果として出力した。
+
+\todo[inline]{p.19の図５はどう見ても表． また小さすぎる，注文のタイプを大，並，小としたはず）}
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.5\linewidth]{figures/GA_result.png}
+  \caption{GAが出力した121ジョブセット（注文タイプ別）総加工時間}
+  \label{fig:GA result}
+\end{figure}
+
+本研究を背景としての問題設定およびジョブセットの規模でしたら、ジェネレーショ終えて許容解を出せるまで概ね17秒左右がかかる。
+以下は注文タイプにより、三つ種類の中でランダムに選択された注文のジェネレーショの最短総加工時間折れ線グラフとガントチャート。
+
+\todo[inline]{一般注文，大きい注文とか，用語や呼び方を統一してください．注文（大，並，小）ならそれに統一する．ちなみに日本語で並，は牛丼屋しかつかわない，ふつうは大中小と記述する．特に学術論文に「並」は使わないほうがよい．}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/generation_19_small.png}
+    \caption{注文書19(小さい注文)のジェネレーション折れ線グラフ}
+    \label{fig:19 generation}
+\end{subfigure}
+\vspace{1.5em} % 上下间距，可调
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/gantt_19.png}
+    \caption{注文書19(注文（小）)の許容解ガントチャート}
+    \label{fig:19 gantt}
+\end{subfigure}
+
+\caption{注文書19(注文（小）)の実験結果}
+\label{fig:small order ga result}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/generation_68_normal.png}
+    \caption{注文書68(注文（中）)が生成した折れ線グラフ}
+    \label{fig:68 generation}
+\end{subfigure}
+\vspace{1.5em}
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/gantt_68.png}
+    \caption{注文書68(一般注文)の許容解ガントチャート}
+    \label{fig:68 gantt}
+\end{subfigure}
+\caption{注文書68(一般注文)の実験結果}
+\label{fig:normal order ga result}
+\end{figure}
+
+\begin{figure}[p]
+\centering
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/generation_93_large.png}
+    \caption{注文書93(大きい注文)のジェネレーション折れ線グラフ}
+    \label{fig:93 generation}
+\end{subfigure}
+\vspace{1.5em}
+\begin{subfigure}{\linewidth}
+    \centering
+    \includegraphics[width=0.9\linewidth]{figures/gantt_93.png}
+    \caption{注文書93(大きい注文)の許容解ガントチャート}
+    \label{fig:93 gantt}
+\end{subfigure}
+\caption{注文書93(大きい注文)の実験結果}
+\label{fig:large order ga result}
+\end{figure}
+
+\clearpage
+GAの実験結果を見て、ジェネレーション回数は50回以下で、200回の計算終了時と変わらない最適解を得ていることがわかる。収束まで最も計算回数の多いケースでも200回以下で良いスケジューリング案に到達している。
+ガントチャートからは、加工工程のスケジューリングの可視化結果から，機械の遊休時間がほとんど見られないスケジュール案が出力できることも視認できる。
+JSSPは典型的なNP問題であるので、問題により厳密解に至るまで総当たり法が必要となる。
+それを踏まえればGAはJSSPのスケジュール最適化で実効性の高い計算時間で最適解をだせることがわかる。
+\newpage
+
+\section{深層強化学習による解の改善}
+
+深層強化学習(Deep Reinforcement Learning,Deep RL)とは,
+強化学習(Reinforcement Learning,RL)と深層学習を組み合わせた機械学習の一分野である。
+RL は意思決定問題を扱う手法として広く用いられており、
+一般にマルコフ決定過程(Markov Decision Process、MDP)として定式化される。
+RL はエージェントと環境から構成され、エージェントは環境との相互作用を通じて、
+全体として最適なポリシーを探索する。
+
+エージェントは、まず環境の状態を観測し、現在保持している方策に基づいて行動候補の中から行動を選択する。
+その行動により環境の状態が変化し、エージェントは新たな環境において再び行動を選択する。
+この過程において、環境から報酬が与えられ、エージェントは将来にわたる報酬を定期的に評価することで、ポリシーの更新および改善を行う。
+
+RL と Deep RL の主な違いは、行動選択の際にニューラルネットワークを用いる点にある。
+Deep RL では、ニューラルネットワークによって状態と行動の関係を近似することで、行動候補の中から適切な行動を選択する。
+これにより、複雑なモデルを比較的簡潔な形式で表現できるとともに、意思決定に関与する多様な要因を柔軟に考慮することが可能となる。
+
+さらに、Deep RL においては、エージェントが試行錯誤を通じて方策を学習・改良することで最適ポリシーを獲得し、
+動的に変化する環境においても、その最適ポリシーに基づいた意思決定が可能となる。
+
+\subsection{深層強化学習の考え方}
+強化学習は、環境との相互作用を通じて逐次的に意思決定を行う枠組みであり、
+一般にマルコフ決定過程(MDP)として表現される。
+MDP は、状態集合(環境) $S$、行動集合 $A$、報酬関数 $R$、
+および割引率 $\gamma$ から構成される。
+
+
+本研究では、価値関数に基づく強化学習手法であるDeep Q-Network(DQN)を用いる。
+DQN では、各状態 $s_t$ における行動 $a_t$ の価値を表す
+行動価値関数 $Q(s_t,a_t)$ をニューラルネットワークにより近似し、
+各状態における行動選択を $Q$ 値に基づいて行う。
+図\ref{\label{fig:dqn}}に DQN の仕組みとして手法の概要を示す。また、表\ref{tab:rl_notation}に使用する記号をまとめる。
+
+エージェントは時刻 $t$ で環境の状態 $s_t \in S$ を観測し、
+$Q(s_t,a)$ が最大となる行動を選択することで、
+将来にわたる累積報酬の最大化を目指す。
+学習過程においては、\underline{探索}とすでに学習した特徴の\underline{活用}のバランスを取るため、
+$\varepsilon$-greedy 法を用いて確率的にランダム行動を選択する。
+
+時刻 $t$ において，$[0,1]$ の一様分布から乱数 $u$ を生成し，
+行動 $a_t$ は次式により決定される：
+\begin{equation}
+a_t =
+\begin{cases}
+\text{random}(A_t) 
+& \text{if } u < \varepsilon, \\[6pt]
+\displaystyle \arg\max_{a_t \in A_t} Q(s_t,a_t;\theta)
+& \text{if } u \ge \varepsilon.
+\end{cases}
+\label{eq:epsilon_greedy}
+\end{equation}
+
+なお，本研究では学習の進行に伴い
+$\varepsilon$ を段階的に減少させることで、
+初期段階では探索を重視し、
+学習が進むにつれて活用を優先する設計としている。
+
+本研究で扱うJSSP環境は、
+加工工程の開始および完了といったイベントによって状態が更新される
+イベント駆動型の環境として構成されている。
+
+DQN における 1 step とは、
+時刻 $t$ においてエージェントが状態 $s_t$ を観測し、
+行動 $a_t$ を選択した後、
+環境が次状態 $s_{t+1}$ と報酬 $r_t$ を返すまでの
+連続的な意思決定単位を指す。
+
+行動 $a_t$ には、
+\begin{itemize}
+\item 実行可能な作業工程を選択してスケジューリングを行う行動
+\item 次のイベント発生まで待機する行動
+\end{itemize}
+の両方が含まれており、
+各 step において環境状態が更新される。
+
+そして、episode とは、
+一つのジョブセットに対して、初期状態から開始し、
+すべての作業工程が完了までを指す。
+すなわち、1 episode は
+一つのジョブセットに対する完全なスケジューリング過程に対応する。
+\todo[inline]{この完全の意味がよくわからない．一つの許容可能なmakespanを有するスケジュール案作成，という意味？}
+
+本実装では、メインネットワークとターゲットネットワーク、二つのネットワークを用いる。
+メインネットワークは、状態 $s_t$ を入力として各行動の $Q$ 値を出力し、
+$\varepsilon$-greedy 法により実行行動 $a_t$ を決定するために用いられる。
+また、経験再生でサンプルされた $(s_t,a_t,r_t,s_{t+1})$ に対して、
+メインネットワーク出力から $Q(s_t,a_t)$ を算出し、
+誤差逆伝播によりメインネットワークのパラメータ更新を行う。
+
+経験再生はDQNの学習においては、
+連続した経験データ間の相関を減り、
+学習の安定性とデータ効率を向上させるため導入する。
+
+各 step において得られる経験$(s_t,a_t,r_t,s_{t+1})$ 
+は、リプレイバッファ(replay buffer)に保存される。
+学習時には、
+このバッファからランダムにミニバッチを抽出し、
+損失関数に基づいてメインネットワークの更新を行う。
+この手法により、
+\begin{itemize}
+\item 学習データの相関を低減できる
+\item 過去の重要な経験を繰り返し利用できる
+\item 学習の発散を抑制できる
+\end{itemize}
+といった効果が得られる。
+
+また本研究では，
+一定数以上の経験が蓄積された後に
+経験再生による学習を開始することで，
+初期段階における不安定な更新を回避している。
+
+ターゲットネットワークは、将来報酬に相当する非リアルタイムな価値成分の推定に用いられる。
+具体的には、次状態 $s_{t+1}$ に対してターゲットネットワークから
+$\max_{a'}Q(s_{t+1},a';\theta^{-})$ を計算し、
+\begin{equation}
+y_t =
+r_t + \gamma \max_{a'} Q(s_{t+1},a';\theta^{-})
+\label{eq:dqn_target}
+\end{equation}
+として目標値 $y_t$ を構成する。
+これにより、即時に得られる報酬 $r_t$（リアルタイムな報酬成分）と、
+将来の累積報酬に対応する価値（非リアルタイムな価値成分）を分離して扱うことができる。
+
+さらに、本実装では学習の安定化のため、
+一定ステップ間隔ごとにメインネットワークのパラメータを
+ターゲットネットワークへコピーするハード更新を行う。
+具体的には、現時点ステップ数が設定していた更新ステップの倍数となるたびに
+$\theta^{-}\leftarrow\theta$ として同期する。
+また、固定テストデータ集合に対する定期評価では、
+評価値のばらつきを抑える目的からターゲットネットワークを用いて計算を行う。
+
+メインネットワークのパラメータ $\theta$ の更新には，
+確率的勾配降下法に基づく最適化手法である Adam オプティマイザを用いる。
+学習率を $\alpha$ とすると，
+各学習ステップにおけるパラメータ更新は，
+損失関数 $L_t(\theta)$ の勾配に基づいて行われる。
+以上の処理により，各ステップにおいてメインネットワークのパラメータ更新が行われる。
+
+DQN における学習は，
+メインネットワークが出力する行動価値 $Q(s_t,a_t;\theta)$ と，
+ターゲットネットワークを用いて構成される目標値 $y_t$ との差を
+最小化することを目的として行われる。
+
+損失関数として平均二乗誤差(Mean Squared Error, MSE)を採用し、
+時刻 $t$ における損失 $L_t(\theta)$ を次式で定義する：
+\begin{equation}
+L_t(\theta)
+=
+\mathbb{E}
+\left[
+\left(
+y_t - Q(s_t,a_t;\theta)
+\right)^2
+\right].
+\label{eq:dqn_loss}
+\end{equation}
+
+ここで，目標値 $y_t$ はターゲットネットワークを用いて式\ref{eq:dqn_target}として計算される。
+
+\begin{table}[htbp]
+\centering
+\caption{強化学習およびDQNに用いる記号の定義}
+\label{tab:rl_notation}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+記号 & 説明 \\
+\hline
+S & 状態集合（環境が取り得る全状態の集合） \\
+A & 行動集合（エージェントが選択可能な行動の集合） \\
+s_t & 時刻$t$における環境の状態 \\
+a_t & 時刻$t$において選択される行動 \\
+A_t & 状態$s_t$における実行可能行動集合 \\
+r_t & 時刻$t$に得られる即時報酬 \\
+R & 報酬関数 \\
+\alpha & 学習率\\
+\gamma & 将来報酬の重み付け係数 \\
+Q(s,a) & 状態$s$において行動$a$を選択した際の行動価値 \\
+Q(s,a;\theta) & メインネットワークにより近似される行動価値関数 \\
+Q(s,a;\theta^{-}) & ターゲットネットワークにより近似される行動価値関数 \\
+\theta & メインネットワークのパラメータ \\
+\theta^{-} & ターゲットネットワークのパラメータ \\
+y_t & 学習における目標値 \\
+\varepsilon & $\varepsilon$-greedy法における探索率 \\
+a' & 次状態における行動候補 \\
+L_t(\theta) & 時刻 $t$ における損失\\
+\hline
+\end{tabular}
+\end{table}
+\clearpage
+
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.8\textheight]{figures/dqn.png}
+  }
+  \caption{DQNの仕組み}
+  \label{fig:dqn}
+\end{figure}
+\clearpage
+
+\subsection{DQN を JSSP に適用する理由}
+前章では、GAを用いてJSSPに対するスケジューリング最適化を行い、
+比較的高品質な許容解を得られることを示した。
+GA は問題構造に依存せず適用可能であり、事前学習を必要としない点で汎用性の高い手法である。
+一方で、各ジョブセットに対して毎回多数の世代にわたる進化計算を実行する必要があり、
+1 回のスケジューリングに要する計算時間は問題規模に応じて増大する。
+
+これに対し、本研究で採用するDQNは、
+環境との相互作用を通じてスケジューリングポリシーをQ-valueによって学習する手法である。
+DQN では、学習段階において多数のジョブセットを用いてモデルを訓練する必要があるものの、
+一度学習が完了した後は、
+各ジョブセットに対するスケジューリングを逐次的な推論処理として高速に実行できる。
+そのため、同一規模のジョブセットに対する 1 回の完全スケジューリングに要する時間は、
+GA と比較して大幅に短縮される。
+
+特に、生産現場においては、
+機械故障や新規受注の追加などによりスケジュールを頻繁に再計算する必要が生じる。
+このような状況では、
+毎回最初から探索を行う GA よりも、
+学習済みモデルに基づいて即時に意思決定を行える DQN の方が適していると考えられる。
+
+以上より、GA は静的環境における高精度なスケジューリング最適化に有効である一方、
+DQN は学習コストを伴うものの、
+単一ジョブセットに対する計算時間が短く、
+動的環境やリアルタイム性が要求される状況において優位性を有する。
+本研究では、これらの特性を踏まえ、GA と DQN の両手法を比較対象として位置付ける。
+
+\subsection{報酬関数の構成}
+本研究ではDQN によりジョブショップスケジューリングを逐次意思決定として解くため,
+各 step における即時報酬 $r_t$ を設計する.
+報酬設計は学習の収束性、アクション選択方策の偏りまたは訓練済みモデルの性能に強く影響するため,
+\begin{itemize}
+\item 複数指標を組み合わせた複合型報酬関数
+\item $makespan$を直接最適化する$makespan$ 中心型報酬関数
+\end{itemize}
+の2種類を実装し,比較した.
+
+\subsubsection{複合型報酬関数}
+複合型報酬では,スケジューリングの良さを単一指標に限定せず,
+「$makespan$の短縮」「各ジョブの加工プロセスの推進」「機械負荷の同一化」「待ち時間の抑制」など，
+複数の観点を同時に評価することで学習を安定化またはモデル性能の向上させることを狙う．
+時刻 $t$ における報酬 $r_t$ は，以下の重み付き和として定義する：
+
+時刻 $t$ における報酬 $r_t$ は，以下の重み付き和として定義する：
+
+\begin{equation}
+\label{eq:reward_composite}
+r_t
+=
+r^{\mathrm{time}}_t
++
+r^{\mathrm{prog}}_t
++
+r^{\mathrm{bal}}_t
++
+r^{\mathrm{comp}}_t
++
+r^{\mathrm{opp}}_t
++
+r^{\mathrm{util}}_t
++
+r^{\mathrm{cp}}_t
++
+r^{\mathrm{bn}}_t
++
+r^{\mathrm{final}}_t .
+\end{equation}
+
+各項は以下の通りである（実装では係数はハイパーパラメータとして設定する）：
+
+\begin{itemize}
+  \item \textbf{加工時間ペナルティ}:
+  選択した第$s$種別製品の第$q$番目の加工工程の加工時間を $t_{s,q}$ とすると，
+  \begin{equation}
+  r^{time}_t = - w_{time} t_{s,q} .
+  \end{equation}
+  長い工程の選択を抑制し，局所的な時間増加を抑える目的で導入する．
+
+  \item \textbf{加工工程推進報酬}:
+  全工程数を $N_{ops}$,当stepの完了工程数を $N^{f}_{step}$ とし，
+  進捗率を $g_{step}=N^{f}_{step}/N_{ops}$ と定義する．
+  \begin{equation}
+  r^{prog}_t = w_{prog} (g_{step+1}-g_{step}) .
+  \end{equation}
+  1 step の意思決定がイベント駆動により「工程完了」という推進することを明示するための報酬である．
+
+  \item \textbf{機械負荷平準化}:
+  機械 $M_m$ の累積使用時間を $t^{sum}_m$ とし，
+  \begin{equation}
+  r^{bal}_t = - w_{bal} {std}\left(\{t^{sum}_m\}\right).
+  \end{equation}
+  特定機械へのボトルネック化を抑える目的で導入する．
+
+  \item \textbf{ジョブスケジュール完了報酬}:
+  あるジョブの最終工程が完了した場合に定数報酬を与える：
+  \begin{equation}
+  r^{comp}_t =
+  \begin{cases}
+  w_{comp} & (\text{ジョブ$s$が完了})\\
+  0 & (\text{それ以外})
+  \end{cases}.
+  \end{equation}
+
+  \item \textbf{機会損失ペナルティ（最短工程の未選択）}:
+  実行可能行動集合を $A_t$ とし，その中で最短加工時間を $t^{A}_{min}$ とする．
+  選択した第$s$種別製品の第$q$番目の加工工程の加工時間 $t_{s,q}$ が $t^{A}_{min}$ より大きい場合，
+  \begin{equation}
+  r^{opp}_t = - w_{opp} (t_{s,q} - t^{A}_{min}).
+  \end{equation}
+  「すぐ終わる作業」の優先を促す報酬である．
+
+  \item \textbf{アイドル抑制（空き機械の即時利用）}:
+  空き機械が存在するにもかかわらず開始が遅れる状況を抑えるため，
+  機械が隙間がないように稼働させた場合は小さな正な報酬，
+  逆に機械加工待ちが増える場合は軽微な負報酬を与える．
+
+  \item \textbf{残作業最大ジョブ優先}:
+  残り作業量の最も大きいジョブを優先した場合に小さな正な報酬を与える．
+
+  \item \textbf{ボトルネック回避}:
+  現時点で機械が残した加工工程が一番多いのをボトルネックとみなし，
+  その機械をさらに悪化させる選択には軽微な負な報酬を与える一方，
+  非ボトルネック機械を活用する選択には正報酬を与える．
+
+  \item \textbf{エピソード終端の効率報酬}:
+  すべてのジョブの加工工程が完了し，エピソードが終了した時点において，
+  当該スケジューリング案の総加工時間 $makespan$ を $C_{\max}$ とする．
+  また，全加工工程の加工時間総和を
+  \begin{equation}
+  T^{sum} = \sum_{s} \sum_{q} t_{s,q}
+  \end{equation}
+  と定義し，加工機械台数を $|M|$ とすると，
+  理論的な下界として
+  \begin{equation}
+  C^{LB} = \frac{T^{sum}}{|M|}
+  \end{equation}
+  を用いる．
+
+  エピソード終端時の報酬は，
+  実際の $makespan$ が理論下界にどの程度近いかを評価する指標として，
+  以下のように定義する：
+  \begin{equation}
+  r^{final}_t =
+  \begin{cases}
+  w_{final} \dfrac{C^{LB}}{C_{\max}} & (\text{エピソード終端時}) \\
+  0 & (\text{それ以外})
+  \end{cases}.
+  \end{equation}
+
+  この終端報酬により，エージェントは各 step における局所的な判断だけでなく，
+  エピソード全体として $makespan$ を短縮する方策を学習することが期待される．
+\end{itemize}
+
+
+一方で，複合型報酬は各項が相互に干渉しやすく，
+重みの調整によっては「局所的に見栄えの良い行動」を過度に促進してしまい，
+目的である $C_{\max}$ 最小化と整合しない方策に収束する可能性がある．
+本研究の実験でも，複合型報酬は学習の安定性は得られる場合がある一方，
+最終的な $makespan$ 改善が限定的となる傾向が確認された．
+
+\subsubsection{$makespan$ 中心型報酬関数}
+次に，目的関数と報酬の整合性を高めるため，
+$makespan$ の増分に基づく中心型報酬関数を設計する．
+step における $makespan$(推測完了時刻の最大値)を $C_{\max}(t)$ とすると，
+\begin{equation}
+\label{eq:reward_delta_cmax}
+r_t^{\mathrm{main}} = -\Delta C_{\max}(t) = -\left(C_{\max}(t+1)-C_{\max}(t)\right).
+\end{equation}
+すなわち，意思決定によって $C_{\max}$ が増えるほど負の報酬となり，
+$C_{\max}$ の増加を抑える行動を学習する．
+
+さらに，実装上はプロセス推進の停滞（無意味な待機や不適切な選択可能な加工プロセススキップ）を抑制するため，
+以下の補助項を加える：
+\begin{equation}
+\label{eq:reward_makespan_total}
+r_t = r_t^{\mathrm{main}} + r_t^{\mathrm{imm}} + r_t^{\mathrm{pen}}
+\end{equation}
+
+\begin{itemize}
+  \item \textbf{即時着手ボーナス} $r_t^{\mathrm{imm}}$:
+  「最も早く待機している機械」に対して直ちに工程を開始できた場合に小さな正報酬を与える．
+  これは $C_{\max}$ だけでは区別しにくい局所的な停滞を抑えるためである．
+
+  \item \textbf{待機・プロセススキップに関連ペナルティ} $r_t^{\mathrm{pen}}$:
+  実行可能工程が存在するにもかかわらず待機する，
+  または不適切なスキップを繰り返すなど，
+  スケジュール生成に推進しない行動に負報酬を与える．
+\end{itemize}
+
+この$makespan$ 中心型報酬関数は目的関数 $C_{\max}$ と直接かかわっているため，
+報酬設計によるバイアスが小さく，
+本研究の実験では複合型より $makespan$ を安定的に改善できる傾向が確認された．
+
+\subsection{モデル訓練結果}
+
+本章では,DQN のモデル訓練結果について評価を行う.
+具体的には,複合型報酬関数および$makespan$ 中心型報酬関数のそれぞれに対して学習を行い,
+得られた訓練済みモデル（すなわちニューラルネットワークのパラメータ）を用いて,
+実際の加工順序行列 $OM$ および加工時間行列 $OT$ に対するスケジューリングを実行し,
+生成されたスケジュールの性能を評価する.
+
+深層強化学習においては,モデルの性能がハイパーパラメータの設定に大きく依存することが知られている.
+特に学習の安定性，収束速度，および最終的に得られる解の品質は,
+学習率や割引率,探索率などのパラメータ設定によって大きく左右される.
+そのため,本研究では複数のハイパーパラメータの組み合わせを試行し,
+学習挙動およびスケジューリング結果の両面から性能評価を行った.
+
+複合型報酬関数および$makespan$ 中心型報酬関数のいずれにおいても,
+共通して調整対象とした主なハイパーパラメータを
+表\ref{tab:reward hyperparameter}に示す.
+
+
+\begin{table}[htbp]
+\centering
+\caption{モデル訓練で調整するハイパーパラメータ}
+\label{tab:reward hyperparameter}
+\begin{tabular}{>{$}c<{$} l}
+\hline
+記号 & 説明 \\
+\hline
+$EPISODES$ & 学習エピソード回数\\
+\alpha & 学習率\\
+\gamma & 将来報酬の重み付け係数 \\
+\varepsilon & $\varepsilon$-greedy法における探索率 \\
+$BatchSize$ & 経験再生におけるバッチサイズ \\
+$MemorySize$ & 経験再生プールメモリー容量 \\
+$TargetUpdate$ & DQN における目標ネットワークの更新頻度 \\
+{EPISODES}^{Complete}_{Min} & 経験再生状態収集エピソード回数\\
+$Evaluation$ & $Evaluation$回数エピソードごとにテスト\\
+\hline
+\end{tabular}
+\end{table}
+
+表\ref{tab:reward hyperparameter}に示した各ハイパーパラメータの役割について，
+以下に説明する。
+
+$EPISODES$ は，エージェントが環境と相互作用しながら学習を行う総エピソード数を表す。
+この値は，方策の収束性や学習の安定性に影響を与え，
+エピソード数が不足する場合には十分な学習が行われない一方，
+過度に大きい場合には計算コストが増大する。
+エピソード内において，
+エージェントが環境に対して一度の意思決定を行う単位を
+step と定義する.
+JSSP における各 step では，
+エージェントは現在の環境を観測し，
+次に実行する加工工程を選択する，
+あるいは実行可能な工程が存在しない場合には
+何も加工を行わない（待機）という行動を選択する。
+すなわち,1 step は,
+ある時点における加工工程の割り当て判断，
+または加工を行わない判断に対応する。
+これらの step を繰り返すことで，
+すべてのジョブの全加工工程が選択完了した時点で
+エピソードが終了し，
+当該スケジュールに対する$makespan$が確定する。
+
+$\alpha$ は学習率を表し，
+ニューラルネットワークのパラメータ更新時における
+勾配の反映度合いを制御する係数である。
+学習率の設定は，学習の安定性および収束速度に大きく影響する。
+
+$\gamma$ は将来報酬の重み付け係数であり，
+現在の行動選択において将来得られる報酬をどの程度考慮するかを決定する。
+この値が大きいほど長期的な報酬を重視した方策が学習される。
+本研究の DQN 実装では，
+メインネットワークにより得られた即時報酬 $r_t$ に対し，
+ターゲットネットワークを用いて推定した次状態の最大 Q 値
+$\max_{a'} Q_{\mathrm{target}}(s_{t+1}, a')$ を
+$\gamma$ 倍して加算することで，
+即時的な評価と将来的な評価の両方を考慮した Q 値更新を行っている。
+
+$\varepsilon$ は $\varepsilon$-greedy 法における探索率を表す。
+$\varepsilon$ は固定値ではなく，エピソードの進行に伴い徐々に減少するよう設定されている。
+各 step において，一様乱数を生成し，その値が $\varepsilon$ 未満の場合には，
+実行可能な行動集合の中からランダムに行動を選択することで探索を行う。
+一方，乱数が$\varepsilon$以上の場合には，
+メインネットワークにより推定された Q 値に基づき，
+実行可能な行動の中で最も Q 値が大きい行動を選択する。
+このように，学習初期には探索を重視し，
+学習の進行とともに獲得した知識を活用することで，
+探索と活用のバランスを調整している。
+
+$BatchSize$ は，経験再生において一度の学習更新に用いられる
+経験データのサンプル数を表す。
+バッチサイズは，学習の安定性および計算効率に影響を与える。
+
+$MemorySize$ は，経験再生プールに保存される
+状態遷移データの最大容量を表す。
+この容量が十分でない場合，
+学習に用いられる経験の多様性が損なわれる可能性がある。
+
+$TargetUpdate$ は,DQN における目標ネットワークの更新頻度を表す。
+目標ネットワークを一定間隔で更新することで，
+Q 値推定の不安定化を抑制し，
+学習の安定性向上を図る。
+
+${EPISODES}^{Complete}_{Min}$ は，
+経験再生に用いる状態遷移データを収集するために必要な，
+完全なスケジューリングエピソードの最小回数を表す。
+この設定により，
+不完全なスケジュールに基づく学習を防止する。
+
+$Evaluation$ は，
+一定の学習エピソード数ごとに，
+固定された評価用データセットに対してテストを実施する間隔を表す。
+これにより，学習過程におけるモデル性能の推移を定期的に確認できる。
+
+\subsubsection{複合型報酬関数での訓練}
+複合型報酬関数を用いた学習では，
+複数の評価指標を同時に考慮するため，
+各報酬項に対応する係数の設定が学習挙動および最終的なスケジューリング性能に大きく影響する。
+本研究では，前節で定義した各報酬項の数式構造は固定した上で，
+それぞれに付与する係数をハイパーパラメータとして調整し，
+学習の安定性および得られるスケジュール品質を評価した。
+
+複合型報酬関数に含まれる主な係数と，
+それぞれが制御する評価項目を以下に示す。
+
+\begin{itemize}
+  \item $w_{time}$:
+  加工時間ペナルティの重みを表す係数であり，
+  局所的に加工時間の長い工程選択をどの程度抑制するかを制御する。
+
+  \item $w_{prog}$:
+  加工工程推進報酬の重みを表す係数であり，
+  各 step における工程完了をどの程度強く評価するかを制御する。
+
+  \item $w_{bal}$:
+  機械負荷平準化項の重みを表す係数であり，
+  特定機械への負荷集中をどの程度回避するかを制御する。
+
+  \item $w_{comp}$:
+  ジョブ完了時に与えられる完了報酬の大きさを決定する係数である。
+
+  \item $w_{opp}$:
+  機会損失ペナルティの重みを表す係数であり，
+  実行可能な中で短時間で終了する工程を優先させる度合いを制御する。
+
+  \item $w_{final}$:
+  エピソード終端時に与えられる効率報酬の重みを表す係数であり，
+  スケジュール全体としての $makespan$ 短縮をどの程度重視するかを制御する。
+\end{itemize}
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/wait_v3_1_graph.png}
+  \caption{複合型報酬関数DQNでの実験}
+  \label{fig:complex reward result}
+\end{figure}
+
+図\ref{fig:complex reward result}は，複合型報酬関数を用いて学習を行った際の，
+エピソード数に対する平均 makespan および損失関数(loss)の推移を示したものである。
+
+まず，上段に示す平均 $makespan$ の推移に着目すると，
+学習初期ではエピソードごとのばらつきが大きく，
+比較的大きな $makespan$ が観測されている。
+これは，$\varepsilon$-greedy 法によるランダム探索が支配的であり，
+スケジューリング方策が十分に学習されていないためであると考えられる。
+その後，学習の進行に伴い平均 $makespan$ は段階的に低下し，
+一定エピソード以降ではほぼ安定した値に収束していることが確認できる。
+一部のエピソードにおいて一時的な $makespan$ の増加が見られるものの，
+全体としては改善傾向を維持しており，
+複合型報酬関数に基づく方策学習が有効に機能していることが示唆される。
+
+次に，下段に示す損失関数の推移を見ると，
+学習初期において loss が急激に減少しており，
+Q 値推定が速やかに安定方向へ向かっていることが分かる。
+その後は緩やかな減少傾向を示しながら，
+一定範囲内で振動する挙動を示している。
+これは，環境の非定常性および探索行動の影響を受けつつも，
+学習が発散することなく安定して進行していることを示している。
+
+以上より，複合型報酬関数を用いた場合，
+平均 $makespan$ および損失関数の双方が学習の進行に伴って収束する挙動を示しており，
+本モデルがスケジューリング方策を段階的に学習していることが確認できる。
+本研究では，複数のハイパーパラメータ組合せに対して学習を試行し，
+その中で JSSP に対する性能が最も良好であったモデルの学習過程を
+図\ref{fig:complex reward result}として示している。
+学習が安定して収束しているにもかかわらず，
+得られたスケジューリング結果の性能は，
+図\ref{fig:complex reward vs ga}に示すように遺伝的アルゴリズムによる解と比較すると，
+依然として大きな差が存在することが確認された。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/complex_reward_dqnvsga.png}
+  \caption{複合型報酬関数DQNとGAの総加工時間性能差}
+  \label{fig:complex reward vs ga}
+\end{figure}
+
+このことで，複合型報酬関数を用いた場合，
+報酬に影響を与える要因が多岐にわたるため，
+各 step における報酬信号が複雑かつノイズを含みやすくなることが分かる。
+その結果，学習過程において損失関数や平均 makespan の収束が確認される一方で，
+エージェントがスケジューリングにおける本質的な改善方策を
+十分に獲得できているとは限らず，
+見かけ上は学習が進行しているように見えても，
+実際の問題解決能力には必ずしも結び付かない場合がある。
+
+そこで次節では，報酬構造を簡略化した$makespan$ 中心型報酬関数について検討する。
+
+\subsubsection{$makespan$ 中心型報酬関数での訓練}
+本小節では，複合型報酬関数とは異なり，
+最終的なスケジューリング性能指標である $makespan$ の改善に焦点を当てた，
+$makespan$ 中心型報酬関数を用いた学習について述べる。
+
+本報酬設計では，複数の評価項目を同時に考慮する複合型報酬関数と比べ，
+報酬信号を可能な限り単純化し，
+各 step における意思決定が
+最終的な $makespan$ に与える影響を
+直接的に学習させることを目的としている。
+具体的には,step 前後における総加工時間 $C_{\max}$ の変化量に基づき，
+$C_{\max}$ の増加を抑制する行動に対して正の評価を与え，
+逆に $C_{\max}$ を増大させる行動には負の評価を与える構成とした。
+
+$makespan$ 中心型報酬関数では，
+最終的な総加工時間の抑制を主目的としつつ，
+学習の停滞や非効率な行動を防ぐため，
+いくつかの補助的な報酬項およびペナルティ項を導入している。
+これらの各項に対応する係数を以下に示す。
+
+\begin{itemize}
+  \item $w_{\Delta C}$:
+  $makespan$ の増分 $\Delta C_{\max}$ に対する重みを表す係数であり，
+  各 step において総加工時間の増加をどの程度強く抑制するかを制御する。
+  本報酬関数における主成分である。
+
+  \item $w_{\mathrm{idle}}$:
+  機械の待機時間に対するペナルティの重みを表す係数であり，
+  不必要な待機や加工開始の遅延を抑制する役割を持つ。
+
+  \item $w_{\mathrm{miss}}$:
+  実行可能な加工工程が存在するにもかかわらず，
+  それを選択しなかった場合に与えられるペナルティの重みを表す係数であり，
+  機会損失を明示的に評価する。
+
+  \item $w_{\mathrm{skip}}$:
+  待機行動(action = 0)に対する軽微なペナルティの重みを表す係数であり,
+  意思決定の回避を過度に選択することを防ぐ目的で導入する。
+
+  \item $w_{\mathrm{imm}}$:
+  最も早く空いた機械において，
+  即時に加工を開始できた場合に与えられる補助的報酬の重みを表す係数であり，
+  機械資源の有効活用を促進する。
+\end{itemize}
+
+図\ref{fig:simple reward result}は，$makespan$ 中心型報酬関数を用いて学習を行った際の，
+エピソード数に対する平均 $makespan$ 、損失関数(loss)と平均総報酬の推移を示したものである。
+
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.8\textheight]{figures/wait_v5_2_graph.png}
+  }
+  \caption{中心型報酬関数DQNでの実験}
+  \label{fig:simple reward result}
+\end{figure}
+
+図\ref{fig:simple reward result}から分かるように，
+複合型報酬関数の場合とは異なり，
+いずれの観測指標においても明確な収束傾向は確認されない。
+
+特に，平均 $makespan$ および平均総報酬は，
+エピソードの進行に伴って大きなばらつきを維持しており，
+学習が単調に改善方向へ進行しているとは言いずらい。
+また，損失関数についても，
+学習全体を通じて大きな変動が観測されており，
+Q 値推定が安定的に収束しているとは言えない動きを示す。
+
+ですが，本モデルを用いて実際の JSSP に対するスケジューリングを行った結果，図\ref{fig:simple reward vs ga}に示すように,
+得られた解の性能は，
+GAによる解と互角している,
+さらに一部の問題例においては，
+GA によって得られた解を上回る場合も確認された。
+このことは，学習過程における評価指標の収束性と，
+最終的な問題解決能力とが必ずしも一致しないことがわかる。
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/simple_reward_dqnvsga.png}
+  \caption{中心型報酬関数DQNとGAの総加工時間性能差}
+  \label{fig:simple reward vs ga}
+\end{figure}
+
+$makespan$ 中心型報酬関数では，
+報酬関数が $C_{\max}$ の増分に直接基づいて与えられるため，
+局所的な意思決定の良否が即時的に評価される一方，
+環境の非定常性により，学習過程全体としては不安定な挙動を示しやすい。
+しかしながら，
+このような報酬設計は，
+スケジューリングにおける有効なヒューリスティックを
+ネットワーク内部に獲得させるには十分であり，
+結果として実用上有効な解を導出できたものと考えられる。
+
+このような，
+学習過程において損失関数や評価指標が明確に収束しない一方で，
+最終的に得られる解の性能が一定水準に達するという挙動は，
+強化学習において必ずしも例外的な現象ではない。
+Sutton および Barto は，
+強化学習における価値関数学習では，
+損失関数(TD 誤差など)が
+教師あり学習における誤差指標とは本質的に異なり，
+学習の進行とともに環境分布や方策分布が変化するため，
+単調な収束を示さない場合が多いことを指摘している \cite{ref_sutton2018}。
+そのため，損失関数の挙動のみから，
+最終的な方策性能を直接評価することは困難である。
+
+さらに、Tsitsiklis および Van Roy は，
+関数近似とブートストラップを併用する価値関数学習においては，
+理論的にも学習過程が振動または非収束となる可能性があることを示している \cite{ref_tsitsiklis1997}。
+この結果は，
+DQN のようなオフポリシー学習に基づく手法において，
+損失関数の安定性が保証されない状況下でも，
+必ずしも方策が無意味になるわけではないことを示唆している。
+
+また、JSSP を対象とした深層強化学習の研究においても，
+学習過程の収束性よりも，
+最終的に得られるスケジューリング解の品質が重視される傾向が報告されている \cite{ref_zhang2020}。
+Zhang らは，
+学習曲線が大きく変動する場合であっても，
+適切なディスパッチング方策が獲得されれば，
+従来のヒューリスティック手法と同等の性能が得られることを示している。
+
+以上の文献を踏まえると，
+本研究において観測された
+「学習指標の非収束性」と「実問題に対する解探索能力」との乖離は，
+$makespan$ 中心型報酬関数の特性と，
+強化学習における価値関数学習の性質に起因するものと考えられる。
+すなわち，本報酬設計は，
+安定した学習曲線の獲得には課題を残すものの，
+スケジューリングに有効なヒューリスティックを
+ネットワーク内部に形成するには十分であり，
+その結果として GA と同程度，
+あるいは一部問題においてそれを上回る解が得られたと解釈できる。
+
+\subsection{訓練済みモデルでの実験結果}
+本章で学習したモデルを用いて得られたスケジューリング解と，
+GAによって得られた解とを比較し,
+$makespan$およびスケジューリング構造の観点から，
+両手法の性能差について詳細に検討する。
+
+前章に述べた3タイプの注文(小、並、大)ごとに対して,
+複合型報酬関数でのDQNと中心型報酬関数でのDQN両方をGAと比較する。
+複合型報酬関数でのDQNで得られた解はほどんどGAに超えられないので,
+3タイプの注文ごとにそれぞれGAと比べて近い例(比率1.3ぐらい)、離れた例(比率1.5ぐらい)とだいぶ離れた例(比率1.8ぐらい)を示す.
+中心型報酬関数でのDQNで得られた解はGAと互角しているので、
+3タイプの注文ごとにそれぞれGAを超える例(比率0.9ぐらい)、GA相当な例(比率1ぐらい)とGAを劣る例(比率1.2ぐらい)を示す.
+\clearpage
+
+\subsubsection{複合型報酬関数での実験結果}
+図\ref{fig:complex reward vs ga result 1.34(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.34の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.34(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.34)}
+  \label{fig:complex reward vs ga result 1.34(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.48(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.48の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.48(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.48)}
+  \label{fig:complex reward vs ga result 1.48(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.76(small)}は注文(小)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.76の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.76(small).png}
+  }
+  \caption{注文(小)複合型報酬関数DQNとGAのガントチャート(比率1.76)}
+  \label{fig:complex reward vs ga result 1.76(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.2(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \label{fig:complex reward vs ga result 1.2(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.5(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.5(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
+  \label{fig:complex reward vs ga result 1.5(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.72(regular)}は注文(並)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.72の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.72(regular).png}
+  }
+  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.72)}
+  \label{fig:complex reward vs ga result 1.72(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.22(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.22の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.22(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.22)}
+  \label{fig:complex reward vs ga result 1.22(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.5(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.5(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
+  \label{fig:complex reward vs ga result 1.5(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:complex reward vs ga result 1.71(large)}は注文(大)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.71の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/complex_1.71(large).png}
+  }
+  \caption{注文(大)複合型報酬関数DQNとGAのガントチャート(比率1.71)}
+  \label{fig:complex reward vs ga result 1.71(large)}
+\end{figure}
+\clearpage
+
+図群に示す複合型報酬関数を用いた DQN のスケジューリング結果では，
+GA により得られた解と比較して$makespan$ が大きく悪化することが確認された。
+特に，工序数が多い Job5 および Job6 に処理が集中し，
+他ジョブの実行可能な工序が十分に挿入されないスケジュール構造が共通して観測される。
+
+この要因の一つとして，
+本研究で設計した複合型報酬関数における即時報酬と将来報酬の相対的な影響の偏りが挙げられる。
+本環境では，残作業量が最大のジョブを優先する項が強く作用しており，
+Job5 および Job6 を連続的に選択する行動系列は，
+将来の報酬を含めた行動価値として高く評価されやすい。
+その結果，ある時点で Job5 または Job6 を選択した後は，
+同一ジョブを継続して処理する行動が高い将来報酬を見込める選択として学習される。
+
+一方で，空き機械を利用して他ジョブの工序を挿入する行動は，
+その時点で得られる即時報酬が比較的小さい。
+たとえ長期的には待ち時間の削減や$makespan$ の短縮に寄与する可能性があったとしても，
+当該行動に対する即時報酬が，
+直前まで選択されていた Job5 または Job6 の継続処理によって期待される将来報酬を上回らない場合,DQN はこれを選択しにくい。
+すなわち，「他ジョブを挿入する」という行動は，即時報酬の観点から不利であるだけでなく，
+既に形成された行動系列に基づく将来報酬と比較しても行動価値が低く評価される傾向にある。
+
+このように，即時報酬が小さいが長期的には有効な行動と，即時および将来報酬の両面で高く評価されやすい行動との間で
+報酬構造に非対称性が存在する場合，エージェントは後者に過度に依存した方策を学習しやすい。
+その結果,Job5 および Job6 の処理が過度に優先され，他ジョブの工序を柔軟に挿入する探索が十分に行われず，
+GA が実現している空き時間活用型のスケジューリングと比較して$makespan$ が悪化したものと考えられる。
+
+\subsubsection{$makespan$中心型報酬関数での実験結果}
+図\ref{fig:simple reward vs ga result 0.95(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.95の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.95(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.95)}
+  \label{fig:simple reward vs ga result 0.95(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.99(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.99(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
+  \label{fig:simple reward vs ga result 0.99(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.24(small)}は注文(小)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.24の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.24(small).png}
+  }
+  \caption{注文(小)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.24)}
+  \label{fig:simple reward vs ga result 1.24(small)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.97(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.97の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.97(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.97)}
+  \label{fig:simple reward vs ga result 0.97(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.99(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.99(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
+  \label{fig:simple reward vs ga result 0.99(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.2(regular).png}
+  }
+  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \label{fig:simple reward vs ga result 1.2(regular)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 0.94(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.94の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_0.94(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.94)}
+  \label{fig:simple reward vs ga result 0.94(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1)}
+  \label{fig:simple reward vs ga result 1(large)}
+\end{figure}
+\clearpage
+
+図\ref{fig:simple reward vs ga result 1.16(large)}は注文(大)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.16の例.
+\begin{figure}[htbp]
+  \centering
+  \rotatebox{90}{
+    \includegraphics[width=0.7\textheight]{figures/simple_1.16(large).png}
+  }
+  \caption{注文(大)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1)}
+  \label{fig:simple reward vs ga result 1.16(large)}
+\end{figure}
+\clearpage
+
+以上に示した図より，$makespan$ 中心型報酬関数を用いた場合，
+多くの問題例においては, DQN がスケジューリング方策を適切に学習し，
+GA による解と同等，あるいはそれを上回る性能を示すことが確認された。
+これは，報酬が $C_{\max}$ の変化に直接基づいて与えられることで，
+ネットワークが調度全体の完工時間を意識した意思決定を獲得できたためであると考えられる。
+
+一方で，一部の問題例においては，
+加工工程数が最も多い Job6 がスケジュールの最後に集中して配置され，
+結果として $makespan$ が大きく悪化するケースも観測された。
+この挙動は，$makespan$ 中心型報酬関数における
+即時報酬と将来報酬の相対的な評価に起因すると考えられる。
+
+すなわち，
+Job6 に対して他の作業を挿入する行動は，
+短期的には即時報酬が小さく評価される一方で，
+過去の選択によって見込まれる将来報酬が相対的に大きくなる場合がある。
+その結果，エージェントは局所的に高い Q 値を持つ行動を優先し，
+加工工程数の多いジョブを後回しにする方策を選択する傾向を示す。
+
+このように，
+$makespan$ 中心型報酬関数は，
+全体として有効なスケジューリング戦略を学習させる能力を持つ一方で，
+報酬設計の性質上，特定のジョブ構成に対しては
+$makespan$ の増大を招く意思決定が強化される可能性があることが示唆される。
+
+\subsection{実験考察}
+以上の実験結果より，本研究で検討した二種類の報酬関数は，
+いずれも DQN によるJSSPスケジューリング方策の学習に寄与する一方で,
+異なる課題を含まれていることが明らかとなった。
+
+まず，複合型報酬関数を用いた場合，
+平均 $makespan$ や損失関数の推移から，
+エージェントが学習を進めているように見える挙動が確認された。
+しかしながら，
+報酬関数に含まれる要素が多岐にわたることで，各要素間の影響が相互に干渉し，
+学習信号にノイズが多く含まれる結果となった。
+そのため，学習過程では一定の収束傾向が観測されるものの，
+最終的に得られた方策は実際の JSSP に対して十分に有効な解を導出できていない場合が多かった。
+すなわち，複合型報酬関数は「学習しているように見えるが，本質的な方策改善に結びつきにくい」
+という特性を有していると考えられる。
+
+一方，$makespan$ 中心型報酬関数を用いた場合，
+報酬が $C_{\max}$ の変化に直接対応するため，
+エージェントはスケジューリング全体を意識した意思決定戦略を比較的明確に学習できる。
+その結果,多くの問題例において,GA と同等水準の解，あるいはそれを上回る解が得られた。
+しかし，即時報酬と将来報酬の評価バランスの影響により，
+加工工程数の多いジョブが後回しにされるなど，
+極端なスケジューリング方策が選択されるケースも確認された。
+これは，戦略そのものは学習できているものの，
+評価基準の歪みにより，特定条件下で性能劣化を引き起こす可能性を示している。
+
+以上より，複合型報酬関数は安定した学習挙動を示しやすい反面，
+ノイズの多さにより有効な方策獲得が困難であり，
+$makespan$ 中心型報酬関数は実用的な戦略を学習可能である一方，
+評価設計に起因する極端解の問題を内包していることが分かった。
+
+\section{今後の課題}
+本研究を通じて,DQN を用いた JSSP スケジュール最適化の有効性と課題が明らかとなった。
+これらを踏まえ，今後の課題として以下の二点が挙げられる。
+
+第一に，
+報酬関数設計の高度化が挙げられる。
+本研究では，複合型報酬関数と $makespan$ 中心型報酬関数をそれぞれ独立に検討したが，
+複合型は学習挙動が安定しているように見える一方で，多様な評価要素が同時に作用することにより報酬のノイズが増大し，
+必ずしも有効なスケジューリング方策の獲得に結びつかない場合があった。
+一方，$makespan$ 中心型報酬関数では，スケジュール方策そのものは比較的明確に学習されるものの，
+即時報酬と将来報酬のバランスが偏ることで，一部の作業を後回しにする極端な意思決定が選択される傾向が確認された。
+特に，加工工程数の多いジョブに対して，他ジョブを挿入することによる即時的な報酬改善よりも，
+過去の行動に基づく将来的報酬が過大に評価される場合，結果として総 $makespan$ を悪化させる調度が生成される可能性がある。
+今後は，即時報酬と将来報酬の寄与度を適切に調整する仕組みや，
+学習段階に応じて報酬構造を変化させる手法を導入することで，
+GA と比較しても極端な解を生じにくい，より安定したスケジューリング方策の獲得が期待される。
+
+第二に，
+モデルの一般化性能の向上が課題として挙げられる。
+本研究では，製造する製品の加工工程順序をあらかじめ固定した問題設定を採用した。
+そのため，学習済みモデルは，訓練時と同一または類似した加工工程構造を持つ問題に対しては有効である一方，
+訓練時に出現しなかった加工工程順序を持つ製品に対する適応性には制限がある。
+今後は，加工工程順序が異なる製品を含む学習データの拡張や，
+状態表現の改良を通じて，未知の加工工程構造に対しても柔軟に対応可能な，
+より汎用的なスケジューリングモデルの構築が望まれる。
+\clearpage
+
+\begin{thebibliography}{99}
+
+\bibitem{ref1} K.T. Chung, C.K.M.Lee and Y.P. Tsang, "Neural combinatorial optimization with reinforcement learning in industrial engineering: a survey"
+\textit{Artif Intell Rev}. vol. 58, 130(2025).
+
+\bibitem{ref2} M. Xu, Y. Mei, F.F. Zhang and M.J. Zhang, "Learn to optimise for job shop scheduling: a survey with comparison between genetic programming and reinforcement learning"
+\textit{Artif Intell Rev}. vol. 58, 160(2025).
+
+\bibitem{ref3} C. Ngwu, Y. Liu and R. Wu, "Reinforcement learning in dynamic job shop scheduling: a comprehensive review of AI-driven approaches in modern manufacturing"
+\textit{J Intell Manuf}.(2025).
+
+\bibitem{ref4} X.R. Shao and C.S. Kim, "An Adaptive Job Shop Scheduler Using Multilevel Convolutional Neural Network and Iterative Local Search"
+\textit{IEEE Access}. vol. 10, pp. 88079-88092(2022).
+
+\bibitem{ref5} L.B. Wang, X. Hu, Y. Wang, S. Xu, S. Ma, K. Yang, Z. Liu and W. Wang, "Dynamic job-shop scheduling in smart manufacturing using deep reinforcement learning"
+\textit{Computer Networks}. vol. 190, 107937(2021).
+
+\bibitem{ref6} S. Lee, Y. Cho and Y.H. Lee, "Injection Mold Production Sustainable Scheduling Using Deep Reinforcement Learning"
+\textit{Sustainability}. vol. 12, 8718(2020).
+
+\bibitem{ref7} C. Pickardt, J. Branke, T. Hildebrandt, J. Heger and B. Scholz-Reiter, "Generating dispatching rules for semiconductor manufacturing to minimize weighted tardiness"
+\textit{Proceedings of the 2010 Winter Simulation Conference}.Baltimore, MD, USA, pp. 2504-2515(2010).
+
+\bibitem{ref8} 村山 昇,川田 誠一, "遺伝的アルゴリズムを用いた加工機械と複積載AGVの同時スケジューリング"
+\textit{日本機械学会論文集(C編)}. vol. 12, 712, pp. 3638-3643(2005-12).
+
+\bibitem{ref9} B. Yu, Z. Hui, Z. Xin, C. Zheng, J. Riku, Y. Kun, "Toward Autonomous Multi-UAV Wireless Network: A Survey of Reinforcement Learning-Based Approaches"
+\textit{IEEE COMMUNICATIONS SURVEYS AND TUTORIALS}. vol. 25, No. 4, FOURTH QUARTER 2023, pp. 3038-3067(2023).
+
+\bibitem{ref10} 小野 啓介, 森川 克己, 長沢 敬祐, 高橋 勝彦, "フレキシブルジョブショップ環境の受託製造企業におけるエネルギー消費量配分問題"
+\textit{J Jpn Ind Manage Assoc}. vol. 72, pp. 179-187(2022).
+
+\bibitem{ref11} 貝原 俊也, 國領 大介, 藤井 信忠, 村上 亘, 梅田豊裕, "フレキシブルジョブショップを対象とした受注生産における機械稼働計画立案もための基礎検討"
+\textit{第63回自動制御連合講演会}. (2020).
+
+\bibitem{ref12} 貝原 俊也, 國領 大介, 藤井 信忠, 西村 翔平, "CPS型ファクトリセキュリティ実現に向けた生産スケジューリング手法に関する研究-マスカスタム生産対応フレキシブルオープンショップを対象とした検討-"
+\textit{第61回自動制御連合講演会}. (2018).
+
+\bibitem{ref13} 平沼 智之, 安田 翔也, 藤堂 健世, 谷口 茉帆, 山村 雅幸, "組合せ最適化ぬおけるベイジアン最適化アルゴリズムを組み込んだ遺伝的アルゴリズムの提案"
+\textit{The 35th Annual Conference of the Japanese Society for Artificial Intelligence}. (2021).
+
+\bibitem{ref14} 三神 賢雅, 伊原 滉也, 佐久間 拓人 , 加藤 昇平, "混合整数最適化に基づく生産ライン作業スケジュール生成システムの開発"
+\textit{The 36th Annual Conference of the Japanese Society for Artificial Intelligence}. (2022).
+
+\bibitem{ref15} 蘭 嘉, 田中 瑛理, 佐々木 優 , 森江 翔, 有馬 澄佳, "複数種のリソースを共用する多品種生産システムの分散協調スケジューリング-自動車部品後補充生産への適用-"
+\textit{日本経営工学会論文誌}. vol. 72, No.1, pp. 75-87(2021).
+
+\bibitem{ref16} G.Y. Shi, H. IIMA, N. Sannomiya, "A New Encodnig Scheme for Solving Job Shop Problems by Genetic Algorithm"
+\textit{Conference on Decision and Control}. (1996).
+
+\bibitem{ref17} UMIT BILGE, GUNDUZ ULUSOY, "A TIME WINDOW APPROACH TO SIMULTANEOUS SCHEDULING OF MACHINES AND MATERIAL HANDLING SYSTEM IN AN FMS"
+\textit{Operations Research}.vol. 43, No.6, (1995).
+
+\bibitem{ref18} 花田 良子, 廣安 知之, 三木 光範, "遺伝的アルゴリズムによる工場の生産スケジュールの自動生成"
+\textit{THE SCIENCE AND ENGINEERING REVIEW OF DOSHISHA UNIVERSITY}.vol. 48, No.4, pp.241-248, (2008).
+
+\bibitem{ref19} 平中 雄一朗, 西 竜志, 乾口 雅弘, "ラグランジュ緩和とカット生成による生産工程と複数台搬送車の同時スケジューリング問題に対する分解法"
+\textit{システム制御情報学会論文誌}.vol. 20, No.12, pp.465-474, (2007).
+
+\bibitem{ref20} Raghda B. Taha, Amin K. El-Kharbotly, Yomna M. Sadek, Nahid H. Afia, "A Genetic Algorithm for solving two-sided assembly line balancing problems"
+\textit{Ain Shams Engineering Journal}.vol. 2, pp.227-240, (2011).
+
+\bibitem{ref21} Kazi Shah Nawaz Ripon, N. H. Siddique, Jim Torresen, "Improved precedence preservation crossover for multi-objective job shop scheduling problem"
+\textit{Evolving Systems}.vol. 2, pp.119-129, (2011).
+
+\bibitem{ref22} Andrzej Kiernich, Jerzy Kalenik, Wojciech Steplewski, Marek Koscielski and Aneta Chołaj, "Impact of Particular Stages of the Manufacturing Process on the Reliability of Flexible Printed Circuits"
+\textit{Sensors}.25, 140, (2025).
+
+\bibitem{ref_mnih2015} V. Mnih, K. Kavukcuoglu, D. Silver \textit{et al.},"Human-level control through deep reinforcement learning",
+\textit{Nature}, vol. 518, no. 7540, pp. 529-533 (2015).
+
+\bibitem{ref_sutton2018} R.S. Sutton and A.G. Barto,
+\textit{Reinforcement Learning: An Introduction}, 2nd ed., MIT Press, Cambridge, MA (2018).
+
+\bibitem{ref_nazari2018} M. Nazari, A. Oroojlooy, L. Snyder and M. Tak{\'a}{\v{c}},"Reinforcement learning for solving the vehicle routing problem",
+\textit{arXiv preprint}, arXiv:1802.04240 (2018).
+
+\bibitem{ref_zhang2020} C. Zhang, W. Song, Z. Cao \textit{et al.},"Learning to dispatch for job shop scheduling via deep reinforcement learning",
+in \textit{Advances in Neural Information Processing Systems} (NeurIPS) (2020).
+
+\bibitem{ref_silver2017}D. Silver, J. Schrittwieser, K. Simonyan \textit{et al.},"Mastering the game of Go without human knowledge",
+\textit{Nature}, vol. 550, pp. 354-359 (2017).
+
+\bibitem{ref_tsitsiklis1997} J.N. Tsitsiklis and B. Van Roy,"An analysis of temporal-difference learning with function approximation",
+\textit{IEEE Transactions on Automatic Control}, vol. 42, no. 5, pp. 674--690 (1997).
+
+\bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン,2022.
+
+\bibitem{book2} 野寺 隆志, 『楽々LATEX』,共立出版株式会社,1996.
+
+\bibitem{book3} 飯塚 修平, 『ウェブ最適化ではじめる機械学習』,オライリー・ジャパン,2020.
+
+\bibitem{book4} 矢沢 久雄, 『基本情報技術者 らくらく突破 Python』,技術評論社,2021.
+
+\bibitem{book5} 伊藤 多一,今津 儀充,須藤 広大,など 『現場で使える! Python 深層強化学習入門 - 強化学習と深層学習による探索と制御』,株式会社翔泳社,2025.
+
+\bibitem{book6} Kirill Bobrov, 『なっとく！並列処理プログラミング』,株式会社翔泳社,2025.
+
+\bibitem{book7} 平井 有三, 『はじめてのパターン認識』,森北出版株式会社,2023.
+
+\bibitem{book8} 大用 倉智,山田 孝子,『作りながら丁寧に学ぶ Pythonプログラミング入門』,関西学院大学出版会,2022.
+
+\end{thebibliography}
+
+\end{document}
