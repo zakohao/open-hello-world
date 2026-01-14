@@ -24,7 +24,7 @@ else:
 EPISODES = 500
 GAMMA = 0.95           # 越接近1表示越重视长期回报
 LR = 0.0005            # 较小的学习率使训练更稳定但收敛较慢
-EPSILON_DECAY = 0.98 # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
+EPSILON_DECAY = 0.9995 # 控制从探索(随机选择)到利用(选择最优动作)的过渡速度
 MIN_EPSILON = 0.01     # 最小探索率 越大越随机选择，越小越选择当前最适
 BATCH_SIZE = 64       # 固定批量大小
 MEMORY_SIZE = 100000   # 存储(state, action, reward, next_state)经验元组的个数
@@ -633,75 +633,82 @@ def evaluate_model_on_datasets(model, datasets, device):
 
 
 def plot_evaluation_results(evaluation_results, episode_losses, hyperparams):
-    if not evaluation_results and not episode_losses:
-        print("没有评估结果或loss值可绘制")
-        return
-        
-    # 创建2×2子图
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    ax_tl = axes[0, 0]  # 左上：平均makespan
-    ax_tr = axes[0, 1]  # 右上：平均总reward
-    ax_bl = axes[1, 0]  # 左下：loss
-    ax_br = axes[1, 1]  # 右下：超参数文本
-    
-    # 左上：评估结果（平均makespan）
-    if evaluation_results:
-        # evaluation_results: [(episode, avg_makespan, avg_reward), ...]
-        episodes, makespans, rewards = zip(*evaluation_results)
-        
-        ax_tl.plot(episodes, makespans, linewidth=2, marker='o', markersize=4, label='Average Makespan')
-        ax_tl.set_xlabel('Episode')
-        ax_tl.set_ylabel('Average Makespan')
-        ax_tl.set_title('Evaluation on Fixed Jobsets: Makespan')
-        ax_tl.grid(True, alpha=0.3)
-        ax_tl.legend()
-    
-    # 右上：平均总reward
-        ax_tr.plot(episodes, rewards, linewidth=2, marker='^', markersize=4, label='Average Total Reward')
-        ax_tr.set_xlabel('Episode')
-        ax_tr.set_ylabel('Average Total Reward')
-        ax_tr.set_title('Evaluation on Fixed Jobsets: Total Reward')
-        ax_tr.grid(True, alpha=0.3)
-        ax_tr.legend()
-    else:
-        ax_tl.set_visible(False)
-        ax_tr.set_visible(False)
+    import numpy as np
+    import matplotlib.pyplot as plt
 
-    # 左下：loss曲线 
+    # ===== 全局字体放大（两张图都生效）=====
+    plt.rcParams.update({
+        'font.size': 18,
+        'axes.titlesize': 22,
+        'axes.labelsize': 20,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'legend.fontsize': 18
+    })
+
+    # =========================
+    # Figure 1: Evaluation (Makespan) 单独保存
+    # =========================
+    if evaluation_results:
+        episodes, makespans, rewards = zip(*evaluation_results)
+
+        fig1, ax1 = plt.subplots(figsize=(12, 7))
+        ax1.plot(episodes, makespans, linewidth=2.5, marker='o', markersize=6, label='Average Makespan')
+        ax1.set_xlabel('Episode')
+        ax1.set_ylabel('Average Makespan')
+        ax1.set_title('Evaluation on Fixed Jobsets: Average Makespan')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(loc='best')
+
+        fig1.tight_layout()
+        fig1.savefig('eval_makespan_curve.png', dpi=300, bbox_inches='tight')
+        plt.show()
+
+        print("已保存: eval_makespan_curve.png")
+    else:
+        print("没有 evaluation_results，跳过 makespan 曲线绘制")
+
+    # =========================
+    # Figure 2: Loss 曲线 + 右上角超参数文本（不挡 legend）
+    # =========================
     if episode_losses:
         episodes_loss, losses = zip(*episode_losses)
-        ax_bl.plot(episodes_loss, losses, 'r-', linewidth=2, markersize=3, label='Loss')
-        ax_bl.set_xlabel('Episode')
-        ax_bl.set_ylabel('Loss')
-        ax_bl.set_yscale('log')  # 使用对数坐标，因为loss值可能变化很大
-        ax_bl.set_title('Training Loss')
-        ax_bl.grid(True, alpha=0.3)
-        
-        if losses:
-            avg_loss = np.mean(losses)
-            ax_bl.axhline(y=avg_loss, linestyle='--', alpha=0.7, 
-                          label=f'Average Loss: {avg_loss:.4f}')
-        ax_bl.legend()
+        losses = np.array(losses, dtype=float)
+        avg_loss = float(np.mean(losses)) if len(losses) else None
+
+        fig2, ax2 = plt.subplots(figsize=(12, 7))
+
+        ax2.plot(episodes_loss, losses, linewidth=2.5, label='Loss')
+        ax2.set_xlabel('Episode')
+        ax2.set_ylabel('Loss')
+        ax2.set_yscale('log')
+        ax2.set_title('Training Loss (log scale)')
+        ax2.grid(True, alpha=0.3)
+
+        if avg_loss is not None:
+            ax2.axhline(y=avg_loss, linestyle='--', alpha=0.8, label=f'Average Loss: {avg_loss:.4f}')
+
+        # ✅ Legend 放左上角，避免被右上角超参数遮挡
+        ax2.legend(loc='upper left')
+
+        # ✅ 超参数文本放右上角，且留出 legend 空间
+        hyperparam_text = "\n".join([f"{k}: {v}" for k, v in hyperparams.items()])
+        ax2.text(
+            0.98, 0.98, hyperparam_text,
+            transform=ax2.transAxes,
+            ha='right', va='top',
+            fontsize=14,  # 文本略小一点，避免太占地方（你也可以调到 16）
+            bbox=dict(boxstyle="round,pad=0.5", facecolor="white", alpha=0.85, edgecolor="gray")
+        )
+
+        fig2.tight_layout()
+        fig2.savefig('training_loss_curve.png', dpi=300, bbox_inches='tight')
+        plt.show()
+
+        print("已保存: training_loss_curve.png")
     else:
-        ax_bl.set_visible(False)
-    
-    # 右下：超参数文本
-    ax_br.axis('off')  
-    hyperparam_text = "\n".join([f"{key}: {value}" for key, value in hyperparams.items()])
-    ax_br.text(
-        0.02, 0.98, hyperparam_text,
-        fontsize=9,
-        va='top', ha='left',
-        transform=ax_br.transAxes,
-        bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7)
-    )
-    ax_br.set_title('Hyperparameters', pad=10)
-    
-    plt.tight_layout()
-    plt.savefig('training_results.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    
-    print(f"训练结果图已保存为 'training_results.png'")
+        print("没有 episode_losses，跳过 loss 曲线绘制")
+
 
 
 def train_target(training_datasets):

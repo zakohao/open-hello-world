@@ -615,78 +615,115 @@ def evaluate_model_on_datasets(model, datasets, device):
     
     return avg_makespan, avg_reward
 
-
 def plot_evaluation_results(evaluation_results, episode_losses, hyperparams):
+    import numpy as np
+    import matplotlib.pyplot as plt
+
     if not evaluation_results and not episode_losses:
         print("没有评估结果或loss值可绘制")
         return
-        
-    # 创建2×2子图
-    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
-    ax_tl = axes[0, 0]  # 左上：平均makespan
-    ax_tr = axes[0, 1]  # 右上：平均总reward
-    ax_bl = axes[1, 0]  # 左下：loss
-    ax_br = axes[1, 1]  # 右下：超参数文本
-    
-    # 左上：评估结果（平均makespan）
-    if evaluation_results:
-        # evaluation_results: [(episode, avg_makespan, avg_reward), ...]
-        episodes, makespans, rewards = zip(*evaluation_results)
-        
-        ax_tl.plot(episodes, makespans, linewidth=2, marker='o', markersize=4, label='Average Makespan')
-        ax_tl.set_xlabel('Episode')
-        ax_tl.set_ylabel('Average Makespan')
-        ax_tl.set_title('Evaluation on Fixed Jobsets: Makespan')
-        ax_tl.grid(True, alpha=0.3)
-        ax_tl.legend()
-    
-    # 右上：平均总reward
-        ax_tr.plot(episodes, rewards, linewidth=2, marker='^', markersize=4, label='Average Total Reward')
-        ax_tr.set_xlabel('Episode')
-        ax_tr.set_ylabel('Average Total Reward')
-        ax_tr.set_title('Evaluation on Fixed Jobsets: Total Reward')
-        ax_tr.grid(True, alpha=0.3)
-        ax_tr.legend()
-    else:
-        ax_tl.set_visible(False)
-        ax_tr.set_visible(False)
 
-    # 左下：loss曲线 
+    # ===== 全局字体放大 =====
+    plt.rcParams.update({
+        'font.size': 18,
+        'axes.titlesize': 22,
+        'axes.labelsize': 20,
+        'xtick.labelsize': 18,
+        'ytick.labelsize': 18,
+        'legend.fontsize': 18
+    })
+
+    # ==========================================================
+    # 图1：平均 Makespan
+    # ==========================================================
+    if evaluation_results:
+        episodes, makespans, rewards = zip(*evaluation_results)
+
+        fig1, ax1 = plt.subplots(figsize=(12, 7))
+        ax1.plot(episodes, makespans, linewidth=2.5, marker='o', markersize=6, label='Average Makespan')
+        ax1.set_xlabel('Episode')
+        ax1.set_ylabel('Average Makespan')
+        ax1.set_title('Evaluation on Fixed Jobsets: Makespan')
+        ax1.grid(True, alpha=0.3)
+        ax1.legend(loc='best')
+
+        fig1.tight_layout()
+        fig1.savefig('eval_makespan.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        print("已保存: eval_makespan.png")
+    else:
+        print("没有 evaluation_results，跳过平均 makespan 图")
+
+    # ==========================================================
+    # 图2：Loss
+    # ==========================================================
     if episode_losses:
         episodes_loss, losses = zip(*episode_losses)
-        ax_bl.plot(episodes_loss, losses, 'r-', linewidth=2, markersize=3, label='Loss')
-        ax_bl.set_xlabel('Episode')
-        ax_bl.set_ylabel('Loss')
-        ax_bl.set_yscale('log')  # 使用对数坐标，因为loss值可能变化很大
-        ax_bl.set_title('Training Loss')
-        ax_bl.grid(True, alpha=0.3)
-        
-        if losses:
-            avg_loss = np.mean(losses)
-            ax_bl.axhline(y=avg_loss, linestyle='--', alpha=0.7, 
-                          label=f'Average Loss: {avg_loss:.4f}')
-        ax_bl.legend()
-    else:
-        ax_bl.set_visible(False)
-    
-    # 右下：超参数文本
-    ax_br.axis('off')  
-    hyperparam_text = "\n".join([f"{key}: {value}" for key, value in hyperparams.items()])
-    ax_br.text(
-        0.02, 0.98, hyperparam_text,
-        fontsize=9,
-        va='top', ha='left',
-        transform=ax_br.transAxes,
-        bbox=dict(boxstyle="round,pad=0.5", facecolor="lightgray", alpha=0.7)
-    )
-    ax_br.set_title('Hyperparameters', pad=10)
-    
-    plt.tight_layout()
-    plt.savefig('training_results.png', dpi=300, bbox_inches='tight')
-    plt.show()
-    
-    print(f"训练结果图已保存为 'training_results.png'")
+        losses = np.array(losses, dtype=float)
 
+        fig2, ax2 = plt.subplots(figsize=(12, 7))
+        ax2.plot(episodes_loss, losses, linewidth=2.5, label='Loss')
+        ax2.set_xlabel('Episode')
+        ax2.set_ylabel('Loss')
+        ax2.set_yscale('log')
+        ax2.set_title('Training Loss (log scale)')
+        ax2.grid(True, alpha=0.3)
+
+        if len(losses) > 0:
+            avg_loss = float(np.mean(losses))
+            ax2.axhline(y=avg_loss, linestyle='--', alpha=0.8,
+                        label=f'Average Loss: {avg_loss:.4f}')
+
+        # legend 放左上角，避免挡住曲线（你也可改 best）
+        ax2.legend(loc='upper left')
+
+        fig2.tight_layout()
+        fig2.savefig('training_loss.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        print("已保存: training_loss.png")
+    else:
+        print("没有 episode_losses，跳过 loss 图")
+
+    # ==========================================================
+    # 图3：Total Reward + Hyperparameters（同一画布，上图reward，下图超参数）
+    # ==========================================================
+    if evaluation_results:
+        episodes, makespans, rewards = zip(*evaluation_results)
+
+        # 两行一列：上 reward，下 超参数
+        fig3, (ax3, ax_text) = plt.subplots(
+            2, 1, figsize=(12, 9),
+            gridspec_kw={'height_ratios': [3, 1]}  # 上面更高
+        )
+
+        # --- 上：reward 曲线 ---
+        ax3.plot(episodes, rewards, linewidth=2.5, marker='^', markersize=6, label='Average Total Reward')
+        ax3.set_xlabel('Episode')
+        ax3.set_ylabel('Average Total Reward')
+        ax3.set_title('Evaluation on Fixed Jobsets: Total Reward')
+        ax3.grid(True, alpha=0.3)
+        ax3.legend(loc='best')
+
+        # --- 下：超参数文本 ---
+        ax_text.axis('off')
+        hyperparam_text = "\n".join([f"{k}: {v}" for k, v in hyperparams.items()])
+
+        # 在下方区域居左显示
+        ax_text.text(
+            0.02, 0.98, hyperparam_text,
+            fontsize=14,  # 超参数文字稍小一点（不然会挤）
+            va='top', ha='left',
+            transform=ax_text.transAxes,
+            bbox=dict(boxstyle="round,pad=0.6", facecolor="lightgray", alpha=0.75, edgecolor="gray")
+        )
+        ax_text.set_title('Hyperparameters', pad=6)
+
+        fig3.tight_layout()
+        fig3.savefig('eval_total_reward_with_hyperparams.png', dpi=300, bbox_inches='tight')
+        plt.show()
+        print("已保存: eval_total_reward_with_hyperparams.png")
+    else:
+        print("没有 evaluation_results，跳过 total reward + hyperparams 图")
 
 def train_target(training_datasets):
     if not training_datasets:
