@@ -1334,9 +1334,10 @@ $Evaluation$ は，
   スケジュール全体としての $makespan$ 短縮をどの程度重視するかを制御する.
 \end{itemize}
 
-\begin{figure}[htbp]
+\begin{figure}[t]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/wait_v3_1_graph.png}
+  \includegraphics[width=0.8\linewidth]{figures/complex_wait_v3_1_ave_makespan.png}\par
+  \includegraphics[width=0.8\linewidth]{figures/complex_wait_v3_1_loss.png}
   \caption{複合型報酬関数DQNでの実験}
   \label{fig:complex reward result}
 \end{figure}
@@ -1440,14 +1441,41 @@ $makespan$ 中心型報酬関数では，
 図\ref{fig:simple reward result}は，$makespan$ 中心型報酬関数を用いて学習を行った際の，
 エピソード数に対する平均 $makespan$ 、損失関数(loss)と平均総報酬の推移を示したものである.
 
-\begin{figure}[htbp]
+\begin{figure}[p]
+\centering
+
+\begin{subfigure}{\linewidth}
   \centering
-  \rotatebox{90}{
-    \includegraphics[width=0.8\textheight]{figures/wait_v5_2_graph.png}
-  }
-  \caption{中心型報酬関数DQNでの実験}
-  \label{fig:simple reward result}
+  \includegraphics[width=0.8\linewidth]{figures/simple_wait_v5_1_makespan.png}
+  \caption{中心型報酬関数DQNでの実験の$makespan$評価}
+  \label{fig:simple_reward_makespan}
+\end{subfigure}
+
+\vspace{1.5em}
+
+\begin{subfigure}{\linewidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/simple_wait_v5_1_loss.png}
+  \caption{中心型報酬関数DQNでの実験のloss関数}
+  \label{fig:simple_reward_loss}
+\end{subfigure}
+
+\caption{中心型報酬関数DQNでの実験}
+\label{fig:simple reward result}
 \end{figure}
+
+\begin{figure}[p]
+\ContinuedFloat
+\centering
+
+\begin{subfigure}{\linewidth}
+  \centering
+  \includegraphics[width=0.8\linewidth]{figures/simple_wait_v5_1_reward_value.png}
+  \caption{中心型報酬関数DQNでの実験の平均総報酬}
+  \label{fig:simple reward value}
+\end{subfigure}
+\end{figure}
+
 
 図\ref{fig:simple reward result}から分かるように，
 複合型報酬関数の場合とは異なり，
@@ -1889,7 +1917,7 @@ GA と比較しても極端な解を生じにくい，より安定したスケ�
 より汎用的なスケジューリングモデルの構築が望まれる.
 \clearpage
 
-section{謝辞}
+\section{謝辞}
 \clearpage
 
 \begin{thebibliography}{99}
