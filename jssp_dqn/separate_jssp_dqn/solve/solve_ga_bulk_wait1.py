@@ -13,15 +13,15 @@ from matplotlib import gridspec
 from matplotlib.patches import Patch
 
 # =========================================================
-# Global plot style (bigger fonts)
+# Global plot style (even bigger fonts)
 # =========================================================
 plt.rcParams.update({
-    "font.size": 14,
-    "axes.titlesize": 18,
-    "axes.labelsize": 16,
-    "xtick.labelsize": 13,
-    "ytick.labelsize": 13,
-    "legend.fontsize": 13,
+    "font.size": 22,
+    "axes.titlesize": 30,
+    "axes.labelsize": 26,
+    "xtick.labelsize": 22,
+    "ytick.labelsize": 22,
+    "legend.fontsize": 22,
 })
 
 # =========================================================
@@ -500,7 +500,7 @@ def ga_solve_and_schedule(machine_matrix, time_matrix,
 
 
 # =========================================================
-# Plotting: two gantts aligned + right-side legend & stats
+# Plotting: two gantts + bottom metrics/legend (unchanged content)
 # =========================================================
 def _draw_gantt_on_ax(ax, schedule, num_jobs, title, cmap, xlim_max):
     """
@@ -518,25 +518,69 @@ def _draw_gantt_on_ax(ax, schedule, num_jobs, title, cmap, xlim_max):
     machines = sorted(list(set([int(t[2]) for t in sched])))
     m2y = {m: i for i, m in enumerate(machines)}
 
+    # ✅ 让行距更大，但保持“刻度=条”的严格对齐
+    Y_GAP = 1.35
+
+    # ✅ 条更粗
+    BAR_H = 1.05
+
     buckets = defaultdict(list)
     for job, op, m, s, e in sched:
         buckets[int(m)].append((float(s), float(e - s), int(job), int(op)))
 
     for m, tasks in buckets.items():
-        y = m2y[m]
+        y = m2y[m] * Y_GAP
         tasks.sort(key=lambda x: x[0])
         for s, dur, j, op in tasks:
-            ax.barh(y, dur, left=s, height=0.7, edgecolor='black', color=cmap(j))
-            ax.text(s + dur / 2, y, f"J{j+1}-O{op+1}", ha='center', va='center', fontsize=10)
+            ax.barh(
+                y, dur,
+                left=s,
+                height=BAR_H,
+                edgecolor='black',
+                color=cmap(j)
+            )
 
-    ax.set_title(title)
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Machine")
-    ax.set_yticks(range(len(machines)))
+            # ✅ 标签更大；短条旋转避免重叠
+            if dur >= 260:
+                rot = 0
+                fs = 20
+            elif dur >= 180:
+                rot = 20
+                fs = 19
+            else:
+                rot = 60
+                fs = 18
+
+            ax.text(
+                s + dur / 2, y,
+                f"J{j+1}-O{op+1}",
+                ha='center', va='center',
+                fontsize=fs,
+                rotation=rot,
+                rotation_mode='anchor'
+            )
+
+    # ✅ 关键：刻度位置必须与 y 使用同一套 y_positions（否则就会你说的“对不上”）
+    y_positions = [i * Y_GAP for i in range(len(machines))]
+    ax.set_yticks(y_positions)
     ax.set_yticklabels([f"M{m}" for m in machines])
+
+    ax.set_title(title, pad=12)
+    ax.set_xlabel("Time", labelpad=10)
+    ax.set_ylabel("Machine", labelpad=10)
     ax.invert_yaxis()
+
+    # 让上下不贴边（但不改变对齐关系）
+    ax.margins(y=0.10)
+
     ax.set_xlim(0, xlim_max)
     ax.grid(True, linestyle='--', alpha=0.6)
+
+    # 再保险一次字体（只影响显示，不影响数据/legend）
+    ax.title.set_fontsize(30)
+    ax.xaxis.label.set_fontsize(26)
+    ax.yaxis.label.set_fontsize(26)
+    ax.tick_params(axis='both', labelsize=22)
 
 
 def plot_compare_canvas(ga_schedule, dqn_schedule,
@@ -547,19 +591,19 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
                         suptitle="GA vs DQN (JSSP)"):
     cmap = plt.colormaps.get_cmap("tab20").resampled(num_jobs)
 
-    xlim_max = max(ga_makespan, dqn_makespan) * 1.05 + 1e-6
+    xlim_max = max(ga_makespan, dqn_makespan) * 1.06 + 1e-6
 
-    fig = plt.figure(figsize=(24, 13))
+    # ✅ 画布再放大 + 两张甘特图区域更高（metrics/legend 不动）
+    fig = plt.figure(figsize=(36, 22))
     gs = gridspec.GridSpec(
-        nrows=2, ncols=2,
-        width_ratios=[4.8, 1.6],
-        height_ratios=[1, 1],
-        wspace=0.12, hspace=0.18
+        nrows=3, ncols=1,
+        height_ratios=[1.55, 1.55, 0.60],
+        hspace=0.40
     )
 
     ax_ga = fig.add_subplot(gs[0, 0])
     ax_dqn = fig.add_subplot(gs[1, 0], sharex=ax_ga)
-    ax_info = fig.add_subplot(gs[:, 1])
+    ax_info = fig.add_subplot(gs[2, 0])
     ax_info.axis("off")
 
     _draw_gantt_on_ax(
@@ -575,7 +619,8 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
 
     ratio = (dqn_makespan / ga_makespan) if ga_makespan > 0 else float("inf")
 
-    lines = [
+    # ===== 下方信息区（内容不动，只是字体更大）=====
+    metrics_lines = [
         "=== Metrics ===",
         f"GA solve time     : {ga_time_s:.2f} s",
         f"DQN solve time    : {dqn_time_s:.2f} s",
@@ -583,25 +628,30 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
         f"GA makespan       : {ga_makespan:.2f}",
         f"DQN makespan      : {dqn_makespan:.2f}",
         f"DQN / GA ratio    : {ratio:.4f}",
-        "",
-        "=== Job Color Legend ===",
     ]
 
-    ax_info.text(0.02, 0.98, "\n".join(lines), va="top", ha="left", fontsize=15)
+    ax_info.text(
+        0.02, 0.92,
+        "\n".join(metrics_lines),
+        va="top", ha="left",
+        fontsize=28
+    )
 
     patches = [Patch(facecolor=cmap(j), edgecolor='black', label=f"Job {j+1}") for j in range(num_jobs)]
     ax_info.legend(
         handles=patches,
-        loc="lower left",
-        bbox_to_anchor=(0.02, 0.02),
-        ncol=1 if num_jobs <= 12 else 2,
+        loc="upper left",
+        bbox_to_anchor=(0.55, 0.98),
+        ncol=2 if num_jobs > 10 else 1,
         frameon=True,
-        fontsize=13
+        fontsize=26,
+        title="Job Color",
+        title_fontsize=28
     )
 
-    fig.suptitle(suptitle, fontsize=20)
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.savefig(out_png, dpi=220)
+    fig.suptitle(suptitle, fontsize=34)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.savefig(out_png, dpi=260)
     plt.close(fig)
     print(f"[OK] 对比画布已保存: {out_png}")
 
@@ -610,30 +660,22 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
 # Batch main
 # =========================================================
 if __name__ == "__main__":
-    # =========================================================
-    # Batch settings (你只需要改这里)
-    # =========================================================
     FOLDER = r"D:\pysrc\wang_data\jobset\normal Printed Circuit Board\odder_mean[10],odder_std_dev[2]\lot_mean[3],lot_std_dev[1]\machine[13]\seed[3]"
-    FILE_PREFIX = r"[6]r[17]c,"  # 文件名形如: [6]r[17]c,20gene.csv
+    FILE_PREFIX = r"[6]r[17]c,"
     GENE_START = 0
-    GENE_END = 120              # ✅ 你要改范围就改这里（包含端点）
+    GENE_END = 120
 
-    # ✅ 这里换成你要载入的 wait_1.pth
     MODEL_PATH = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_1.pth"
 
-    OUT_DIR = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\gantt_chart\complex_dqn_ga"
+    OUT_DIR = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\gantt_chart\complex_dqn_ga_1"
     os.makedirs(OUT_DIR, exist_ok=True)
 
-    # GA 超参数（不动）
     GA_PARAMS = dict(
         POP_SIZE=100, MAX_GEN=200, CX_PROB=0.8, MUT_PROB=0.1,
         ELITE_SIZE=2, TOURNAMENT_SIZE=5,
         seed=0
     )
 
-    # =========================================================
-    # Batch run
-    # =========================================================
     print(f"[Batch] gene range: {GENE_START}..{GENE_END}")
     print(f"[Batch] input folder: {FOLDER}")
     print(f"[Batch] output dir  : {OUT_DIR}")
@@ -656,7 +698,6 @@ if __name__ == "__main__":
         print(f"[RUN] gene={gene} file={csv_name}")
 
         try:
-            # 1) Load problem
             ma, pt = load_single_csv(problem_file)
             if ma is None or pt is None:
                 print(f"[FAIL] load failed: {csv_name}")
@@ -665,17 +706,14 @@ if __name__ == "__main__":
 
             num_jobs = ma.shape[0]
 
-            # 2) GA solve (unchanged)
             ga_sched, ga_ms, ga_t = ga_solve_and_schedule(ma, pt, **GA_PARAMS)
 
-            # 3) DQN solve (wait_1 style)
             dqn_sched, dqn_ms, dqn_t = solve_with_trained_model(
                 ma, pt,
                 model_path=MODEL_PATH,
                 max_steps_factor=200
             )
 
-            # 4) Save compare canvas
             out_png = os.path.join(OUT_DIR, f"{gene}_ga_vs_wait_1.png")
             plot_compare_canvas(
                 ga_sched, dqn_sched,

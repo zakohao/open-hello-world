@@ -654,25 +654,62 @@ def _draw_gantt_on_ax(ax, schedule, num_jobs, title, cmap, xlim_max):
     machines = sorted(list(set([int(t[2]) for t in sched])))
     m2y = {m: i for i, m in enumerate(machines)}
 
+    # ✅ 更大行距 + 更粗条（但刻度与条严格同一套 y_positions）
+    Y_GAP = 1.35
+    BAR_H = 1.05
+
     buckets = defaultdict(list)
     for job, op, m, s, e in sched:
         buckets[int(m)].append((float(s), float(e - s), int(job), int(op)))
 
     for m, tasks in buckets.items():
-        y = m2y[m]
+        y = m2y[m] * Y_GAP
         tasks.sort(key=lambda x: x[0])
         for s, dur, j, op in tasks:
-            ax.barh(y, dur, left=s, height=0.6, edgecolor='black', color=cmap(j))
-            ax.text(s + dur / 2, y, f"J{j+1}-O{op+1}", ha='center', va='center', fontsize=8)
+            ax.barh(
+                y, dur,
+                left=s,
+                height=BAR_H,
+                edgecolor='black',
+                color=cmap(j)
+            )
 
-    ax.set_title(title)
-    ax.set_xlabel("Time")
-    ax.set_ylabel("Machine")
-    ax.set_yticks(range(len(machines)))
+            # ✅ 标签更大；短条旋转避免堆叠
+            if dur >= 260:
+                rot, fs = 0, 20
+            elif dur >= 180:
+                rot, fs = 20, 19
+            else:
+                rot, fs = 60, 18
+
+            ax.text(
+                s + dur / 2, y,
+                f"J{j+1}-O{op+1}",
+                ha='center', va='center',
+                fontsize=fs,
+                rotation=rot,
+                rotation_mode='anchor'
+            )
+
+    # ✅ 关键：刻度位置必须与 y 同步（否则就会“对不上”）
+    y_positions = [i * Y_GAP for i in range(len(machines))]
+    ax.set_yticks(y_positions)
     ax.set_yticklabels([f"M{m}" for m in machines])
+
+    ax.set_title(title, pad=12)
+    ax.set_xlabel("Time", labelpad=10)
+    ax.set_ylabel("Machine", labelpad=10)
     ax.invert_yaxis()
+
+    ax.margins(y=0.10)
     ax.set_xlim(0, xlim_max)
     ax.grid(True, linestyle='--', alpha=0.6)
+
+    # 再保险一次字体（只影响显示，不影响数据/legend）
+    ax.title.set_fontsize(30)
+    ax.xaxis.label.set_fontsize(26)
+    ax.yaxis.label.set_fontsize(26)
+    ax.tick_params(axis='both', labelsize=22)
 
 
 def plot_compare_canvas(ga_schedule, dqn_schedule,
@@ -684,19 +721,22 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
     cmap = plt.colormaps.get_cmap("tab20").resampled(num_jobs)
 
     # align x-axis
-    xlim_max = max(ga_makespan, dqn_makespan) * 1.05 + 1e-6
+    xlim_max = max(ga_makespan, dqn_makespan) * 1.06 + 1e-6
 
-    fig = plt.figure(figsize=(22, 12))
+    # ✅ 新布局：3行1列
+    # 0: GA甘特图
+    # 1: DQN甘特图
+    # 2: metrics + legend（放在最下方）
+    fig = plt.figure(figsize=(36, 22))
     gs = gridspec.GridSpec(
-        nrows=2, ncols=2,
-        width_ratios=[4.8, 1.6],
-        height_ratios=[1, 1],
-        wspace=0.12, hspace=0.18
+        nrows=3, ncols=1,
+        height_ratios=[1.55, 1.55, 0.60],
+        hspace=0.40
     )
 
     ax_ga = fig.add_subplot(gs[0, 0])
     ax_dqn = fig.add_subplot(gs[1, 0], sharex=ax_ga)
-    ax_info = fig.add_subplot(gs[:, 1])
+    ax_info = fig.add_subplot(gs[2, 0])
     ax_info.axis("off")
 
     _draw_gantt_on_ax(
@@ -710,10 +750,17 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
         cmap=cmap, xlim_max=xlim_max
     )
 
-    # right panel: metrics + legend
+    # ✅ 放大 GA/DQN 两张图的标题、轴标签、tick 字体
+    for ax in [ax_ga, ax_dqn]:
+        ax.title.set_fontsize(24)
+        ax.xaxis.label.set_fontsize(20)
+        ax.yaxis.label.set_fontsize(20)
+        ax.tick_params(axis='both', labelsize=18)
+
+    # ===== 下方信息区：左 metrics + 右 legend =====
     ratio = (dqn_makespan / ga_makespan) if ga_makespan > 0 else float("inf")
 
-    lines = [
+    metrics_lines = [
         "=== Metrics ===",
         f"GA solve time     : {ga_time_s:.2f} s",
         f"DQN solve time    : {dqn_time_s:.2f} s",
@@ -721,28 +768,35 @@ def plot_compare_canvas(ga_schedule, dqn_schedule,
         f"GA makespan       : {ga_makespan:.2f}",
         f"DQN makespan      : {dqn_makespan:.2f}",
         f"DQN / GA ratio    : {ratio:.4f}",
-        "",
-        "=== Job Color Legend ===",
     ]
 
-    ax_info.text(0.02, 0.98, "\n".join(lines), va="top", ha="left", fontsize=12)
+    # 左侧：metrics
+    ax_info.text(
+        0.02, 0.92,
+        "\n".join(metrics_lines),
+        va="top", ha="left",
+        fontsize=28
+    )
 
-    # legend patches (use same cmap as gantts)
+    # 右侧：legend
     patches = [Patch(facecolor=cmap(j), edgecolor='black', label=f"Job {j+1}") for j in range(num_jobs)]
     ax_info.legend(
         handles=patches,
-        loc="lower left",
-        bbox_to_anchor=(0.02, 0.02),
-        ncol=1 if num_jobs <= 12 else 2,
+        loc="upper left",
+        bbox_to_anchor=(0.52, 0.98),  # 右半区
+        ncol=2 if num_jobs >= 10 else 1,
         frameon=True,
-        fontsize=10
+        fontsize=26,
+        title="Job Color",
+        title_fontsize=28
     )
 
-    fig.suptitle(suptitle, fontsize=16)
-    plt.tight_layout(rect=[0, 0, 1, 0.96])
-    plt.savefig(out_png, dpi=220)
+    fig.suptitle(suptitle, fontsize=34)
+    plt.tight_layout(rect=[0, 0, 1, 0.95])
+    plt.savefig(out_png, dpi=260)
     plt.close(fig)
     print(f"[OK] 对比画布已保存: {out_png}")
+
 
 if __name__ == "__main__":
     # =========================================================
@@ -754,7 +808,7 @@ if __name__ == "__main__":
     GENE_END = 120              # ✅ 你要改范围就改这里（包含端点）
 
     MODEL_PATH = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\model\wait_v5_1.pth"
-    OUT_DIR = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\gantt_chart\dqn_ga"
+    OUT_DIR = r"D:\vscode\open-hello-world\jssp_dqn\separate_jssp_dqn\gantt_chart\simple_dqn_ga_1"
     os.makedirs(OUT_DIR, exist_ok=True)
 
     # GA 超参数（需要的话你也可以在这里改）
