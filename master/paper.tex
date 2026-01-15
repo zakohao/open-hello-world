@@ -143,7 +143,7 @@ JSSPは、複数のジョブを限られた機械に割り当て、全体の処�
 実際に、近年の研究ではこの流れを反映した多様なアプローチが報告されている。
 K.T. Chungら\cite{ref1}は現在工業5.0の時代に向けて、機械学習、特に強化学習を用いて、CO(combinatorial optimization)問題を解決しようについて、現在の研究進展を述べた。
 M. Xuら\cite{ref2}は遺伝的プログラミングと強化学習を統合的に整理・比較しはJSSPスケジュール最適化問題ににおいて果たす役割と近年の研究動向を明らかにした。
-C. Ngwuら\cite{ref3}は動的なJSSP問題は強化学習や進化的ヒューリスティック、機械学習を用いた手法でリアルタイムな意思決定は可能であることを示しました。
+C. Ngwuら\cite{ref3}は動的なJSSP問題は強化学習や進化的ヒューリスティック、機械学習を用いた手法でリアルタイムな意思決定は可能であることを示した。
 X.R. Shaoら\cite{ref4}は小規模かつ短時間のJSSP問題に対して、多層畳み込みニューラルネットワーク(ML-CNN)と反復局所探索(ILS)を組み合わせ、ML-CNNで全体経路を学習し、ILSで最適な局所経路を探索する手法が提案した。
 L.B. Wangら\cite{ref5}は機械故障や再作業などの動的な環境でのJSSP問題につい深層強化学習(DRL)を用いた動的スケジューリング手法が提案され、PPOにより最適な方策を学習することで、リアルタイムな生産スケジューリングが可能であることが示された。
 S. Leeら\cite{ref6}は射出成形金型製造プロセスにおいて、Deep Q-Networkを活用することで従来より総加重遅延を低減できる金型生産スケジューリングを最適化した。
@@ -590,7 +590,7 @@ V
 
 \begin{figure}[htbp]
   \centering
-  \includegraphics[width=0.8\linewidth]{figures/order_type.png}
+  \includegraphics[width=0.7\linewidth]{figures/order_type.png}
   \caption{データ分類}
   \label{fig:order type}
 \end{figure}
@@ -1569,12 +1569,12 @@ GAによって得られた解とを比較し,
 $makespan$およびスケジューリング構造の観点から，
 両手法の性能差について詳細に検討する.
 
-前章に述べた3タイプの注文(小、並、大)ごとに対して,
-複合型報酬関数でのDQNと中心型報酬関数でのDQN両方をGAと比較する.
-複合型報酬関数でのDQNで得られた解はほどんどGAに超えられないので,
-3タイプの注文ごとにそれぞれGAと比べて近い例(比率1.3ぐらい)、離れた例(比率1.5ぐらい)とだいぶ離れた例(比率1.8ぐらい)を示す.
-中心型報酬関数でのDQNで得られた解はGAと互角しているので、
-3タイプの注文ごとにそれぞれGAを超える例(比率0.9ぐらい)、GA相当な例(比率1ぐらい)とGAを劣る例(比率1.2ぐらい)を示す.
+前章に述べた3タイプの注文(小、中、大)ごとに対して,
+複合型報酬関数のDQNと中心型報酬関数でのDQNの両方をGAと比較する.
+複合型報酬関数のDQNからで得られた解はほどんどGAを超えられない.
+そこで,ここでは3タイプの注文ごとにそれぞれGAと比べて近い例(比率1.3ぐらい)、離れた例(比率1.5ぐらい)とだいぶ離れた例(比率1.8ぐらい)を示す.
+中心型報酬関数でのDQNで得られた解は,GAと互角であるので,
+こちらは3タイプの注文ごとにそれぞれGAを超える例(比率0.9ぐらい)、GA相当な例(比率1ぐらい)とGAを劣る例(比率1.2ぐらい)を示す.
 \clearpage
 
 \subsubsection{複合型報酬関数での実験結果}
@@ -1587,15 +1587,15 @@ $makespan$およびスケジューリング構造の観点から，
 \end{figure}
 
 以下の図\ref{fig:complex reward vs ga result 1.34(small)}から図\ref{fig:simple reward vs ga result 1.16(large)}までの図は,
-実験用データにあるジョブセットに対して,GAで得られた最適解ガントチャートとDQN(複合型報酬関数DQNと$makespan$中心型報酬関数)で得られた最適解ガントチャート
-及びGAとDQNそれぞれが結果出るかかる時間のデータが記載されている.
+実験用データにあるジョブセットに対して,GAで得られた最適解のガントチャートとDQN(複合型報酬関数DQNと$makespan$中心型報酬関数)で得られた最適解のガントチャート
+及びGAとDQNそれぞれの出力までの時間が記載する.
 縦軸は機械番号，横軸は時刻をとっている.
 
 注文のタイプごとに複合型報酬関数DQNの性能について個例を挙げると.
 
 
 図\ref{fig:complex reward vs ga result 1.34(small)}は注文(小)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.34の例.
+複合型報酬関数DQNで得られたのガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.34の例を示す.
 GAの例を観察すると,M4とM5の使い方で,QAとDQNで大きな違いがあり,
 GAは機械のアイドル時間なく使っているが,DQNはそれぞれ時間5000~7500、2200~8500に大きな空白があり,
 ジョブ6の加工工程が全部完成するまで,他のジョブ加工プロセスを選択せず.
@@ -1611,10 +1611,10 @@ GAは機械のアイドル時間なく使っているが,DQNはそれぞれ時�
 \clearpage
 
 図\ref{fig:complex reward vs ga result 1.48(small)}は注文(小)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.48の例.
-GAの例を観察すると,またジョブ6とジョブ5の取り扱うがQAとDQNで大きな違いがあり,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.48の例を示す.
+GAの例を観察すると,またジョブ6とジョブ5の取り扱いでGAとDQNで大きな違いがあり,
 ジョブ6の加工工程が全部完成するまで,他のジョブ加工プロセスを選択せず.
-ジョブ5の加工工程が全部スケジュール案の最後に配置され.
+ジョブ5の加工工程が全部スケジュール案の最後に配置され,
 機械のアイドル時間ほどんど使用しないことで$makespan$がDQNのほうが長くかかってしまった例である.
 \begin{figure}[htbp]
   \centering
@@ -1625,9 +1625,9 @@ GAの例を観察すると,またジョブ6とジョブ5の取り扱うがQAとD
 \clearpage
 
 図\ref{fig:complex reward vs ga result 1.76(small)}は注文(小)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.76の例.
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.76の例を示す.
 今回の例は,DQNのスケジュール案はジョブ5とジョブ6共にスケジュールが完成するまで,
-他のジョブの加工プロセスを一切配置しないとこで,時間を無駄,DQNの$makespan$はGAの$makespan$の二倍弱にした.
+他のジョブの加工プロセスを一切配置しないことで,時間を無駄,DQNの$makespan$はGAの$makespan$の二倍弱になった.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.76(small).png}
@@ -1636,49 +1636,49 @@ GAの例を観察すると,またジョブ6とジョブ5の取り扱うがQAとD
 \end{figure}
 \clearpage
 
-図\ref{fig:complex reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
-この例でしたら,DQNがジョブ6とジョブ5の加工工程に他のジョブ加工プロセスを配置することで,
-GAとの差を小さくした.
+図\ref{fig:complex reward vs ga result 1.2(regular)}は注文(中)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例を示す.
+この例では,DQNがジョブ6とジョブ5の加工工程に他のジョブ加工プロセスを配置することで,
+GAとの差が小さくなった.
 だが,まだ改善できるところがある.
-例えばM10以後の機械の使い方,GAはM10以後の機械をまとめて加工する.
+例えばM10以後の機械の使い方,GAはM10以後の機械をまとめて加工が,
 DQNは各加工工程の間に遊び時間を入れている.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.2(regular).png}
-  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \caption{注文(中)複合型報酬関数DQNとGAのガントチャート(比率1.2)}
   \label{fig:complex reward vs ga result 1.2(regular)}
 \end{figure}
 \clearpage
 
-図\ref{fig:complex reward vs ga result 1.5(regular)}は注文(並)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
-この例のスケジュールパターンは図\ref{fig:complex reward vs ga result 1.76(small)}で示した例と同じ,
+図\ref{fig:complex reward vs ga result 1.5(regular)}は注文(中)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例を示す.
+この例のスケジュールパターンは図\ref{fig:complex reward vs ga result 1.76(small)}で示した例と同じで
 ジョブ5とジョブ6の加工工程配置が不適切である.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.5(regular).png}
-  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
+  \caption{注文(中)複合型報酬関数DQNとGAのガントチャート(比率1.5)}
   \label{fig:complex reward vs ga result 1.5(regular)}
 \end{figure}
 \clearpage
 
-図\ref{fig:complex reward vs ga result 1.72(regular)}は注文(並)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.72の例.
-この例もは図\ref{fig:complex reward vs ga result 1.76(small)}で示した例と同じように設置されて,
-$makespan$を長伸ばした.
+図\ref{fig:complex reward vs ga result 1.72(regular)}は注文(中)タイプに対して,
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.72の例を示す.
+この例でも図\ref{fig:complex reward vs ga result 1.76(small)}で示した例と同じようにジョブ5とジョブ6が最後に回されて,
+$makespan$が伸びた.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.72(regular).png}
-  \caption{注文(並)複合型報酬関数DQNとGAのガントチャート(比率1.72)}
+  \caption{注文(中)複合型報酬関数DQNとGAのガントチャート(比率1.72)}
   \label{fig:complex reward vs ga result 1.72(regular)}
 \end{figure}
 \clearpage
 
 図\ref{fig:complex reward vs ga result 1.22(large)}は注文(大)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.22の例.
-この例でしたら,ジョブ5の中にジョブ6を入れていたが,
-ジョブ6の加工工程が全部完成するまで他のジョブの加工プロセスを入れなかった.
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.22の例を示す.
+この例でも,ジョブ5の中にジョブ6を入れていたが,
+ジョブ6の加工工程が全部完成するまで他のジョブの加工プロセスが入れなかった.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.22(large).png}
@@ -1688,8 +1688,8 @@ $makespan$を長伸ばした.
 \clearpage
 
 図\ref{fig:complex reward vs ga result 1.5(large)}は注文(大)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例.
-この例も先の図\ref{fig:complex reward vs ga result 1.72(regular)}同じのパータンでよくスケジュールできなかった.
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.5の例を示す.
+この例も先の図\ref{fig:complex reward vs ga result 1.72(regular)}と同様にうまくスケジュールできなかった.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/complex_1.5(large).png}
@@ -1699,7 +1699,7 @@ $makespan$を長伸ばした.
 \clearpage
 
 図\ref{fig:complex reward vs ga result 1.71(large)}は注文(大)タイプに対して,
-複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.71の例.
+複合型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.71の例を示す.
 最後の複合型報酬関数DQNとGAのガントチャートの例も,ジョブ5とジョブ6を除いて,隙間なく仕事しているが,
 ジョブ6とジョブ5で時間を無駄遣いした.
 \begin{figure}[htbp]
@@ -1710,26 +1710,26 @@ $makespan$を長伸ばした.
 \end{figure}
 \clearpage
 
-図群に示す複合型報酬関数を用いた DQN のスケジューリング結果では，
-GA により得られた解と比較して$makespan$ が大きく悪化することが確認された.
-特に，工序数が多い Job5 および Job6 に処理が集中し，
-他ジョブの実行可能な工序が十分に挿入されないスケジュール構造が共通して観測される.
+以上の図に示した複合型報酬関数を用いた DQN のスケジューリング結果では，
+GA により得られた解と比較して$makespan$ が大きく悪化する例が確認された.
+特に，工序数が多い Job5 および Job6 で処理が集中し，
+他ジョブの実行可能なスケジューリングが十分に割り込めないスケジュール課題が共通して観測された.
 
 この要因の一つとして，
 本研究で設計した複合型報酬関数における即時報酬と将来報酬の相対的な影響の偏りが挙げられる.
-本環境では，残作業量が最大のジョブを優先する項が強く作用しており，
+本環境では，残り作業量が最大のジョブを優先する項が強く作用しており，
 Job5 および Job6 を連続的に選択する行動系列は，
 将来の報酬を含めた行動価値として高く評価されやすい.
 その結果，ある時点で Job5 または Job6 を選択した後は，
-同一ジョブを継続して処理する行動が高い将来報酬を見込める選択として学習される.
+同一ジョブを継続して処理する行動が高い将来報酬を見込める選択として学習されてしまったと考えられる.
 
 一方で，空き機械を利用して他ジョブの工序を挿入する行動は，
 その時点で得られる即時報酬が比較的小さい.
 たとえ長期的には待ち時間の削減や$makespan$ の短縮に寄与する可能性があったとしても，
 当該行動に対する即時報酬が，
-直前まで選択されていた Job5 または Job6 の継続処理によって期待される将来報酬を上回らない場合,DQN はこれを選択しにくい.
+直前まで選択されていた Job5 または Job6 の継続処理によって期待される将来報酬を上回らない場合, DQN はこれを選択しにくい.
 すなわち，「他ジョブを挿入する」という行動は，即時報酬の観点から不利であるだけでなく，
-既に形成された行動系列に基づく将来報酬と比較しても行動価値が低く評価される傾向にある.
+既に形成された行動系列に基づく将来報酬と比較しても行動価値が低く評価される傾向にあった.
 
 このように，即時報酬が小さいが長期的には有効な行動と，即時および将来報酬の両面で高く評価されやすい行動との間で
 報酬構造に非対称性が存在する場合，エージェントは後者に過度に依存した方策を学習しやすい.
@@ -1737,7 +1737,7 @@ Job5 および Job6 を連続的に選択する行動系列は，
 GA が実現している空き時間活用型のスケジューリングと比較して$makespan$ が悪化したものと考えられる.
 
 \subsubsection{$makespan$中心型報酬関数での実験結果}
-訓練済みモデルで実験用データである120個ジョブセットに対して,得られた$makespan$は図\ref{fig:simple reward dqn result}に示す.
+訓練済みモデルで実験用データである120個ジョブセットに対して,得られた$makespan$を図\ref{fig:simple reward dqn result}に示す.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_dqn_result.png}
@@ -1745,10 +1745,9 @@ GA が実現している空き時間活用型のスケジューリングと比�
   \label{fig:simple reward dqn result}
 \end{figure}
 
-注文のタイプごとに$makespan$中心型報酬関数DQNの性能について個例を挙げると.
-
+注文のタイプごとに$makespan$中心型報酬関数DQNの性能について個例を挙げると,
 図\ref{fig:simple reward vs ga result 0.95(small)}は注文(小)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.95の例.
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.95の例を示す.
 $makespan$中心型報酬関数DQN最初の例から,複合型報酬関数DQNで得られたガントチャートのスケジュール案と比べて,
 隙間なく加工プロセスを配置できました.
 複合型報酬関数DQNが苦手なジョブ5とジョブ6についても,上手く他の加工プロセスを入れることで,
@@ -1762,7 +1761,7 @@ GAにより短い$makespan$のスケジュール案を得られました.
 \clearpage
 
 図\ref{fig:simple reward vs ga result 0.99(small)}は注文(小)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例を示す.
 この例も$makespan$中心型報酬関数DQNがほんの少し優れた例である.
 全対の加工プロセスが配置された形とすると,GAとDQNがほぼ同じ方策で配置している.
 \begin{figure}[htbp]
@@ -1774,7 +1773,7 @@ $makespan$中心型報酬関数DQNで得られたガントチャートの$makesp
 \clearpage
 
 図\ref{fig:simple reward vs ga result 1.24(small)}は注文(小)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.24の例.
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.24の例を示す.
 今回挙げられた例は,DQNがGAと比べて,かなり劣るになった.
 ジョブ5とジョブ6を除いてジョブを詰めて加工し,
 ジョブ5の加工プロセスの間に少しジョブ6の加工プロセスを入れて,
@@ -1788,47 +1787,47 @@ $makespan$中心型報酬関数DQNで得られたガントチャートの$makesp
 \end{figure}
 \clearpage
 
-図\ref{fig:simple reward vs ga result 0.97(regular)}は注文(並)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.97の例.
+図\ref{fig:simple reward vs ga result 0.97(regular)}は注文(中)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.97の例を示す.
 このDQNスケジュール案は,6種類のジョブに一番短いジョブ1を真っ先に加工させ,
 GAと比べて$makespan$を短縮した.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_0.97(regular).png}
-  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.97)}
+  \caption{注文(中)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.97)}
   \label{fig:simple reward vs ga result 0.97(regular)}
 \end{figure}
 \clearpage
 
-図\ref{fig:simple reward vs ga result 0.99(regular)}は注文(並)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例.
+図\ref{fig:simple reward vs ga result 0.99(regular)}は注文(中)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.99の例を示す.
 このジョブセットに関してのGAスケジュール案とDQNスケジュール案は$makespan$の長さはほぼ同じですが,
 GAのスケジュール案はプロセスの間に十分のアイドル時間を入れ,逆にDQNの方はプロセスを詰めて集中加工傾向がある.
-これにより,GAで得られたスケジュール案の特徴はDQNと比べて,前に挙げられた例と真っ逆のパータンも確認した.
+これにより,GAで得られたスケジュール案の特徴はDQNと比べて,前に挙げられた例と真っ逆のパターンも確認した.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_0.99(regular).png}
-  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
+  \caption{注文(中)$makespan$中心型報酬関数DQNとGAのガントチャート(比率0.99)}
   \label{fig:simple reward vs ga result 0.99(regular)}
 \end{figure}
 \clearpage
 
-図\ref{fig:simple reward vs ga result 1.2(regular)}は注文(並)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例.
+図\ref{fig:simple reward vs ga result 1.2(regular)}は注文(中)タイプに対して,
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.2の例を示す.
 このジョブセットに対して,DQNで得られたスケジュール案のパターンは図\ref{fig:simple reward vs ga result 1.24(small)}とにている.
-ジョブ６の取り扱うが苦手の原因で,$makespan$を伸びた.
+ジョブ６の取り扱いを処理出来ず$makespan$が伸びた.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_1.2(regular).png}
-  \caption{注文(並)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.2)}
+  \caption{注文(中)$makespan$中心型報酬関数DQNとGAのガントチャート(比率1.2)}
   \label{fig:simple reward vs ga result 1.2(regular)}
 \end{figure}
 \clearpage
 
 図\ref{fig:simple reward vs ga result 0.94(large)}は注文(大)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.94の例.
-このジョブセットに対して,DQNで得られたスケジュール案のパターンは図\ref{fig:simple reward vs ga result 0.97(regular)}とにている.
-ジョブ1の取り扱いかたでスケジュール案を改善した.
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が0.94の例を示す.
+このジョブセットに対して,DQNで得られたスケジュール案のパターンは,図\ref{fig:simple reward vs ga result 0.97(regular)}と類似している.
+ジョブ1の取り扱いにより,でスケジュール案が改善した.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_0.94(large).png}
@@ -1838,9 +1837,9 @@ $makespan$中心型報酬関数DQNで得られたガントチャートの$makesp
 \clearpage
 
 図\ref{fig:simple reward vs ga result 1(large)}は注文(大)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1の例.
+$makespan$中心型報酬関数DQNで得られたガントチャート,$makespan$とGAで得られたガントチャートの$makespan$の比率が1の例を示す.
 このジョブセットの二つのスケジュール案は$makespan$から見るとほぼ同じ程度である.
-加工プロセスの塊は,GAの方は後で集中加工する.DQNの方は前置きに加工する方策を選択した.
+加工プロセスの塊は,GAの方は後で集中加工している.DQNでは前置きに加工する方策が選択された.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_1(large).png}
@@ -1850,10 +1849,10 @@ $makespan$中心型報酬関数DQNで得られたガントチャートの$makesp
 \clearpage
 
 図\ref{fig:simple reward vs ga result 1.16(large)}は注文(大)タイプに対して,
-$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.16の例.
-このジョブセットでDQNが得られたスケジュール案は前の比率が1.2弱の例と同じ,
-ジョブ6の加工方策は全ジョブの最後に配置し加工することを選択した.
-これにより$makespan$がGAと比べて劣れた.
+$makespan$中心型報酬関数DQNで得られたガントチャートの$makespan$とGAで得られたガントチャートの$makespan$の比率が1.16の例を示す.
+このジョブセットでDQNが得られたスケジュール案は,前の比率が1.2弱の例と同じ,
+ジョブ6の加工方策は全ジョブの最後に配置し加工することになった.
+これにより$makespan$がGAと比べて伸びた.
 \begin{figure}[htbp]
   \centering
   \includegraphics[width=1\linewidth]{figures/simple_1.16(large).png}
@@ -1862,11 +1861,11 @@ $makespan$中心型報酬関数DQNで得られたガントチャートの$makesp
 \end{figure}
 \clearpage
 
-以上に示した図より，$makespan$ 中心型報酬関数を用いた場合，
+以上から，$makespan$ 中心型報酬関数を用いた場合，
 多くの問題例においては, DQN がスケジューリング方策を適切に学習し，
 GA による解と同等，あるいはそれを上回る性能を示すことが確認された.
 これは，報酬が $C_{\max}$ の変化に直接基づいて与えられることで，
-ネットワークが調度全体の完工時間を意識した意思決定を獲得できたためであると考えられる.
+ネットワークがスケジュール全体の完工時間を評価する意思決定を獲得したため、と考えられる.
 
 図\ref{fig:makespan scatter ga connect dqn}には$makespan$を横軸，縦軸はジョブセット番号順で並べた．
 ここではジョブセットに含まれる注文の処理時間の分散を３段階で色分けし, GAとDQNの$makespan$差を示す.
@@ -1878,10 +1877,13 @@ GA による解と同等，あるいはそれを上回る性能を示すこと�
   \label{fig:makespan scatter ga connect dqn}
 \end{figure}
 
+図\ref{fig:makespan scatter ga connect dqn}からもジョブセットのばらつきが大きいときDQNはこれをうまく処理できないが,
+ジョブのサイズが比較的そろっていれば,GAに近い$makespan$を得られることがわかる.
+
 一方で，一部の問題例においては，
 加工工程数が最も多い Job6 がスケジュールの最後に集中して配置され，
 結果として $makespan$ が大きく悪化するケースも観測された.
-この挙動は，$makespan$ 中心型報酬関数における
+その理由を考えると,この挙動は，$makespan$ 中心型報酬関数における
 即時報酬と将来報酬の相対的な評価に起因すると考えられる.
 
 すなわち，
@@ -1898,9 +1900,9 @@ $makespan$ 中心型報酬関数は，
 $makespan$ の増大を招く意思決定が強化される可能性があることが示唆される.
 
 \subsection{実験考察}
-以上の実験結果より，本研究で検討した二種類の報酬関数は，
+これまでの実験結果より，本研究で検討した二種類の報酬関数は，
 いずれも DQN によるJSSPスケジューリング方策の学習に寄与する一方で,
-異なる課題を含まれていることが明らかとなった.
+異なる課題を含むことが明らかとなった.
 
 まず，複合型報酬関数を用いた場合，
 平均 $makespan$ や損失関数の推移から，
@@ -1931,33 +1933,34 @@ $makespan$ 中心型報酬関数は実用的な戦略を学習可能である一
 
 \section{今後の課題}
 本研究を通じて,DQN を用いた JSSP スケジュール最適化の有効性と課題が明らかとなった.
-これらを踏まえ，今後の課題として以下の二点が挙げられる.
+これらを踏まえると，今後の課題として以下の二点が挙げられる.
 
 第一に，
-報酬関数設計の高度化が挙げられる.
+報酬関数設計の高度化である.
 本研究では，複合型報酬関数と $makespan$ 中心型報酬関数をそれぞれ独立に検討したが，
 複合型は学習挙動が安定しているように見える一方で，多様な評価要素が同時に作用することにより報酬のノイズが増大し，
 必ずしも有効なスケジューリング方策の獲得に結びつかない場合があった.
 一方，$makespan$ 中心型報酬関数では，スケジュール方策そのものは比較的明確に学習されるものの，
 即時報酬と将来報酬のバランスが偏ることで，一部の作業を後回しにする極端な意思決定が選択される傾向が確認された.
 特に，加工工程数の多いジョブに対して，他ジョブを挿入することによる即時的な報酬改善よりも，
-過去の行動に基づく将来的報酬が過大に評価される場合，結果として総 $makespan$ を悪化させる調度が生成される可能性がある.
+過去の行動に基づく将来的報酬が過大に評価される場合，結果として総 $makespan$ を悪化させるスケジュールが生成される傾向がみられた.
 今後は，即時報酬と将来報酬の寄与度を適切に調整する仕組みや，
 学習段階に応じて報酬構造を変化させる手法を導入することで，
-GA と比較しても極端な解を生じにくい，より安定したスケジューリング方策の獲得が期待される.
+GA と比較しても極端な解を生じにくい，より安定したスケジューリング方策の獲得が期待できる.
 
 第二に，
 モデルの一般化性能の向上が課題として挙げられる.
 本研究では，製造する製品の加工工程順序をあらかじめ固定した問題設定を採用した.
-そのため，学習済みモデルは，訓練時と同一または類似した加工工程構造を持つ問題に対しては有効である一方，
-訓練時に出現しなかった加工工程順序を持つ製品に対する適応性には制限がある.
+そのため，学習済みモデルは，訓練時と同一または類似した加工工程構造を持つ問題に対しては有効である.
+一方，訓練時に出現しなかった加工工程順序を持つ製品に対する適応性には制限がある.
 今後は，加工工程順序が異なる製品を含む学習データの拡張や，
 状態表現の改良を通じて，未知の加工工程構造に対しても柔軟に対応可能な，
 より汎用的なスケジューリングモデルの構築が望まれる.
 \clearpage
 
 \section{謝辞}
-本研究を進めるにあたり，多大なるご指導とご支援を賜りました指導教員の先生に，心より感謝申し上げます．
+本研究を進めるにあたり，多大なるご指導とご支援を賜りました指導教員山田先生をはじめ，研究科の先生たち，心より感謝申し上げます．
+講義の受講やご助言を賜った工学部情報工学課程の巳波 弘佳教授、大崎 博之教授に心より感謝申し上げます．
 研究の遂行に際しては，論文執筆における日本語表現の細部に至るまで丁寧にご確認いただき，
 また，研究内容の構成や論理展開についても数多くの貴重な助言をいただきました．
 さらに，本課題を遂行する上で不可欠となる研究設備のご提供をはじめ，
@@ -1968,52 +1971,52 @@ GA と比較しても極端な解を生じにくい，より安定したスケ�
 \begin{thebibliography}{99}
 
 \bibitem{ref1} K.T. Chung, C.K.M.Lee and Y.P. Tsang, "Neural combinatorial optimization with reinforcement learning in industrial engineering: a survey"
-\textit{Artif Intell Rev}. vol. 58, 130(2025).
+\textit{Artif Intell Rev}. vol. 58, 130 (2025).
 
 \bibitem{ref2} M. Xu, Y. Mei, F.F. Zhang and M.J. Zhang, "Learn to optimise for job shop scheduling: a survey with comparison between genetic programming and reinforcement learning"
-\textit{Artif Intell Rev}. vol. 58, 160(2025).
+\textit{Artif Intell Rev}. vol. 58, 160 (2025).
 
 \bibitem{ref3} C. Ngwu, Y. Liu and R. Wu, "Reinforcement learning in dynamic job shop scheduling: a comprehensive review of AI-driven approaches in modern manufacturing"
-\textit{J Intell Manuf}.(2025).
+\textit{J Intell Manuf}. (2025).
 
 \bibitem{ref4} X.R. Shao and C.S. Kim, "An Adaptive Job Shop Scheduler Using Multilevel Convolutional Neural Network and Iterative Local Search"
-\textit{IEEE Access}. vol. 10, pp. 88079-88092(2022).
+\textit{IEEE Access}. vol. 10, pp. 88079-88092 (2022).
 
 \bibitem{ref5} L.B. Wang, X. Hu, Y. Wang, S. Xu, S. Ma, K. Yang, Z. Liu and W. Wang, "Dynamic job-shop scheduling in smart manufacturing using deep reinforcement learning"
-\textit{Computer Networks}. vol. 190, 107937(2021).
+\textit{Computer Networks}. vol. 190, 107937 (2021).
 
 \bibitem{ref6} S. Lee, Y. Cho and Y.H. Lee, "Injection Mold Production Sustainable Scheduling Using Deep Reinforcement Learning"
-\textit{Sustainability}. vol. 12, 8718(2020).
+\textit{Sustainability}. vol. 12, 8718 (2020).
 
 \bibitem{ref7} C. Pickardt, J. Branke, T. Hildebrandt, J. Heger and B. Scholz-Reiter, "Generating dispatching rules for semiconductor manufacturing to minimize weighted tardiness"
-\textit{Proceedings of the 2010 Winter Simulation Conference}.Baltimore, MD, USA, pp. 2504-2515(2010).
+\textit{Proceedings of the 2010 Winter Simulation Conference}.Baltimore, MD, USA, pp. 2504-2515 (2010).
 
 \bibitem{ref8} 村山 昇,川田 誠一, "遺伝的アルゴリズムを用いた加工機械と複積載AGVの同時スケジューリング"
-\textit{日本機械学会論文集(C編)}. vol. 12, 712, pp. 3638-3643(2005-12).
+\textit{日本機械学会論文集(C編)}. vol. 12, 712, pp. 3638-3643 (2005-12).
 
 \bibitem{ref9} B. Yu, Z. Hui, Z. Xin, C. Zheng, J. Riku, Y. Kun, "Toward Autonomous Multi-UAV Wireless Network: A Survey of Reinforcement Learning-Based Approaches"
-\textit{IEEE COMMUNICATIONS SURVEYS AND TUTORIALS}. vol. 25, No. 4, FOURTH QUARTER 2023, pp. 3038-3067(2023).
+\textit{IEEE COMMUNICATIONS SURVEYS AND TUTORIALS}. vol. 25, No. 4, FOURTH QUARTER 2023, pp. 3038-3067 (2023).
 
 \bibitem{ref10} 小野 啓介, 森川 克己, 長沢 敬祐, 高橋 勝彦, "フレキシブルジョブショップ環境の受託製造企業におけるエネルギー消費量配分問題"
-\textit{J Jpn Ind Manage Assoc}. vol. 72, pp. 179-187(2022).
+\textit{J Jpn Ind Manage Assoc}. vol. 72, pp. 179-187, (2022).
 
 \bibitem{ref11} 貝原 俊也, 國領 大介, 藤井 信忠, 村上 亘, 梅田豊裕, "フレキシブルジョブショップを対象とした受注生産における機械稼働計画立案もための基礎検討"
-\textit{第63回自動制御連合講演会}. (2020).
+\textit{第63回自動制御連合講演会}, (2020).
 
 \bibitem{ref12} 貝原 俊也, 國領 大介, 藤井 信忠, 西村 翔平, "CPS型ファクトリセキュリティ実現に向けた生産スケジューリング手法に関する研究-マスカスタム生産対応フレキシブルオープンショップを対象とした検討-"
-\textit{第61回自動制御連合講演会}. (2018).
+\textit{第61回自動制御連合講演会}, (2018).
 
 \bibitem{ref13} 平沼 智之, 安田 翔也, 藤堂 健世, 谷口 茉帆, 山村 雅幸, "組合せ最適化ぬおけるベイジアン最適化アルゴリズムを組み込んだ遺伝的アルゴリズムの提案"
-\textit{The 35th Annual Conference of the Japanese Society for Artificial Intelligence}. (2021).
+\textit{The 35th Annual Conference of the Japanese Society for Artificial Intelligence}, (2021).
 
 \bibitem{ref14} 三神 賢雅, 伊原 滉也, 佐久間 拓人 , 加藤 昇平, "混合整数最適化に基づく生産ライン作業スケジュール生成システムの開発"
-\textit{The 36th Annual Conference of the Japanese Society for Artificial Intelligence}. (2022).
+\textit{The 36th Annual Conference of the Japanese Society for Artificial Intelligence}, (2022).
 
 \bibitem{ref15} 蘭 嘉, 田中 瑛理, 佐々木 優 , 森江 翔, 有馬 澄佳, "複数種のリソースを共用する多品種生産システムの分散協調スケジューリング-自動車部品後補充生産への適用-"
-\textit{日本経営工学会論文誌}. vol. 72, No.1, pp. 75-87(2021).
+\textit{日本経営工学会論文誌}. vol. 72, No.1, pp. 75-87, (2021).
 
 \bibitem{ref16} G.Y. Shi, H. IIMA, N. Sannomiya, "A New Encodnig Scheme for Solving Job Shop Problems by Genetic Algorithm"
-\textit{Conference on Decision and Control}. (1996).
+\textit{Conference on Decision and Control}, (1996).
 
 \bibitem{ref17} UMIT BILGE, GUNDUZ ULUSOY, "A TIME WINDOW APPROACH TO SIMULTANEOUS SCHEDULING OF MACHINES AND MATERIAL HANDLING SYSTEM IN AN FMS"
 \textit{Operations Research}.vol. 43, No.6, (1995).
@@ -2034,38 +2037,38 @@ GA と比較しても極端な解を生じにくい，より安定したスケ�
 \textit{Sensors}.25, 140, (2025).
 
 \bibitem{ref_mnih2015} V. Mnih, K. Kavukcuoglu, D. Silver \textit{et al.},"Human-level control through deep reinforcement learning",
-\textit{Nature}, vol. 518, no. 7540, pp. 529-533 (2015).
+\textit{Nature}, vol. 518, no. 7540, pp. 529-533, (2015).
 
 \bibitem{ref_sutton2018} R.S. Sutton and A.G. Barto,
-\textit{Reinforcement Learning: An Introduction}, 2nd ed., MIT Press, Cambridge, MA (2018).
+\textit{Reinforcement Learning: An Introduction}, 2nd ed., MIT Press, Cambridge, MA , (2018).
 
 \bibitem{ref_nazari2018} M. Nazari, A. Oroojlooy, L. Snyder and M. Tak{\'a}{\v{c}},"Reinforcement learning for solving the vehicle routing problem",
-\textit{arXiv preprint}, arXiv:1802.04240 (2018).
+\textit{arXiv preprint}, arXiv:1802.04240, (2018).
 
 \bibitem{ref_zhang2020} C. Zhang, W. Song, Z. Cao \textit{et al.},"Learning to dispatch for job shop scheduling via deep reinforcement learning",
-in \textit{Advances in Neural Information Processing Systems} (NeurIPS) (2020).
+in \textit{Advances in Neural Information Processing Systems} (NeurIPS), (2020).
 
 \bibitem{ref_silver2017}D. Silver, J. Schrittwieser, K. Simonyan \textit{et al.},"Mastering the game of Go without human knowledge",
-\textit{Nature}, vol. 550, pp. 354-359 (2017).
+\textit{Nature}, vol. 550, pp. 354-359, (2017).
 
 \bibitem{ref_tsitsiklis1997} J.N. Tsitsiklis and B. Van Roy,"An analysis of temporal-difference learning with function approximation",
-\textit{IEEE Transactions on Automatic Control}, vol. 42, no. 5, pp. 674--690 (1997).
+\textit{IEEE Transactions on Automatic Control}, vol. 42, no. 5, pp. 674-690, (1997).
 
-\bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン,2022.
+\bibitem{book1} 斎藤 康毅, 『ゼロから作るDeep Learning - Pythonで学ぶディープラーニングの理論と実装』,オライリー・ジャパン, 2022.
 
-\bibitem{book2} 野寺 隆志, 『楽々LATEX』,共立出版株式会社,1996.
+\bibitem{book2} 野寺 隆志, 『楽々LATEX』,共立出版株式会社, 1996.
 
-\bibitem{book3} 飯塚 修平, 『ウェブ最適化ではじめる機械学習』,オライリー・ジャパン,2020.
+\bibitem{book3} 飯塚 修平, 『ウェブ最適化ではじめる機械学習』,オライリー・ジャパン, 2020.
 
-\bibitem{book4} 矢沢 久雄, 『基本情報技術者 らくらく突破 Python』,技術評論社,2021.
+\bibitem{book4} 矢沢 久雄, 『基本情報技術者 らくらく突破 Python』,技術評論社, 2021.
 
-\bibitem{book5} 伊藤 多一,今津 儀充,須藤 広大,など 『現場で使える! Python 深層強化学習入門 - 強化学習と深層学習による探索と制御』,株式会社翔泳社,2025.
+\bibitem{book5} 伊藤 多一,今津 儀充,須藤 広大,など 『現場で使える! Python 深層強化学習入門 - 強化学習と深層学習による探索と制御』,株式会社翔泳社, 2025.
 
-\bibitem{book6} Kirill Bobrov, 『なっとく！並列処理プログラミング』,株式会社翔泳社,2025.
+\bibitem{book6} Kirill Bobrov, 『なっとく！並列処理プログラミング』,株式会社翔泳社, 2025.
 
-\bibitem{book7} 平井 有三, 『はじめてのパターン認識』,森北出版株式会社,2023.
+\bibitem{book7} 平井 有三, 『はじめてのパターン認識』,森北出版株式会社, 2023.
 
-\bibitem{book8} 大用 倉智,山田 孝子,『作りながら丁寧に学ぶ Pythonプログラミング入門』,関西学院大学出版会,2022.
+\bibitem{book8} 大用 倉智,山田 孝子,『作りながら丁寧に学ぶ Pythonプログラミング入門』,関西学院大学出版会, 2022.
 
 \end{thebibliography}
 
